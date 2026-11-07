@@ -108,7 +108,7 @@ def inspect_output(raw,request):
 
 class EvaluationService:
     def __init__(self,repo,adapter=None,timeout=60):
-        self.repo=repo;self.adapter=adapter;self.timeout=timeout;self.limit=asyncio.Semaphore(2)
+        self.repo=repo;self.adapter=adapter;self.timeout=timeout;self.limit=asyncio.Semaphore(1)
         with repo.connect(write=True) as db:
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS evaluation_jobs(id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES conversations(id), content_hash TEXT NOT NULL, request TEXT NOT NULL, status TEXT NOT NULL, result TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);

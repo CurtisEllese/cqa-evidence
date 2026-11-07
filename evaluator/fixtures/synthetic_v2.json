@@ -1,0 +1,581 @@
+[
+  {
+    "request": {
+      "schema_version": "2.0",
+      "conversationId": "synthetic-ru",
+      "conversationHash": "bfca83f584affc04902bc1ef2c25a967d6536724964b94c072c6e546ca002751",
+      "language": "RU",
+      "channel": "agent chat",
+      "checklist": {
+        "schema_version": "2.0",
+        "id": "cqa-official",
+        "name": "CQA — официальный чек-лист",
+        "version": 1,
+        "criteria": [
+          {
+            "id": "greeting",
+            "title": "Установление контакта",
+            "description": "В первом ответе оператор поздоровался на языке клиента И представился. Приветствие бота не считается.",
+            "section": "Начало диалога",
+            "weight": "10",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "discovery",
+            "title": "Выявление потребности",
+            "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+            "section": "Начало диалога",
+            "weight": "15",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Данных изначально достаточно для ответа на запрос."
+          },
+          {
+            "id": "identification",
+            "title": "Идентификация",
+            "description": "Проверка подтверждена ДО раскрытия данных или защищённого действия. Неподтверждённая обязательная проверка — Нет. Согласие на обработку данных не равно идентификации.",
+            "section": "Работа с запросом",
+            "weight": "20",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Запрос не требует идентификации клиента."
+          },
+          {
+            "id": "consultation",
+            "title": "Корректная и полная консультация",
+            "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+            "section": "Работа с запросом",
+            "weight": "20",
+            "type": "scale",
+            "max": "20",
+            "allowedValues": [
+              "0",
+              "5",
+              "10",
+              "15",
+              "20"
+            ],
+            "allowNA": true,
+            "naCondition": "Разговор закончился до формулировки запроса."
+          },
+          {
+            "id": "empathy",
+            "title": "Эмпатия и клиентоориентированность",
+            "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+            "section": "Работа с запросом",
+            "weight": "15",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "dialogue",
+            "title": "Управление диалогом, скорость и грамотность",
+            "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+            "section": "Работа с запросом",
+            "weight": "15",
+            "type": "scale",
+            "max": "10",
+            "allowedValues": [
+              "0",
+              "4",
+              "7",
+              "10"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "closing",
+            "title": "Завершение",
+            "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+            "section": "Результат",
+            "weight": "5",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Диалог оборвался до возможности корректного завершения."
+          },
+          {
+            "id": "gross-errors",
+            "title": "Грубые ошибки",
+            "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+            "section": "Контроль нарушений",
+            "weight": "0",
+            "type": "flag",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          }
+        ]
+      },
+      "messages": [
+        {
+          "id": "synthetic-ru-m1",
+          "speaker": "client",
+          "timestamp": "00:00",
+          "text": "Где в учебном приложении Demo переключить язык?",
+          "message_index": 0
+        },
+        {
+          "id": "synthetic-ru-m2",
+          "speaker": "operator",
+          "timestamp": "00:10",
+          "text": "Здравствуйте! Меня зовут Алекс. В Demo откройте «Настройки», затем «Язык» и выберите нужный язык.",
+          "message_index": 1
+        },
+        {
+          "id": "synthetic-ru-m3",
+          "speaker": "client",
+          "timestamp": "00:20",
+          "text": "Спасибо, получилось.",
+          "message_index": 2
+        },
+        {
+          "id": "synthetic-ru-m4",
+          "speaker": "operator",
+          "timestamp": "00:30",
+          "text": "Рад помочь. Язык изменён. Могу ли я ещё чем-нибудь помочь? До свидания!",
+          "message_index": 3
+        }
+      ],
+      "knowledgeFacts": [
+        {
+          "text": "Synthetic training product Demo only: the interface language is changed under Settings > Language. This generic public navigation question requires no client identification. This fact does not describe a real financial service.",
+          "source": "synthetic training fixture",
+          "effective_date": "2026-11-07",
+          "product": "Demo fictional product",
+          "jurisdiction": "training",
+          "verified_by": "synthetic fixture author"
+        }
+      ],
+      "repair_feedback": null
+    },
+    "expected": {
+      "greeting": "1",
+      "discovery": null,
+      "identification": null,
+      "consultation": "20",
+      "empathy": "1",
+      "dialogue": "10",
+      "closing": "1",
+      "gross-errors": "0"
+    }
+  },
+  {
+    "request": {
+      "schema_version": "2.0",
+      "conversationId": "synthetic-kz",
+      "conversationHash": "782b661684fd1d2c33ca66e599ec3a9566e00990e268f28552696c4e9c2a7054",
+      "language": "KZ",
+      "channel": "voice call",
+      "checklist": {
+        "schema_version": "2.0",
+        "id": "cqa-official",
+        "name": "CQA — официальный чек-лист",
+        "version": 1,
+        "criteria": [
+          {
+            "id": "greeting",
+            "title": "Установление контакта",
+            "description": "В первом ответе оператор поздоровался на языке клиента И представился. Приветствие бота не считается.",
+            "section": "Начало диалога",
+            "weight": "10",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "discovery",
+            "title": "Выявление потребности",
+            "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+            "section": "Начало диалога",
+            "weight": "15",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Данных изначально достаточно для ответа на запрос."
+          },
+          {
+            "id": "identification",
+            "title": "Идентификация",
+            "description": "Проверка подтверждена ДО раскрытия данных или защищённого действия. Неподтверждённая обязательная проверка — Нет. Согласие на обработку данных не равно идентификации.",
+            "section": "Работа с запросом",
+            "weight": "20",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Запрос не требует идентификации клиента."
+          },
+          {
+            "id": "consultation",
+            "title": "Корректная и полная консультация",
+            "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+            "section": "Работа с запросом",
+            "weight": "20",
+            "type": "scale",
+            "max": "20",
+            "allowedValues": [
+              "0",
+              "5",
+              "10",
+              "15",
+              "20"
+            ],
+            "allowNA": true,
+            "naCondition": "Разговор закончился до формулировки запроса."
+          },
+          {
+            "id": "empathy",
+            "title": "Эмпатия и клиентоориентированность",
+            "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+            "section": "Работа с запросом",
+            "weight": "15",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "dialogue",
+            "title": "Управление диалогом, скорость и грамотность",
+            "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+            "section": "Работа с запросом",
+            "weight": "15",
+            "type": "scale",
+            "max": "10",
+            "allowedValues": [
+              "0",
+              "4",
+              "7",
+              "10"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "closing",
+            "title": "Завершение",
+            "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+            "section": "Результат",
+            "weight": "5",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Диалог оборвался до возможности корректного завершения."
+          },
+          {
+            "id": "gross-errors",
+            "title": "Грубые ошибки",
+            "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+            "section": "Контроль нарушений",
+            "weight": "0",
+            "type": "flag",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          }
+        ]
+      },
+      "messages": [
+        {
+          "id": "synthetic-kz-m1",
+          "speaker": "client",
+          "timestamp": "2026-11-07T10:00:00Z",
+          "text": "Demo оқу қолданбасында тілді қай жерден өзгертуге болады?",
+          "message_index": 0
+        },
+        {
+          "id": "synthetic-kz-m2",
+          "speaker": "operator",
+          "timestamp": "2026-11-07T10:00:10Z",
+          "text": "Сәлеметсіз бе! Менің атым Алекс. Demo қолданбасында «Баптаулар», содан кейін «Тіл» бөлімін ашып, қажетті тілді таңдаңыз.",
+          "message_index": 1
+        },
+        {
+          "id": "synthetic-kz-m3",
+          "speaker": "client",
+          "timestamp": "2026-11-07T10:00:20Z",
+          "text": "Рақмет, тілді өзгерттім.",
+          "message_index": 2
+        },
+        {
+          "id": "synthetic-kz-m4",
+          "speaker": "operator",
+          "timestamp": "2026-11-07T10:00:30Z",
+          "text": "Көмектескеніме қуаныштымын. Тіл өзгертілді. Тағы көмегім қажет пе? Сау болыңыз!",
+          "message_index": 3
+        }
+      ],
+      "knowledgeFacts": [
+        {
+          "text": "Synthetic training product Demo only: the interface language is changed under Settings > Language. This generic public navigation question requires no client identification. This fact does not describe a real financial service.",
+          "source": "synthetic training fixture",
+          "effective_date": "2026-11-07",
+          "product": "Demo fictional product",
+          "jurisdiction": "training",
+          "verified_by": "synthetic fixture author"
+        }
+      ],
+      "repair_feedback": null
+    },
+    "expected": {
+      "greeting": "1",
+      "discovery": null,
+      "identification": null,
+      "consultation": "20",
+      "empathy": "1",
+      "dialogue": "10",
+      "closing": "1",
+      "gross-errors": "0"
+    }
+  },
+  {
+    "request": {
+      "schema_version": "2.0",
+      "conversationId": "synthetic-en",
+      "conversationHash": "004f054fd5651c9b45ba3db0a0f296bc526198ef459094679d66fa825c26923b",
+      "language": "EN",
+      "channel": "agent chat",
+      "checklist": {
+        "schema_version": "2.0",
+        "id": "cqa-official",
+        "name": "CQA — официальный чек-лист",
+        "version": 1,
+        "criteria": [
+          {
+            "id": "greeting",
+            "title": "Установление контакта",
+            "description": "В первом ответе оператор поздоровался на языке клиента И представился. Приветствие бота не считается.",
+            "section": "Начало диалога",
+            "weight": "10",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "discovery",
+            "title": "Выявление потребности",
+            "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+            "section": "Начало диалога",
+            "weight": "15",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Данных изначально достаточно для ответа на запрос."
+          },
+          {
+            "id": "identification",
+            "title": "Идентификация",
+            "description": "Проверка подтверждена ДО раскрытия данных или защищённого действия. Неподтверждённая обязательная проверка — Нет. Согласие на обработку данных не равно идентификации.",
+            "section": "Работа с запросом",
+            "weight": "20",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Запрос не требует идентификации клиента."
+          },
+          {
+            "id": "consultation",
+            "title": "Корректная и полная консультация",
+            "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+            "section": "Работа с запросом",
+            "weight": "20",
+            "type": "scale",
+            "max": "20",
+            "allowedValues": [
+              "0",
+              "5",
+              "10",
+              "15",
+              "20"
+            ],
+            "allowNA": true,
+            "naCondition": "Разговор закончился до формулировки запроса."
+          },
+          {
+            "id": "empathy",
+            "title": "Эмпатия и клиентоориентированность",
+            "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+            "section": "Работа с запросом",
+            "weight": "15",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "dialogue",
+            "title": "Управление диалогом, скорость и грамотность",
+            "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+            "section": "Работа с запросом",
+            "weight": "15",
+            "type": "scale",
+            "max": "10",
+            "allowedValues": [
+              "0",
+              "4",
+              "7",
+              "10"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          },
+          {
+            "id": "closing",
+            "title": "Завершение",
+            "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+            "section": "Результат",
+            "weight": "5",
+            "type": "yes_no",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": true,
+            "naCondition": "Диалог оборвался до возможности корректного завершения."
+          },
+          {
+            "id": "gross-errors",
+            "title": "Грубые ошибки",
+            "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+            "section": "Контроль нарушений",
+            "weight": "0",
+            "type": "flag",
+            "max": "1",
+            "allowedValues": [
+              "0",
+              "1"
+            ],
+            "allowNA": false,
+            "naCondition": null
+          }
+        ]
+      },
+      "messages": [
+        {
+          "id": "synthetic-en-m1",
+          "speaker": "client",
+          "timestamp": "00:00",
+          "text": "Where can I change the language in the Demo training app?",
+          "message_index": 0
+        },
+        {
+          "id": "synthetic-en-m2",
+          "speaker": "operator",
+          "timestamp": "00:10",
+          "text": "Hello! My name is Alex. In Demo, open Settings, then Language, and choose your preferred language.",
+          "message_index": 1
+        },
+        {
+          "id": "synthetic-en-m3",
+          "speaker": "client",
+          "timestamp": "00:20",
+          "text": "Thank you, that worked.",
+          "message_index": 2
+        },
+        {
+          "id": "synthetic-en-m4",
+          "speaker": "operator",
+          "timestamp": "00:30",
+          "text": "Happy to help. The language is changed. Can I help with anything else? Goodbye!",
+          "message_index": 3
+        }
+      ],
+      "knowledgeFacts": [
+        {
+          "text": "Synthetic training product Demo only: the interface language is changed under Settings > Language. This generic public navigation question requires no client identification. This fact does not describe a real financial service.",
+          "source": "synthetic training fixture",
+          "effective_date": "2026-11-07",
+          "product": "Demo fictional product",
+          "jurisdiction": "training",
+          "verified_by": "synthetic fixture author"
+        }
+      ],
+      "repair_feedback": null
+    },
+    "expected": {
+      "greeting": "1",
+      "discovery": null,
+      "identification": null,
+      "consultation": "20",
+      "empathy": "1",
+      "dialogue": "10",
+      "closing": "1",
+      "gross-errors": "0"
+    }
+  }
+]
