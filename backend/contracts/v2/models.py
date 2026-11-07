@@ -173,6 +173,12 @@ class CriterionResult(ModelCriterionResult):
     critical: bool
 
 
+class CriterionContribution(Contract):
+    weightedPoints: ScoreDecimalString
+    normalizedWeight: ScoreDecimalString
+    contribution: ScoreDecimalString
+
+
 class Score(RootContract):
     total: ScoreDecimalString | None
     earned: ScoreDecimalString
@@ -180,6 +186,7 @@ class Score(RootContract):
     applicable: NonnegativeInt
     critical: bool
     results: list[CriterionResult]
+    breakdown: dict[str, CriterionContribution] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def confirmed_score(self):
@@ -190,6 +197,12 @@ class Score(RootContract):
         if any(not result.evidence for result in self.results) or any(evidence.verification_status != "verified" for result in self.results for evidence in result.evidence):
             raise ValueError("confirmed scores require verified evidence")
         return self
+
+
+class EvaluationProvenance(Contract):
+    provider: NonEmpty
+    model: NonEmpty
+    promptVersion: NonEmpty
 
 
 class EvaluationResult(RootContract):
@@ -203,6 +216,7 @@ class EvaluationResult(RootContract):
     status: Status
     error: ApiError | None
     score: Score | None
+    provenance: EvaluationProvenance | None = None
 
     @model_validator(mode="after")
     def status_score(self):

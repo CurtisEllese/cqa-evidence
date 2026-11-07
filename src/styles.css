@@ -3111,3 +3111,14 @@ td,
   line-height: 1.6;
   margin: 0;
 }
+.evaluation-history { padding: 16px; margin: 12px 0; min-width: 0; }
+.evaluation-history p { color: var(--text-secondary, #637066); font-size: 13px; line-height: 1.6; }
+.history-entry { border-top: 1px solid #e4e9e4; padding: 12px 0; overflow-wrap: anywhere; }
+.history-entry summary { cursor: pointer; font-size: 13px; font-weight: 600; line-height: 1.6; }
+.history-entry article { padding: 8px 0; }
+.history-entry h3 { font-size: 13px; }
+.evaluation-provenance { overflow-wrap: anywhere; max-width: 250px; font-size: 11px !important; }
+.audio-offset { display: flex; align-items: center; gap: 8px; margin: 12px 0 8px; font-size: 12px; }
+.audio-offset input { width: 80px; padding: 6px; border: 1px solid #ccd8cf; border-radius: 6px; }
+.audio-panel small { display: block; line-height: 1.5; }
+.audio-seek { border: 0; background: transparent; color: #257647; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; font-size: 11px; }

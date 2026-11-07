@@ -378,6 +378,36 @@
       "title": "Criterion",
       "type": "object"
     },
+    "CriterionContribution": {
+      "additionalProperties": false,
+      "properties": {
+        "weightedPoints": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Weightedpoints",
+          "type": "string"
+        },
+        "normalizedWeight": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Normalizedweight",
+          "type": "string"
+        },
+        "contribution": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Contribution",
+          "type": "string"
+        }
+      },
+      "required": [
+        "weightedPoints",
+        "normalizedWeight",
+        "contribution"
+      ],
+      "title": "CriterionContribution",
+      "type": "object"
+    },
     "CriterionResult": {
       "additionalProperties": false,
       "properties": {
@@ -440,6 +470,36 @@
         "critical"
       ],
       "title": "CriterionResult",
+      "type": "object"
+    },
+    "EvaluationProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Model",
+          "type": "string"
+        },
+        "promptVersion": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Promptversion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "promptVersion"
+      ],
+      "title": "EvaluationProvenance",
       "type": "object"
     },
     "EvaluationResult": {
@@ -523,6 +583,17 @@
               "type": "null"
             }
           ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluationProvenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -637,6 +708,13 @@
           },
           "title": "Results",
           "type": "array"
+        },
+        "breakdown": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CriterionContribution"
+          },
+          "title": "Breakdown",
+          "type": "object"
         }
       },
       "required": [

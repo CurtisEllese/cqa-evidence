@@ -24,3 +24,6 @@ __pycache__/
 .hypothesis/
 .vite/
 .pytest-tmp/
+
+# Also ignore a local virtual-environment symlink.
+.venv311

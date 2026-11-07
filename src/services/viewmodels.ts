@@ -111,6 +111,7 @@ export function scoreFromWire(
     applicable: score.applicable,
     critical: score.critical,
     results: score.results.map((result) => resultFromWire(result, messages)),
+    breakdown: score.breakdown ?? {},
   };
 }
 export function evaluationFromWire(
@@ -127,6 +128,11 @@ export function evaluationFromWire(
     source: evaluation.source,
     status: evaluation.status,
     error: evaluation.error?.message ?? null,
+    total:
+      evaluation.status === "completed" && evaluation.score?.total != null
+        ? decimal(evaluation.score.total)
+        : null,
+    provenance: evaluation.provenance ?? null,
   };
 }
 function conversationFromWire(

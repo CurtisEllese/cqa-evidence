@@ -30,6 +30,17 @@ const api = await import(apiUrl);
 const criticalStatus = await import(
   await moduleUrl("../features/criticalStatus.ts")
 );
+const timing = await import(await moduleUrl("../features/audioTiming.ts"));
+
+test("audio positions handle ISO zones, offsets and invalid timestamps", () => {
+  assert.equal(timing.audioPosition("2026-11-07T10:00:05+05:00", "2026-11-07T05:02:22Z", 3), 140);
+  assert.equal(timing.audioPosition("00:05", "00:20", -2), 13);
+  assert.equal(timing.audioPosition("00:05", "00:20", -30), 0);
+  assert.equal(timing.audioPosition("00:20", "00:05", 0), null);
+  assert.equal(timing.audioPosition("bad", "00:05", 0), null);
+  assert.equal(timing.audioPosition("00:00", "2026-11-07T05:02:22Z", 0), null);
+  assert.equal(timing.audioPosition("00:00", "00:01", NaN), null);
+});
 
 const checklist = {
   schema_version: "2.0",

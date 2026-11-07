@@ -354,5 +354,19 @@ def score_evaluation(evaluation: dict, appeals=(), *, wire_decimals=False) -> di
                 possible += weight
                 applicable += 1
         total = None if not possible else (earned / possible * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        breakdown = {}
+        for identifier, criterion in criteria.items():
+            value = by_id[identifier]['value']
+            if criterion['type'] == 'flag' or value is None:
+                continue
+            weight = Decimal(str(criterion['weight']))
+            points = Decimal(str(value)) / Decimal(str(criterion['max'])) * weight
+            # Display-only rounding never feeds back into the total calculation.
+            display = lambda number: format(number.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP), 'f')
+            breakdown[identifier] = {
+                'weightedPoints': display(points),
+                'normalizedWeight': display(weight / possible * 100 if possible else Decimal(0)),
+                'contribution': display(points / possible * 100 if possible else Decimal(0)),
+            }
     convert = (lambda value: format(value, "f")) if wire_decimals else float
-    return {"total": None if total is None else convert(total), "earned": convert(earned), "possible": convert(possible), "applicable": applicable, "critical": critical, "results": results}
+    return {"total": None if total is None else convert(total), "earned": convert(earned), "possible": convert(possible), "applicable": applicable, "critical": critical, "results": results, "breakdown": breakdown}

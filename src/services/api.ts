@@ -1,5 +1,5 @@
 import type * as Wire from "../generated/contracts";
-import type { Checklist, Evaluation } from "../domain/types";
+import type { Checklist, Evaluation, Message } from "../domain/types";
 import {
   checklistFromWire,
   checklistToWire,
@@ -195,6 +195,25 @@ export async function fetchEvaluation(
       undefined,
       signal,
     ),
+  );
+}
+export async function fetchEvaluationHistory(
+  conversationId: string,
+  messages: Message[],
+  signal?: AbortSignal,
+): Promise<Evaluation[]> {
+  const payload = await requestJson(
+    `/api/conversations/${encodeURIComponent(conversationId)}/evaluations`,
+    undefined,
+    signal,
+  );
+  if (
+    !Array.isArray(payload) ||
+    payload.some((item) => !isObject(item) || item.schema_version !== "2.0")
+  )
+    throw new Error("Не удалось прочитать историю оценок.");
+  return (payload as Wire.EvaluationResult[]).map((item) =>
+    evaluationFromWire(item, messages),
   );
 }
 export async function downloadExport(conversationId?: string): Promise<void> {

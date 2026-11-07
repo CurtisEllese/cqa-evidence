@@ -1,0 +1,326 @@
+{
+  "checkedAt": "2026-11-07T18:30:00.794447+00:00",
+  "syntheticOnly": true,
+  "humanGroundTruth": false,
+  "cases": [
+    {
+      "conversationId": "demo-only-ru-insult",
+      "status": "completed",
+      "version": 1,
+      "score": "70",
+      "critical": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "В первом ответе оператор поздоровался на языке клиента и представился.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "Уточнение не требовалось: клиент сразу указал, какой отчёт и за какой период хочет скачать.",
+          "applicability_reason": "Данных изначально достаточно для ответа на запрос."
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Запрос касается навигации по разделу отчётов и не требует идентификации клиента.",
+          "applicability_reason": "Запрос не требует идентификации клиента."
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор дал понятный следующий шаг, а клиент сообщил, что нашёл нужный раздел. Ответил по существу запроса.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "empathy",
+          "value": "0",
+          "explanation": "Оператор оскорбил клиента и не отреагировал на просьбу общаться без грубости.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "7",
+          "explanation": "Ответы понятны и ход диалога ясен, но оператор использовал неуместное оскорбительное выражение.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор подвёл итог и попрощался.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "1",
+          "explanation": "Оператор оскорбил клиента.",
+          "applicability_reason": null
+        }
+      ]
+    },
+    {
+      "conversationId": "demo-only-kz-report",
+      "status": "completed",
+      "version": 1,
+      "score": "100",
+      "critical": false,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "Оператор алғашқы жауабында клиенттің тілінде амандасып, өзін таныстырды.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "Сұраққа жауап беру үшін бастапқы ақпарат жеткілікті болды; қосымша нақтылау қажет емес.",
+          "applicability_reason": "Клиент есепті қайдан жүктеуге болатынын сұрады, сондықтан сұрауды нақтылаусыз жауап беруге болатын еді."
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Жалпы нұсқаулық сұрағына жауап беру клиентті сәйкестендіруді қажет етпейді.",
+          "applicability_reason": "Клиент брокерлік есепті жүктеу жолын сұрады; жеке деректер ашылған жоқ және қорғалған әрекет жасалмады."
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор есепті табуға арналған түсінікті қадамдарды берді, ал клиент есепті тауып, жүктегенін растады. Өнім туралы мәліметтердің дұрыстығын қосымша растайтын knowledgeFacts жоқ.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор сыпайы жауап берді; клиент наразылық білдірген жоқ.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Диалог түсінікті әрі жүйелі өтті, жауапты түсіну үшін қайта сұрау қажет болмады.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор әрі қарай көмектесуді ұсынды және қоштасты.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "Көрсетілген хабарламаларда өрескел қателер тізіміне кіретін бұзушылық жоқ.",
+          "applicability_reason": null
+        }
+      ]
+    },
+    {
+      "conversationId": "demo-only-en-private-fee",
+      "status": "completed",
+      "version": 1,
+      "score": "62.31",
+      "critical": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "The operator greeted the client in English and introduced themself in the first response.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "The client asked where to find bond information in the app, and the operator could answer directly without additional details.",
+          "applicability_reason": "The initial request contained enough information to answer without clarification."
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "This was a general question about finding information in the app; no identity check was needed for the request or response.",
+          "applicability_reason": "The request did not require client identification."
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "The operator gave a clear, actionable direction for finding information, and the client confirmed finding the search. No independent product facts were provided for further verification.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "empathy",
+          "value": "0",
+          "explanation": "After the client declined the unrelated offer and clarified what help they wanted, the operator did not address that concern or continue helping.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "7",
+          "explanation": "The exchange was understandable, but the unrelated private-fee offer was a noticeable breakdown in managing the conversation.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "closing",
+          "value": "0",
+          "explanation": "The operator closed the chat without a farewell.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "1",
+          "explanation": "The operator proposed paid advice privately and outside the company, which is a listed gross error.",
+          "applicability_reason": null
+        }
+      ]
+    },
+    {
+      "conversationId": "demo-only-ru-incomplete-call",
+      "status": "completed",
+      "version": 1,
+      "score": "100",
+      "critical": false,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "В первом ответе оператор поздоровался и представился.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "discovery",
+          "value": "1",
+          "explanation": "Для ответа не хватало данных об операции, рынке и тарифе; оператор запросил эти уточнения.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "В запросе не требуется идентификация: оператор не раскрывает данные клиента и не выполняет защищённое действие.",
+          "applicability_reason": "Запрос касается комиссии и уточнения параметров операции; идентификация клиента не требуется."
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор не стал подтверждать точную комиссию без необходимых данных и указал следующий шаг — уточнить параметры операции. Подтверждённых сведений о тарифах для оценки конкретной суммы нет.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор общался вежливо; недовольства клиента в доступном фрагменте не выражено.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Ответ понятен и логично объясняет, каких сведений не хватает. По транскрипции нельзя судить о дикции, темпе или произношении.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "closing",
+          "value": null,
+          "explanation": "Соединение прервалось до возможности корректно завершить разговор.",
+          "applicability_reason": "В доступном фрагменте соединение прервано до завершения оператором."
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "В доступном фрагменте нет оскорбления, предложения частной платной услуги в обход компании или раскрытия конфиденциальной информации.",
+          "applicability_reason": null
+        }
+      ]
+    },
+    {
+      "conversationId": "demo-only-kz-report",
+      "status": "completed",
+      "version": 2,
+      "score": "100",
+      "critical": false,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "5",
+          "explanation": "Оператор сәлемдесіп, өзін Дана деп таныстырды.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "Сұраққа жауап беру үшін бастапқыда жеткілікті ақпарат болған; қосымша нақтылау қажет емес еді.",
+          "applicability_reason": "Клиент брокерлік есепті қайдан жүктеуге болатынын сұрады; сұраудың өзі қажеттілікті анықтауға жеткілікті."
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Бұл жалпы навигация туралы сұрақ; жеке басын растауды немесе қорғалған әрекетті қажет етпейді.",
+          "applicability_reason": "Клиент есепті жүктеу бөлімін сұрады, жеке деректерге қол жеткізуді не қорғалған әрекетті сұрамады."
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор есепті табуға арналған нақты бөлімдер мен қажетті кезеңді таңдау қадамын көрсетті. Өнім туралы бұл мәліметтерді растайтын knowledgeFacts берілмеген, сондықтан олардың дұрыстығын тәуелсіз тексеру мүмкін емес.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор сыпайы жауап берді; клиент наразылық білдірген жоқ.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Диалог анық әрі ретімен өтті, жауап түсінікті болды.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор басқа сұрақ болса көмектесуге дайын екенін айтып, қоштасты.",
+          "applicability_reason": null
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "Көрсетілген диалогта чек-листте аталған өрескел бұзушылықтар байқалмайды.",
+          "applicability_reason": null
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "RU/KZ/EN and call transcript evaluated; explicit critical cases detected",
+    "Appeal recalculated, new semantic scale applied, original version remains accessible",
+    "Restart preserves all evaluations, history, checklist versions and appeal"
+  ],
+  "appeal": {
+    "original": "70",
+    "final": "62.31"
+  }
+}
