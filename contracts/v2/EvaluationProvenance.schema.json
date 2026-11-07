@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:EvaluationProvenance",
+  "additionalProperties": false,
+  "properties": {
+    "provider": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Provider",
+      "type": "string"
+    },
+    "model": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Model",
+      "type": "string"
+    },
+    "promptVersion": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Promptversion",
+      "type": "string"
+    }
+  },
+  "required": [
+    "provider",
+    "model",
+    "promptVersion"
+  ],
+  "title": "EvaluationProvenance",
+  "type": "object"
+}

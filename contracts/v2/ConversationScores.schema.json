@@ -2,6 +2,36 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:cqa:contracts:2.0:ConversationScores",
   "$defs": {
+    "CriterionContribution": {
+      "additionalProperties": false,
+      "properties": {
+        "weightedPoints": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Weightedpoints",
+          "type": "string"
+        },
+        "normalizedWeight": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Normalizedweight",
+          "type": "string"
+        },
+        "contribution": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Contribution",
+          "type": "string"
+        }
+      },
+      "required": [
+        "weightedPoints",
+        "normalizedWeight",
+        "contribution"
+      ],
+      "title": "CriterionContribution",
+      "type": "object"
+    },
     "CriterionResult": {
       "additionalProperties": false,
       "properties": {
@@ -114,6 +144,13 @@
           },
           "title": "Results",
           "type": "array"
+        },
+        "breakdown": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CriterionContribution"
+          },
+          "title": "Breakdown",
+          "type": "object"
         }
       },
       "required": [

@@ -59,6 +59,12 @@ export type Evaluation = {
     | "failed"
     | "retryable";
   error: string | null;
+  total?: number | null;
+  provenance?: {
+    provider: string;
+    model: string;
+    promptVersion: string;
+  } | null;
 };
 export type Conversation = {
   id: string;
@@ -87,6 +93,10 @@ export type EvaluationScore = {
   applicable: number;
   critical: boolean;
   results: CriterionResult[];
+  breakdown?: Record<
+    string,
+    { weightedPoints: string; normalizedWeight: string; contribution: string }
+  >;
 };
 export type Appeal = {
   id: string;

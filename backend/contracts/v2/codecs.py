@@ -113,6 +113,7 @@ def to_wire_score(score: dict | None, messages=None) -> dict | None:
         "earned": decimal_text(score["earned"]), "possible": decimal_text(score["possible"]),
         "applicable": score["applicable"], "critical": score["critical"],
         "results": [_wire_result(result, messages) for result in score["results"]],
+        "breakdown": score.get("breakdown", {}),
     }))
 
 
@@ -142,6 +143,7 @@ def to_wire_evaluation(evaluation: dict | None, conversation_id=None, conversati
         "schema_version": VERSION, "id": evaluation["id"], "conversationId": identifier, "conversationHash": digest,
         "checklist": to_wire_checklist(evaluation["checklist"]), "results": results, "createdAt": evaluation["createdAt"],
         "source": "api", "status": status, "error": evaluation.get("error"), "score": score,
+        "provenance": evaluation.get("provenance"),
     }))
 
 

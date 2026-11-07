@@ -92,6 +92,12 @@ export type Criterion = {
   "naCondition"?: string | null;
 };
 
+export type CriterionContribution = {
+  "weightedPoints": string;
+  "normalizedWeight": string;
+  "contribution": string;
+};
+
 export type CriterionResult = {
   "criterionId": string;
   "value": string | null;
@@ -114,6 +120,12 @@ export type DecideAppealRequest = {
   "status": "accepted" | "rejected";
   "decision"?: string;
   "newValue"?: string | null;
+};
+
+export type EvaluationProvenance = {
+  "provider": string;
+  "model": string;
+  "promptVersion": string;
 };
 
 export type EvaluationRequest = {
@@ -140,6 +152,7 @@ export type EvaluationResult = {
   "status": "queued" | "running" | "completed" | "needs_review" | "failed_validation" | "failed" | "retryable";
   "error": ApiError | null;
   "score": Score | null;
+  "provenance"?: EvaluationProvenance | null;
 };
 
 export type Evidence = {
@@ -210,6 +223,7 @@ export type Score = {
   "applicable": number;
   "critical": boolean;
   "results": Array<CriterionResult>;
+  "breakdown"?: Record<string, CriterionContribution>;
 };
 
 export type StartEvaluationRequest = {

@@ -222,6 +222,19 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
     @app.get('/api/evaluations/{evaluation_id}/export',response_model=EvaluationResult)
     def export_evaluation(evaluation_id:str): return download(evaluation(evaluation_id),'cqa-evaluation')
 
+    @app.get('/api/conversations/{conversation_id}/evaluations',response_model=list[EvaluationResult])
+    def evaluation_history(conversation_id:str):
+        # Include failed jobs so a new unsuccessful attempt never hides earlier success.
+        with repo.connect() as db:
+            if not db.execute('SELECT 1 FROM conversations WHERE id=?', (conversation_id,)).fetchone():
+                raise KeyError('Диалог не найден.')
+            identifiers = [row[0] for row in db.execute('''
+                SELECT id, MAX(created_at) AS created_at FROM (
+                    SELECT id, created_at FROM evaluations WHERE conversation_id=?
+                    UNION ALL SELECT id, created_at FROM evaluation_jobs WHERE conversation_id=?
+                ) GROUP BY id ORDER BY created_at DESC, id DESC''', (conversation_id, conversation_id))]
+        return [evaluation(identifier) for identifier in identifiers]
+
     @app.get('/api/conversations/{conversation_id}/audio')
     async def audio(conversation_id:str,request:Request):
         url,trusted=repo.audio_source(conversation_id)

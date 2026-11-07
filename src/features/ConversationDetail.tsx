@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -29,6 +29,8 @@ import { downloadExport } from "../services/api";
 import { evaluationLabel, evaluationTone } from "./evaluationStatus";
 import { EvaluationControls } from "./EvaluationControls";
 import { originalCriticalStatus } from "./criticalStatus";
+import { EvaluationHistory } from "./EvaluationHistory";
+import { audioPosition } from "./audioTiming";
 
 export function ConversationDetail({
   id,
@@ -55,6 +57,10 @@ export function ConversationDetail({
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [tab, setTab] = useState("results");
+  const audio = useRef<HTMLAudioElement>(null);
+  const pendingSeek = useRef<number | null>(null);
+  const [audioOffset, setAudioOffset] = useState(0);
+  const [audioNotice, setAudioNotice] = useState("");
   if (!conversation)
     return (
       <EmptyState
@@ -118,6 +124,40 @@ export function ConversationDetail({
       element?.focus({ preventScroll: true });
     }
   }
+  function seekAudio(timestamp: string) {
+    if (!conversation) return;
+    const position = audioPosition(
+      conversation.transcript[0].timestamp,
+      timestamp,
+      audioOffset,
+    );
+    if (position === null || !audio.current) {
+      setAudioNotice(
+        "Не удалось сопоставить метку времени с записью. Используйте плеер вручную.",
+      );
+      return;
+    }
+    pendingSeek.current = position;
+    if (audio.current.readyState >= 1) applySeek();
+    else audio.current.load();
+  }
+  function applySeek() {
+    const player = audio.current,
+      position = pendingSeek.current;
+    if (!player || position === null) return;
+    if (Number.isFinite(player.duration) && position > player.duration) {
+      setAudioNotice(
+        "Метка выходит за длительность записи. Скорректируйте смещение.",
+      );
+      pendingSeek.current = null;
+      return;
+    }
+    player.currentTime = position;
+    pendingSeek.current = null;
+    setAudioNotice(
+      `Позиция записи: ${position.toFixed(1)} с. Нажмите воспроизведение в плеере.`,
+    );
+  }
   return (
     <>
       <button className="back-link" onClick={onBack}>
@@ -178,7 +218,18 @@ export function ConversationDetail({
               {conversation.audioUrl ? (
                 <div>
                   <span>Запись разговора</span>
-                  <audio controls preload="none" src={conversation.audioUrl}>
+                  <audio
+                    ref={audio}
+                    controls
+                    preload="none"
+                    src={conversation.audioUrl}
+                    onLoadedMetadata={applySeek}
+                    onError={() =>
+                      setAudioNotice(
+                        "Запись не загрузилась. Попробуйте открыть её по ссылке.",
+                      )
+                    }
+                  >
                     Ваш браузер не поддерживает аудио.
                   </audio>
                   <a
@@ -191,6 +242,22 @@ export function ConversationDetail({
                   >
                     Открыть запись <ArrowUpRight size={14} />
                   </a>
+                  <label className="audio-offset">
+                    Смещение записи, сек.
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={audioOffset}
+                      onChange={(event) =>
+                        setAudioOffset(Number(event.target.value))
+                      }
+                    />
+                  </label>
+                  <small>
+                    Позиции приблизительные: отсчёт от первой реплики.
+                    Положительное смещение учитывает вступление в записи.
+                  </small>
+                  {audioNotice && <p role="status">{audioNotice}</p>}
                 </div>
               ) : (
                 <div>
@@ -240,6 +307,16 @@ export function ConversationDetail({
                         }).format(new Date(message.timestamp))
                       : message.timestamp}
                   </time>
+                  {conversation.channel === "voice call" &&
+                    conversation.audioUrl && (
+                      <button
+                        className="audio-seek"
+                        aria-label={`К записи реплики ${message.timestamp}`}
+                        onClick={() => seekAudio(message.timestamp)}
+                      >
+                        <Headphones size={13} /> К записи
+                      </button>
+                    )}
                 </div>
                 <div className="message-bubble">{message.text}</div>
                 {highlight.includes(message.id) && (
@@ -275,6 +352,12 @@ export function ConversationDetail({
                   ? `Чек-лист v${evaluation.checklist.version}`
                   : "Оценка ещё не запущена"}
               </span>
+              {evaluation?.provenance && (
+                <span className="evaluation-provenance">
+                  {evaluation.provenance.model} · промпт{" "}
+                  {evaluation.provenance.promptVersion}
+                </span>
+              )}
               <span>
                 {final
                   ? `${final.applicable} применимых критериев`
@@ -327,6 +410,11 @@ export function ConversationDetail({
             locked={hasAppealHistory}
             hasEvaluation={!!evaluation}
             onRun={runEvaluation}
+          />
+          <EvaluationHistory
+            key={`history-${id}`}
+            conversation={conversation}
+            onEvidence={showEvidence}
           />
           {(error || evaluationErrors[id]) && (
             <Notice kind="error">{error || evaluationErrors[id]}</Notice>
@@ -520,6 +608,25 @@ export function ConversationDetail({
                               ) : (
                                 <>
                                   Вес {criterion.weight}
+                                  {final?.breakdown?.[criterion.id] && (
+                                    <>
+                                      {" · Баллы с весом: "}
+                                      {
+                                        final.breakdown[criterion.id]
+                                          .weightedPoints
+                                      }
+                                      {" · Нормированный вес: "}
+                                      {
+                                        final.breakdown[criterion.id]
+                                          .normalizedWeight
+                                      }
+                                      %{" · Вклад в итог: "}
+                                      {
+                                        final.breakdown[criterion.id]
+                                          .contribution
+                                      }
+                                    </>
+                                  )}
                                   {result.value === null
                                     ? " · исключён из расчёта"
                                     : ""}
@@ -556,7 +663,9 @@ export function ConversationDetail({
                   {completed && (
                     <Notice>
                       Оценка рассчитана по сохранённой версии чек-листа.
-                      Принятые апелляции учитываются в итоговом балле.
+                      Принятые апелляции учитываются в итоговом балле. Вклады
+                      показаны с округлением для чтения; итог рассчитывается
+                      сервером без промежуточного округления.
                     </Notice>
                   )}
                 </div>

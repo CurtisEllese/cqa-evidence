@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import uuid4
 from pydantic import ValidationError
-from .contracts.v2.models import EvaluationRequest, KnowledgeFact, ModelResponse
+from .contracts.v2.models import EvaluationRequest, EvaluationProvenance, KnowledgeFact, ModelResponse
 from .contracts.v2 import to_wire_checklist
 from .repository import Conflict, dump, now
 
@@ -138,6 +138,9 @@ class EvaluationService:
             request=EvaluationRequest.model_validate({'schema_version':'2.0','conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':to_wire_checklist(checklist),'messages':[{**m,'message_index':i} for i,m in enumerate(conversation['transcript'])],'knowledgeFacts':[fact.model_dump() for fact in self._knowledge_facts],'repair_feedback':None})
             identifier=str(uuid4());timestamp=now()
             result={'id':identifier,'conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':checklist,'results':[],'createdAt':timestamp,'source':'api','status':'queued','error':None}
+            describe = getattr(self.adapter, 'describe', None)
+            if callable(describe):
+                result['provenance'] = EvaluationProvenance.model_validate(describe()).model_dump()
             db.execute('INSERT INTO evaluation_jobs VALUES(?,?,?,?,?,?,?,?)',(identifier,conversation_id,row['content_hash'],request.model_dump_json(), 'queued',dump(result),timestamp,timestamp));self.repo.bump(db)
             return result
 

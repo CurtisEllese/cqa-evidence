@@ -125,12 +125,27 @@ def run(url):
         state["revision"] = 3
         pending.pop().fulfill(json=finished["evaluation"])
         expect(page.get_by_role("button", name="Обновить оценку", exact=True)).to_be_enabled()
+        expect(page.locator(".evaluation-controls")).to_have_count(1)
         expect(page.locator(".score-summary-meta")).to_contain_text("Чек-лист v1")
         expect(selector).to_have_value("1")
         page.reload()
         expect(page.locator(".score-summary-meta")).to_contain_text("Чек-лист v1")
         expect(selector).to_have_value("2")
         print("PASS: selected version reaches API, one job, running snapshot, saved version on reload", flush=True)
+
+        archived = deepcopy(finished['evaluation'])
+        archived['id'] = 'older-job'
+        archived['provenance'] = dict(provider='test-only', model='synthetic-model', promptVersion='test-prompt')
+        page.route('**/api/conversations/fresh/evaluations', lambda route: route.fulfill(json=[finished['evaluation'], archived]))
+        page.get_by_role('button', name='История оценок', exact=True).click()
+        expect(page.locator('.history-entry')).to_have_count(2)
+        page.locator('.history-entry summary').last.click()
+        expect(page.locator('.evaluation-history')).to_contain_text('synthetic-model')
+        page.locator('.history-entry').last.get_by_role('button', name='Показать реплики').click()
+        expect(page.locator('#message-m1')).to_have_class('message message-operator message-highlight')
+        expect(page.locator('.evaluation-controls')).to_have_count(1)
+        page.get_by_role('button', name='Скрыть историю оценок', exact=True).click()
+        print('PASS: archived evaluation metadata, evidence and one control panel after updates', flush=True)
 
         page.set_viewport_size({"width": 375, "height": 812})
         expect(selector).to_be_visible()
