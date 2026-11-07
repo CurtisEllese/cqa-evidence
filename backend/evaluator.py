@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import uuid4
 from pydantic import ValidationError
-from .contracts.v2.models import EvaluationRequest, ModelResponse
+from .contracts.v2.models import EvaluationRequest, KnowledgeFact, ModelResponse
 from .contracts.v2 import to_wire_checklist
 from .repository import Conflict, dump, now
 
@@ -107,8 +107,9 @@ def inspect_output(raw,request):
 
 
 class EvaluationService:
-    def __init__(self,repo,adapter=None,timeout=60):
+    def __init__(self,repo,adapter=None,timeout=60,*,knowledge_facts: tuple[KnowledgeFact, ...] = ()):
         self.repo=repo;self.adapter=adapter;self.timeout=timeout;self.limit=asyncio.Semaphore(1)
+        self._knowledge_facts = tuple(fact.model_copy(deep=True) for fact in knowledge_facts)
         with repo.connect(write=True) as db:
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS evaluation_jobs(id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES conversations(id), content_hash TEXT NOT NULL, request TEXT NOT NULL, status TEXT NOT NULL, result TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -125,14 +126,16 @@ class EvaluationService:
                 db.execute('UPDATE evaluation_jobs SET status=?,result=?,updated_at=? WHERE id=?',(result['status'],dump(result),now(),row['id']))
                 self.repo.bump(db)
 
-    def create(self,conversation_id):
+    def create(self,conversation_id,checklist_version: int | None = None):
         with self.repo.connect(write=True) as db:
             row=db.execute('SELECT * FROM conversations WHERE id=? AND active=1',(conversation_id,)).fetchone()
             if not row: raise KeyError('Диалог не найден.')
             running=db.execute("SELECT 1 FROM evaluation_jobs WHERE conversation_id=? AND status IN ('queued','running')",(conversation_id,)).fetchone()
             if running: raise Conflict('Оценка этого диалога уже выполняется.')
-            conversation=json.loads(row['body']);checklist=self.repo.checklist(db)
-            request=EvaluationRequest.model_validate({'schema_version':'2.0','conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':to_wire_checklist(checklist),'messages':[{**m,'message_index':i} for i,m in enumerate(conversation['transcript'])],'knowledgeFacts':[],'repair_feedback':None})
+            appealed=db.execute('SELECT 1 FROM appeals a JOIN evaluations e ON a.evaluation_id=e.id WHERE e.conversation_id=? LIMIT 1',(conversation_id,)).fetchone()
+            if appealed: raise Conflict('У диалога есть апелляция. Повторная оценка недоступна; история сохранена.')
+            conversation=json.loads(row['body']);checklist=self.repo.checklist(db,checklist_version)
+            request=EvaluationRequest.model_validate({'schema_version':'2.0','conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':to_wire_checklist(checklist),'messages':[{**m,'message_index':i} for i,m in enumerate(conversation['transcript'])],'knowledgeFacts':[fact.model_dump() for fact in self._knowledge_facts],'repair_feedback':None})
             identifier=str(uuid4());timestamp=now()
             result={'id':identifier,'conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':checklist,'results':[],'createdAt':timestamp,'source':'api','status':'queued','error':None}
             db.execute('INSERT INTO evaluation_jobs VALUES(?,?,?,?,?,?,?,?)',(identifier,conversation_id,row['content_hash'],request.model_dump_json(), 'queued',dump(result),timestamp,timestamp));self.repo.bump(db)

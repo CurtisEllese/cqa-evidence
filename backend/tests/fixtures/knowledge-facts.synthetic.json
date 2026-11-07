@@ -1,0 +1,10 @@
+[
+  {
+    "text": "Синтетическое правило тестового продукта: учебный отчёт доступен в разделе «Тестовые отчёты». Не является фактом о Freedom.",
+    "source": "https://example.invalid/synthetic-product/report",
+    "effective_date": "2026-01-01",
+    "product": "Synthetic test product",
+    "jurisdiction": "Synthetic test scope",
+    "verified_by": "Synthetic test reviewer; not expert approval"
+  }
+]

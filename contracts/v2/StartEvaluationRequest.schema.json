@@ -14,6 +14,20 @@
       "pattern": "\\S",
       "title": "Conversationid",
       "type": "string"
+    },
+    "checklistVersion": {
+      "anyOf": [
+        {
+          "maximum": 1000000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Checklistversion"
     }
   },
   "required": [

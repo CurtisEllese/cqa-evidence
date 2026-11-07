@@ -313,6 +313,7 @@ class DecideAppealRequest(RootContract):
 
 class StartEvaluationRequest(RootContract):
     conversationId: Identifier
+    checklistVersion: PositiveInt | None = None
 
 
 class RefreshRequest(RootContract):

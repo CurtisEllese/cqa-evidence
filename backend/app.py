@@ -16,6 +16,7 @@ from .contracts.v2 import (ImportRequest, VersionRequest, MigrationRequest, Crea
 from .evaluator import EvaluationService, load_adapter, error_payload
 from .repository import Repository, Conflict
 from .media import audio_response, AudioProxyError
+from .knowledge import load_knowledge_facts
 
 ROOT=Path(__file__).resolve().parent.parent
 load_dotenv(ROOT/'.env.local')
@@ -23,6 +24,8 @@ load_dotenv(ROOT/'.env')
 MAX_BODY=5*1024*1024
 
 def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator=None,evaluation_timeout=60):
+    facts_path = os.getenv('KNOWLEDGE_FACTS_PATH', '').strip()
+    facts = load_knowledge_facts(ROOT / facts_path if facts_path else None)
     db_path=database_path or os.getenv('DATABASE_PATH',str(ROOT/'local-data/cqa.sqlite'))
     repo=Repository(db_path)
     source_url=organizer_url if organizer_url is not None else os.getenv('ORGANIZER_DEV_URL','')
@@ -33,7 +36,7 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             repo.replace_dev(snapshot['payload'],snapshot['fetchedAt'],'cache')
         except (ValueError,KeyError,TypeError):
             pass # Corrupt old cache is refetched; never fabricate records.
-    service=EvaluationService(repo,evaluator or load_adapter(os.getenv('EVALUATOR_ADAPTER','')),timeout=evaluation_timeout)
+    service=EvaluationService(repo,evaluator or load_adapter(os.getenv('EVALUATOR_ADAPTER','')),timeout=evaluation_timeout,knowledge_facts=facts)
     @asynccontextmanager
     async def lifespan(app):
         service.recover()
@@ -155,7 +158,7 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
     def evaluate(body:StartEvaluationRequest,background:BackgroundTasks):
         find_conversation(body.conversationId)
         if service.adapter is None: raise HTTPException(503,'Сервис ИИ-оценки ещё не подключён. Команде нужны ключ API и выбранная модель.')
-        result=service.create(body.conversationId)
+        result=service.create(body.conversationId,body.checklistVersion)
         background.add_task(service.run,result['id'])
         return to_wire_evaluation(result)
 

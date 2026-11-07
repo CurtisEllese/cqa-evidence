@@ -259,3 +259,13 @@ def test_generated_types_and_schemas_match_authoritative_models():
     spec.loader.exec_module(module)
     for artifact, expected in module.artifacts().items():
         assert artifact.read_text(encoding="utf-8") == expected, f"Regenerate {artifact}"
+
+
+def test_start_evaluation_version_is_optional_and_strict():
+    payload = {"schema_version": "2.0", "conversationId": "x"}
+    assert StartEvaluationRequest.model_validate(payload).checklistVersion is None
+    assert StartEvaluationRequest.model_validate({**payload, "checklistVersion": None}).checklistVersion is None
+    assert StartEvaluationRequest.model_validate({**payload, "checklistVersion": 2}).checklistVersion == 2
+    for invalid in (True, False, 0, -1, 1.0, "1", [], 1_000_001):
+        with pytest.raises(ValidationError):
+            StartEvaluationRequest.model_validate({**payload, "checklistVersion": invalid})

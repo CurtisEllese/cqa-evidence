@@ -214,6 +214,7 @@ export type Score = {
 export type StartEvaluationRequest = {
   "schema_version": "2.0";
   "conversationId": string;
+  "checklistVersion"?: number | null;
 };
 
 export type ValidationIssue = {

@@ -65,8 +65,14 @@ class Repository:
         db.execute("UPDATE metadata SET value=CAST(value AS INTEGER)+1 WHERE key='revision'")
 
     @staticmethod
-    def checklist(db):
-        return json.loads(db.execute('SELECT body FROM checklists ORDER BY version DESC LIMIT 1').fetchone()[0])
+    def checklist(db, version: int | None = None):
+        if version is None:
+            row = db.execute('SELECT body FROM checklists ORDER BY version DESC LIMIT 1').fetchone()
+        else:
+            row = db.execute('SELECT body FROM checklists WHERE version=?', (version,)).fetchone()
+        if row is None:
+            raise KeyError('Версия чек-листа не найдена.')
+        return json.loads(row[0])
 
     @staticmethod
     def metadata(db,key):
