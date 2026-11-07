@@ -8,5 +8,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -r requirements-contracts.txt
-      - run: python -m pytest tests/test_contracts.py -q
+      - run: pip install -r requirements-contracts.txt -r requirements-evaluator.txt
+      - run: python -m pytest tests/test_contracts.py tests/test_evaluator.py -q

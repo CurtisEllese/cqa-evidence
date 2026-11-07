@@ -2,7 +2,7 @@
 
 Прототип Conversation Quality Analytics для Freedom Broker CQA Hackathon.
 
-**Статус: подготовлена архитектура и план. Приложение ещё не реализовано.**
+**Статус: реализованы контракты и адаптер Gemini. UI/FastAPI/SQLite находятся в ветке feat/ui; сквозная интеграция оценки ещё требуется.**
 Исследование готовых решений выполнено до написания кода приложения, 7 ноября 2026.
 
 Цель: оценивать новые RU/KZ/EN диалоги по редактируемому чек-листу, показывать проверяемые доказательства и сохранять историю апелляций. Главный приоритет — совпадение с оценками экспертов на неизвестных диалогах.
@@ -39,3 +39,6 @@ DEV проверен через API: 65 диалогов, 60 чатов, 5 зв�
 Задачи: [Adalbala / AI](https://github.com/CurtisEllese/cqa-evidence/issues/1), [naki707 / backend](https://github.com/CurtisEllese/cqa-evidence/issues/2), [Krutoi312 / frontend](https://github.com/CurtisEllese/cqa-evidence/issues/3), [продукт и интеграция](https://github.com/CurtisEllese/cqa-evidence/issues/4).
 
 Приглашения всем трём инженерам отправлены с правом записи. На момент создания задач приглашения ещё не приняты; владельцы указаны в заголовках и описаниях, поле Assignees пока пустое.
+# Gemini evaluator
+
+Адаптер Gemini и команды проверки: [docs/gemini-evaluator.md](docs/gemini-evaluator.md). Провайдер для первого запуска — Gemini. Адаптер реализован отдельно от интеграции UI/jobs/SQLite.
