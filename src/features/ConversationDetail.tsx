@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -31,6 +31,8 @@ import { EvaluationControls } from "./EvaluationControls";
 import { originalCriticalStatus } from "./criticalStatus";
 import { EvaluationHistory } from "./EvaluationHistory";
 import { audioPosition } from "./audioTiming";
+import { AudioPlayer } from "../components/AudioPlayer";
+import { callDateLabel, conversationTitle } from "./conversationTitle";
 
 export function ConversationDetail({
   id,
@@ -61,6 +63,12 @@ export function ConversationDetail({
   const pendingSeek = useRef<number | null>(null);
   const [audioOffset, setAudioOffset] = useState(0);
   const [audioNotice, setAudioNotice] = useState("");
+  const [resolvedAudioUrl, setResolvedAudioUrl] = useState<string | null>(null);
+  useEffect(() => {
+    pendingSeek.current = null;
+    setAudioOffset(0);
+    setAudioNotice("");
+  }, [id]);
   if (!conversation)
     return (
       <EmptyState
@@ -127,7 +135,7 @@ export function ConversationDetail({
   function seekAudio(timestamp: string) {
     if (!conversation) return;
     const position = audioPosition(
-      conversation.transcript[0].timestamp,
+      conversation.transcript[0]?.timestamp ?? "",
       timestamp,
       audioOffset,
     );
@@ -139,7 +147,6 @@ export function ConversationDetail({
     }
     pendingSeek.current = position;
     if (audio.current.readyState >= 1) applySeek();
-    else audio.current.load();
   }
   function applySeek() {
     const player = audio.current,
@@ -167,7 +174,7 @@ export function ConversationDetail({
       <div className="detail-heading">
         <div>
           <div className="eyebrow">ДИАЛОГ · {conversation.id}</div>
-          <h1>{conversation.title}</h1>
+          <h1>{conversationTitle(conversation)}</h1>
           <div className="detail-metadata">
             <span>
               {conversation.channel === "voice call" ? (
@@ -201,56 +208,54 @@ export function ConversationDetail({
                 <h2>{conversation.operator}</h2>
                 <p>
                   Оператор ·{" "}
-                  {conversation.date
-                    ? new Intl.DateTimeFormat("ru-RU", {
-                        dateStyle: "long",
-                        timeZone: "Asia/Qyzylorda",
-                      }).format(new Date(conversation.date))
-                    : "Дата не указана"}
+                  {conversation.channel === "voice call"
+                    ? (callDateLabel(conversation, true) ?? "Дата не указана")
+                    : conversation.date
+                      ? new Intl.DateTimeFormat("ru-RU", {
+                          dateStyle: "long",
+                          timeZone: "Asia/Qyzylorda",
+                        }).format(new Date(conversation.date))
+                      : "Дата не указана"}
                 </p>
               </div>
             </div>
             <ShieldCheck size={21} className="muted" />
           </div>
           {conversation.channel === "voice call" && (
-            <div className="audio-panel">
-              <Headphones size={20} />
+            <div className="call-audio-panel">
               {conversation.audioUrl ? (
-                <div>
-                  <span>Запись разговора</span>
-                  <audio
-                    ref={audio}
-                    controls
-                    preload="none"
+                <>
+                  <AudioPlayer
+                    key={`${id}:${conversation.audioUrl}`}
+                    audioRef={audio}
                     src={conversation.audioUrl}
                     onLoadedMetadata={applySeek}
-                    onError={() =>
-                      setAudioNotice(
-                        "Запись не загрузилась. Попробуйте открыть её по ссылке.",
-                      )
-                    }
-                  >
-                    Ваш браузер не поддерживает аудио.
-                  </audio>
-                  <a
-                    href={
-                      conversation.audioPageUrl ??
-                      `/api/conversations/${encodeURIComponent(conversation.id)}/audio-page`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Открыть запись <ArrowUpRight size={14} />
-                  </a>
+                    onSourceChange={setResolvedAudioUrl}
+                  />
+                  {resolvedAudioUrl && (
+                    <a
+                      href={
+                        resolvedAudioUrl.startsWith("blob:")
+                          ? resolvedAudioUrl
+                          : (conversation.audioPageUrl ??
+                            `/api/conversations/${encodeURIComponent(conversation.id)}/audio-page`)
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Открыть запись <ArrowUpRight size={14} />
+                    </a>
+                  )}
                   <label className="audio-offset">
                     Смещение записи, сек.
                     <input
                       type="number"
                       step="0.1"
                       value={audioOffset}
-                      onChange={(event) =>
-                        setAudioOffset(Number(event.target.value))
-                      }
+                      onChange={(event) => {
+                        setAudioOffset(Number(event.target.value));
+                        setAudioNotice("");
+                      }}
                     />
                   </label>
                   <small>
@@ -258,7 +263,7 @@ export function ConversationDetail({
                     Положительное смещение учитывает вступление в записи.
                   </small>
                   {audioNotice && <p role="status">{audioNotice}</p>}
-                </div>
+                </>
               ) : (
                 <div>
                   <strong>Транскрипт звонка</strong>
@@ -352,12 +357,6 @@ export function ConversationDetail({
                   ? `Чек-лист v${evaluation.checklist.version}`
                   : "Оценка ещё не запущена"}
               </span>
-              {evaluation?.provenance && (
-                <span className="evaluation-provenance">
-                  {evaluation.provenance.model} · промпт{" "}
-                  {evaluation.provenance.promptVersion}
-                </span>
-              )}
               <span>
                 {final
                   ? `${final.applicable} применимых критериев`
@@ -433,7 +432,7 @@ export function ConversationDetail({
                 ? "Доказательства требуют проверки. Итоговый балл не опубликован; неподтверждённые ссылки не подсвечиваются."
                 : evaluation.status === "queued" ||
                     evaluation.status === "running"
-                  ? "Сервер обрабатывает диалог. Результат появится после проверки ответа модели."
+                  ? "Диалог оценивается. Результат появится автоматически."
                   : "Оценка не завершена. Итоговый балл не опубликован."}
               {evaluation.error && <p>{evaluation.error}</p>}
             </Notice>
@@ -445,7 +444,7 @@ export function ConversationDetail({
                 description={
                   evaluationAvailable
                     ? "Запустите оценку, чтобы получить проверяемые ответы по критериям и ссылки на реплики."
-                    : "Диалог доступен для просмотра. Оценки и доказательства появятся после подключения сервиса автоматической оценки."
+                    : "Диалог доступен для просмотра. Автоматическая оценка временно недоступна."
                 }
               />
             </div>
@@ -516,10 +515,13 @@ export function ConversationDetail({
                       const existing = appeals.find(
                         (a) => a.criterionId === criterion.id,
                       );
+                      const unassessable =
+                        result.assessmentStatus === "unassessable";
                       const passed =
-                        criterion.type === "flag"
+                        !unassessable &&
+                        (criterion.type === "flag"
                           ? result.value === 0
-                          : result.value === criterion.max;
+                          : result.value === criterion.max);
                       return (
                         <article
                           className="panel result-card"
@@ -527,9 +529,9 @@ export function ConversationDetail({
                         >
                           <div className="result-card-top">
                             <span
-                              className={`result-indicator ${result.value === null ? "na" : passed ? "pass" : "partial"}`}
+                              className={`result-indicator ${unassessable || result.value === null ? "na" : passed ? "pass" : "partial"}`}
                             >
-                              {result.value === null ? (
+                              {unassessable || result.value === null ? (
                                 "—"
                               ) : passed ? (
                                 <Check size={14} />
@@ -541,22 +543,39 @@ export function ConversationDetail({
                               <span>{String(index + 1).padStart(2, "0")}</span>
                               {criterion.title}
                             </h3>
-                            <strong>
-                              {result.value === null
-                                ? "N/A"
-                                : criterion.type === "flag"
-                                  ? result.value === 1
-                                    ? "Да · нарушение"
-                                    : "Нет · без нарушения"
-                                  : criterion.type === "binary"
+                            <strong
+                              style={
+                                unassessable
+                                  ? {
+                                      whiteSpace: "normal",
+                                      maxWidth: "8rem",
+                                      textAlign: "right",
+                                      color: "var(--forest)",
+                                    }
+                                  : undefined
+                              }
+                            >
+                              {unassessable
+                                ? "Недостаточно данных"
+                                : result.value === null
+                                  ? "N/A"
+                                  : criterion.type === "flag"
                                     ? result.value === 1
-                                      ? "Да"
-                                      : "Нет"
-                                    : `${result.value} / ${criterion.max}`}
+                                      ? "Да · нарушение"
+                                      : "Нет · без нарушения"
+                                    : criterion.type === "binary"
+                                      ? result.value === 1
+                                        ? "Да"
+                                        : "Нет"
+                                      : `${result.value} / ${criterion.max}`}
                             </strong>
                           </div>
                           <p>{result.explanation}</p>
-                          {result.value === null &&
+                          {unassessable && result.reviewReason && (
+                            <p>{result.reviewReason}</p>
+                          )}
+                          {!unassessable &&
+                            result.value === null &&
                             result.applicabilityReason && (
                               <p>Не применимо: {result.applicabilityReason}</p>
                             )}
@@ -603,7 +622,9 @@ export function ConversationDetail({
                           </div>
                           <div className="result-card-bottom">
                             <span>
-                              {criterion.type === "flag" ? (
+                              {unassessable ? (
+                                "Оценка не выставлена"
+                              ) : criterion.type === "flag" ? (
                                 "Флаг нарушения · вес 0 · не влияет на балл"
                               ) : (
                                 <>
@@ -645,7 +666,7 @@ export function ConversationDetail({
                                     : "Подтверждено"}
                                 <ArrowUpRight size={13} />
                               </button>
-                            ) : completed ? (
+                            ) : completed && !unassessable ? (
                               <button
                                 onClick={() => setAppealCriterion(criterion)}
                               >
@@ -663,9 +684,7 @@ export function ConversationDetail({
                   {completed && (
                     <Notice>
                       Оценка рассчитана по сохранённой версии чек-листа.
-                      Принятые апелляции учитываются в итоговом балле. Вклады
-                      показаны с округлением для чтения; итог рассчитывается
-                      сервером без промежуточного округления.
+                      Принятые апелляции учитываются в итоговом балле.
                     </Notice>
                   )}
                 </div>

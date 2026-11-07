@@ -303,8 +303,8 @@ function ReviewDialog({
                         ? "Клиент"
                         : m.speaker === "bot"
                           ? "Бот"
-                          : "Система"} ·{" "}
-                    {m.timestamp}
+                          : "Система"}{" "}
+                    · {m.timestamp}
                   </small>
                   {m.text}
                 </blockquote>
@@ -497,7 +497,7 @@ function DecisionPreview({
   if (!valid)
     return (
       <p className="field-hint">
-        Заполните решение, чтобы получить предварительный итог с сервера.
+        Заполните решение, чтобы увидеть предварительный итог.
       </p>
     );
   if (result?.key !== requestKey)

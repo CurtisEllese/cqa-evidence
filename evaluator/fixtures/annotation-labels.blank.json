@@ -1,0 +1,212 @@
+[
+  {
+    "labelId": "annotation-demo-ru-FILL_EXPERT_ID",
+    "caseId": "annotation-demo-ru",
+    "caseHash": "9dd514b7f397953f186f088a56404200c50bb40d3ef3967b3812f9846d39d51c",
+    "rubricHash": "88a2041d34bce9067cb4058853a346a7a04fbe2f1e2f1742b741c997f59a9336",
+    "annotatorId": "FILL_EXPERT_ID",
+    "phase": "independent",
+    "blindedToModel": true,
+    "independentOfOtherAnnotators": true,
+    "reviewedAt": "FILL_ISO_TIMESTAMP_WITH_TIMEZONE",
+    "basedOn": [],
+    "judgments": {
+      "greeting": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "discovery": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "identification": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "consultation": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "empathy": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "dialogue": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "closing": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "gross-errors": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      }
+    }
+  },
+  {
+    "labelId": "annotation-demo-kz-FILL_EXPERT_ID",
+    "caseId": "annotation-demo-kz",
+    "caseHash": "7facd1c42bd052b8ba16cd5ff25f61831441955bee87d0efa6c76a1a295b1834",
+    "rubricHash": "88a2041d34bce9067cb4058853a346a7a04fbe2f1e2f1742b741c997f59a9336",
+    "annotatorId": "FILL_EXPERT_ID",
+    "phase": "independent",
+    "blindedToModel": true,
+    "independentOfOtherAnnotators": true,
+    "reviewedAt": "FILL_ISO_TIMESTAMP_WITH_TIMEZONE",
+    "basedOn": [],
+    "judgments": {
+      "greeting": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "discovery": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "identification": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "consultation": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "empathy": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "dialogue": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "closing": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "gross-errors": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      }
+    }
+  },
+  {
+    "labelId": "annotation-demo-en-FILL_EXPERT_ID",
+    "caseId": "annotation-demo-en",
+    "caseHash": "03105b54b8d32955bafd553619a2d1951617a079553b71a5336e0810608ea849",
+    "rubricHash": "88a2041d34bce9067cb4058853a346a7a04fbe2f1e2f1742b741c997f59a9336",
+    "annotatorId": "FILL_EXPERT_ID",
+    "phase": "independent",
+    "blindedToModel": true,
+    "independentOfOtherAnnotators": true,
+    "reviewedAt": "FILL_ISO_TIMESTAMP_WITH_TIMEZONE",
+    "basedOn": [],
+    "judgments": {
+      "greeting": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "discovery": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "identification": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "consultation": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "empathy": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "dialogue": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "closing": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      },
+      "gross-errors": {
+        "status": "unassessable",
+        "value": null,
+        "reason": "",
+        "messageIds": [],
+        "sourceRefs": []
+      }
+    }
+  }
+]

@@ -1,0 +1,4 @@
+# Optional: use only for enterprise access / Dynamics integration.
+# PyJWT verifies signatures using cryptography; MSAL implements Microsoft OAuth.
+PyJWT[crypto]==2.15.1
+msal==1.39.0

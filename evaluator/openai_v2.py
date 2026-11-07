@@ -18,11 +18,12 @@ from pydantic import ValidationError
 
 from backend.contracts.v2 import EvaluationRequest, ModelResponse
 from backend.evaluator import AdapterFailure
+from backend.knowledge import knowledge_request_is_consistent
 from .budget import BudgetLedger
 from .prompt import SYSTEM
 from .settings import OpenAISettings, retry_delay
 
-PROMPT_VERSION = "openai-cqa-v2-wire2-na3"
+PROMPT_VERSION = "openai-cqa-v2-wire2-na3-knowledge-review2"
 ENDPOINT = "https://api.openai.com/v1/responses"
 
 
@@ -99,6 +100,10 @@ class OpenAIV2Evaluator:
 
     async def evaluate(self, request: EvaluationRequest) -> ModelResponse:
         snapshot = EvaluationRequest.model_validate_json(request.model_dump_json())
+        # The persisted server snapshot and wire input must agree. Reject detached
+        # unscoped facts before budget reservation/HTTP; never silently remove them.
+        if not knowledge_request_is_consistent(snapshot):
+            raise AdapterFailure("KNOWLEDGE_CONTEXT_INVALID")
         schema = openai_schema(ModelResponse.model_json_schema())
         payload = {
             "model": self.settings.model,

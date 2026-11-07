@@ -32,6 +32,8 @@ export type CriterionResult = {
   evidenceIds: string[];
   critical: boolean;
   applicabilityReason: string | null;
+  assessmentStatus?: "assessed" | "unassessable";
+  reviewReason?: string | null;
   evidence: Evidence[];
 };
 export type Evidence = {

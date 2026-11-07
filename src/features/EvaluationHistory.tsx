@@ -86,18 +86,15 @@ export function EvaluationHistory({
                   · {entry.total ?? "—"} / 100 ·{" "}
                   {new Date(entry.createdAt).toLocaleString("ru-RU")}
                 </summary>
-                <p>
-                  {entry.provenance
-                    ? `${entry.provenance.provider} · ${entry.provenance.model} · промпт ${entry.provenance.promptVersion}`
-                    : "Модель и промпт не записаны для этого запуска."}
-                </p>
                 {entry.error && <Notice kind="error">{entry.error}</Notice>}
                 {entry.results.map((result) => {
                   const criterion = entry.checklist.criteria.find(
                     (item) => item.id === result.criterionId,
                   );
                   const value =
-                    result.value === null
+                    result.assessmentStatus === "unassessable"
+                      ? "Недостаточно данных"
+                      : result.value === null
                       ? "N/A"
                       : criterion?.type === "binary" ||
                           criterion?.type === "flag"
@@ -111,7 +108,10 @@ export function EvaluationHistory({
                         {criterion?.title ?? result.criterionId}: {value}
                       </h3>
                       <p>{result.explanation}</p>
-                      {result.applicabilityReason && (
+                      {result.assessmentStatus === "unassessable" && result.reviewReason && (
+                        <p>Причина: {result.reviewReason}</p>
+                      )}
+                      {result.assessmentStatus !== "unassessable" && result.applicabilityReason && (
                         <p>N/A: {result.applicabilityReason}</p>
                       )}
                       <Button

@@ -23,8 +23,10 @@ def payload():
 
 
 def request():
-    return EvaluationRequest.model_validate(json.loads((Path(__file__).parents[1] /
-        "evaluator/fixtures/synthetic_v2.json").read_text(encoding="utf-8"))[0]["request"])
+    raw = json.loads((Path(__file__).parents[1] /
+        "evaluator/fixtures/synthetic_v2.json").read_text(encoding="utf-8"))[0]["request"]
+    raw["knowledgeFacts"] = []  # budget tests do not provide a verified product scope
+    return EvaluationRequest.model_validate(raw)
 
 
 def envelope(text="invalid"):
@@ -231,7 +233,7 @@ def test_cancelled_http_attempt_retains_reserve(tmp_path):
         judge = OpenAIV2Evaluator(OpenAISettings("test", "gpt-6-luna", min_interval_seconds=0),
                                  transport=httpx.MockTransport(pending), budget=ledger)
         task = asyncio.create_task(judge.evaluate(request()))
-        await entered.wait()
+        await asyncio.wait_for(entered.wait(), timeout=5)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task

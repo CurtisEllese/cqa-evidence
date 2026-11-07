@@ -158,6 +158,30 @@
           ],
           "default": null,
           "title": "Decidedat"
+        },
+        "createdBy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Createdby"
+        },
+        "decidedBy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decidedby"
         }
       },
       "required": [
@@ -578,6 +602,29 @@
           },
           "title": "Evidence",
           "type": "array"
+        },
+        "assessment_status": {
+          "default": "assessed",
+          "enum": [
+            "assessed",
+            "unassessable"
+          ],
+          "title": "Assessment Status",
+          "type": "string"
+        },
+        "review_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Review Reason"
         },
         "critical": {
           "title": "Critical",

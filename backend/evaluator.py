@@ -5,6 +5,7 @@ import copy
 import importlib
 import inspect
 import json
+from contextlib import nullcontext
 from decimal import Decimal
 from typing import Protocol
 from uuid import uuid4
@@ -12,6 +13,7 @@ from pydantic import ValidationError
 from .contracts.v2.models import EvaluationRequest, EvaluationProvenance, KnowledgeFact, ModelResponse
 from .contracts.v2 import to_wire_checklist
 from .repository import Conflict, dump, now
+from .knowledge import evaluation_knowledge, knowledge_request_is_consistent
 
 
 class Evaluator(Protocol):
@@ -21,7 +23,7 @@ class Evaluator(Protocol):
 class AdapterFailure(Exception):
     """Adapters map provider failures here; never include provider text or secrets."""
     def __init__(self, code='PROVIDER_UNAVAILABLE', *, retryable=False, retry_after=0):
-        self.code=code if code in ('PROVIDER_UNAVAILABLE','PROVIDER_RATE_LIMIT','MODEL_REFUSAL','BUDGET_EXCEEDED','BUDGET_CONFIGURATION','BUDGET_HISTORY_UNKNOWN','BUDGET_STORAGE_ERROR','MODEL_NOT_ALLOWED') else 'PROVIDER_UNAVAILABLE'
+        self.code=code if code in ('PROVIDER_UNAVAILABLE','PROVIDER_RATE_LIMIT','MODEL_REFUSAL','BUDGET_EXCEEDED','BUDGET_CONFIGURATION','BUDGET_HISTORY_UNKNOWN','BUDGET_STORAGE_ERROR','MODEL_NOT_ALLOWED','KNOWLEDGE_CONTEXT_INVALID') else 'PROVIDER_UNAVAILABLE'
         self.retryable=bool(retryable)
         self.retry_after=max(0,float(retry_after))
         super().__init__(self.code)
@@ -61,7 +63,9 @@ def inspect_output(raw,request):
         path=f'/results/{index}';criterion=criteria.get(result.criterionId)
         if not criterion: continue
         value=Decimal(result.value) if result.value is not None else None
-        if value is None:
+        if result.assessment_status == 'unassessable':
+            reviews.append(issue('CRITERION_UNASSESSABLE',path+'/review_reason',result.review_reason))
+        elif value is None:
             if not criterion.allowNA: errors.append(issue('NA_FORBIDDEN',path+'/value','N/A запрещено для этого критерия.'))
         elif value not in {Decimal(v) for v in criterion.allowedValues}:
             errors.append(issue('VALUE_NOT_ALLOWED',path+'/value','Значение отсутствует в шкале критерия.'))
@@ -102,14 +106,20 @@ def inspect_output(raw,request):
             verified.append(evidence)
             if reason: reviews.append(issue(reason,path+f'/evidence/{evidence_index}','Доказательство не подтверждено исходным диалогом.'))
             else: evidence_ids.extend(refs)
-        results.append({'criterionId':result.criterionId,'value':None if value is None else float(value),'explanation':result.explanation,'applicability_reason':result.applicability_reason,'evidence':verified,'evidenceIds':list(dict.fromkeys(evidence_ids)),'critical':criterion.type=='flag' and value==1 and bool(verified) and all(e['verification_status']=='verified' for e in verified)})
+        results.append({'criterionId':result.criterionId,'value':None if value is None else float(value),'explanation':result.explanation,'applicability_reason':result.applicability_reason,'assessment_status':result.assessment_status,'review_reason':result.review_reason,'evidence':verified,'evidenceIds':list(dict.fromkeys(evidence_ids)),'critical':criterion.type=='flag' and value==1 and bool(verified) and all(e['verification_status']=='verified' for e in verified)})
     return results,errors,reviews
 
 
 class EvaluationService:
-    def __init__(self,repo,adapter=None,timeout=60,*,knowledge_facts: tuple[KnowledgeFact, ...] = ()):
+    def __init__(self,repo,adapter=None,timeout=60,*,knowledge_facts: tuple[KnowledgeFact, ...] = (),
+                 scoped_knowledge_facts=(), knowledge_contexts=None):
         self.repo=repo;self.adapter=adapter;self.timeout=timeout;self.limit=asyncio.Semaphore(1)
         self._knowledge_facts = tuple(fact.model_copy(deep=True) for fact in knowledge_facts)
+        self._scoped_knowledge_facts = tuple(fact.model_copy(deep=True) for fact in scoped_knowledge_facts)
+        if any(not isinstance(key,tuple) or len(key)!=2 or not all(isinstance(x,str) and x for x in key)
+               for key in (knowledge_contexts or {})):
+            raise ValueError('knowledge_contexts must be keyed by (conversation_id, content_hash)')
+        self._knowledge_contexts = {key: value.model_copy(deep=True) for key,value in (knowledge_contexts or {}).items()}
         with repo.connect(write=True) as db:
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS evaluation_jobs(id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES conversations(id), content_hash TEXT NOT NULL, request TEXT NOT NULL, status TEXT NOT NULL, result TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -118,7 +128,10 @@ class EvaluationService:
 
     def recover(self):
         with self.repo.connect(write=True) as db:
+            batches = db.execute("SELECT 1 FROM sqlite_master WHERE name='batch_items'").fetchone()
             for row in db.execute("SELECT id,result FROM evaluation_jobs WHERE status IN ('queued','running')").fetchall():
+                if batches and db.execute('SELECT 1 FROM batch_items WHERE evaluation_id=?', (row['id'],)).fetchone():
+                    continue  # Durable batches recover their own snapshots, without replaying calls.
                 saved=db.execute('SELECT body FROM evaluations WHERE id=?',(row['id'],)).fetchone()
                 result=json.loads(saved[0] if saved else row['result'])
                 if saved: result.update(status='completed',error=None)
@@ -126,8 +139,11 @@ class EvaluationService:
                 db.execute('UPDATE evaluation_jobs SET status=?,result=?,updated_at=? WHERE id=?',(result['status'],dump(result),now(),row['id']))
                 self.repo.bump(db)
 
-    def create(self,conversation_id,checklist_version: int | None = None):
-        with self.repo.connect(write=True) as db:
+    def create(self,conversation_id,checklist_version: int | None = None, *, transaction=None):
+        with (nullcontext(transaction) if transaction is not None else self.repo.connect(write=True)) as db:
+            if transaction is None and db.execute("SELECT 1 FROM sqlite_master WHERE name='evaluation_batches'").fetchone():
+                if db.execute("SELECT 1 FROM evaluation_batches WHERE status<>'completed'").fetchone():
+                    raise Conflict('Сначала завершите сохранённую очередь набора.')
             row=db.execute('SELECT * FROM conversations WHERE id=? AND active=1',(conversation_id,)).fetchone()
             if not row: raise KeyError('Диалог не найден.')
             running=db.execute("SELECT 1 FROM evaluation_jobs WHERE conversation_id=? AND status IN ('queued','running')",(conversation_id,)).fetchone()
@@ -135,7 +151,8 @@ class EvaluationService:
             appealed=db.execute('SELECT 1 FROM appeals a JOIN evaluations e ON a.evaluation_id=e.id WHERE e.conversation_id=? LIMIT 1',(conversation_id,)).fetchone()
             if appealed: raise Conflict('У диалога есть апелляция. Повторная оценка недоступна; история сохранена.')
             conversation=json.loads(row['body']);checklist=self.repo.checklist(db,checklist_version)
-            request=EvaluationRequest.model_validate({'schema_version':'2.0','conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':to_wire_checklist(checklist),'messages':[{**m,'message_index':i} for i,m in enumerate(conversation['transcript'])],'knowledgeFacts':[fact.model_dump() for fact in self._knowledge_facts],'repair_feedback':None})
+            facts,knowledge_context=evaluation_knowledge(self._scoped_knowledge_facts,self._knowledge_contexts.get((conversation_id,row['content_hash'])),legacy_count=len(self._knowledge_facts))
+            request=EvaluationRequest.model_validate({'schema_version':'2.0','conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':to_wire_checklist(checklist),'messages':[{**m,'message_index':i} for i,m in enumerate(conversation['transcript'])],'knowledgeFacts':[fact.model_dump() for fact in facts],'knowledge_context':knowledge_context.model_dump(),'repair_feedback':None})
             identifier=str(uuid4());timestamp=now()
             result={'id':identifier,'conversationId':conversation_id,'conversationHash':row['content_hash'],'language':conversation['language'],'channel':conversation['channel'],'checklist':checklist,'results':[],'createdAt':timestamp,'source':'api','status':'queued','error':None}
             describe = getattr(self.adapter, 'describe', None)
@@ -165,12 +182,25 @@ class EvaluationService:
                 ON CONFLICT(job_id,attempt) DO UPDATE SET output=excluded.output,issues=excluded.issues''',
                 (identifier,attempt,output,dump(list(issues))))
 
-    async def run(self,identifier):
+    async def run(self,identifier,*,allow_retry=True):
         async with self.limit:
-            self.update(identifier,'running')
+            # Claim before I/O. Replayed scheduling can never repeat a started job.
+            with self.repo.connect(write=True) as db:
+                row=db.execute('SELECT status,result FROM evaluation_jobs WHERE id=?',(identifier,)).fetchone()
+                if not row or row['status']!='queued': return
+                body=json.loads(row['result']);body['status']='running'
+                db.execute("UPDATE evaluation_jobs SET status='running',result=?,updated_at=? WHERE id=?",(dump(body),now(),identifier))
+                self.repo.bump(db)
             with self.repo.connect() as db:
                 request=EvaluationRequest.model_validate_json(db.execute('SELECT request FROM evaluation_jobs WHERE id=?',(identifier,)).fetchone()[0])
-            for attempt in (1,2):
+            if not knowledge_request_is_consistent(request):
+                # Fail closed for historical queued jobs before any I/O. Completed
+                # records are never touched; new jobs already persist the safe input.
+                facts,audit=evaluation_knowledge((),None,legacy_count=len(request.knowledgeFacts))
+                request.knowledgeFacts=facts;request.knowledge_context=audit
+                with self.repo.connect(write=True) as db:
+                    db.execute('UPDATE evaluation_jobs SET request=? WHERE id=?',(request.model_dump_json(),identifier))
+            for attempt in ((1,2) if allow_retry else (1,)):
                 raw=None;errors=[];reviews=[]
                 try:
                     # Count the attempt before I/O, including timeouts and interrupted requests.
@@ -187,7 +217,7 @@ class EvaluationService:
                     except (ValueError,TypeError): serialized='null'
                     self.record_attempt(identifier,attempt,output=serialized,issues=errors+reviews)
                     if errors:
-                        if attempt==1:
+                        if attempt==1 and allow_retry:
                             request=EvaluationRequest.model_validate({**request.model_dump(),'repair_feedback':errors});continue
                         self.update(identifier,'failed_validation',results=[],error=error_payload('MODEL_OUTPUT_INVALID','Ответ модели не прошёл проверку после повторной попытки.',errors));return
                     if reviews:
@@ -204,7 +234,7 @@ class EvaluationService:
                     self.record_attempt(identifier,attempt,issues=[issue(code,'','Сервис модели не выполнил попытку оценки.')])
                     delay=exc.retry_after if isinstance(exc,AdapterFailure) else 0
                     # Long provider backoff is returned as a retryable failure, never shortened.
-                    if attempt==1 and retryable and delay<=30:
+                    if attempt==1 and allow_retry and retryable and delay<=30:
                         await asyncio.sleep(delay);continue
                     message = {
                         'BUDGET_EXCEEDED': 'Лимит расходов на оценку исчерпан. Новые запросы остановлены.',
@@ -212,6 +242,7 @@ class EvaluationService:
                         'BUDGET_HISTORY_UNKNOWN': 'Расход прошлых запросов не подтверждён. Перед продолжением нужна сверка журнала.',
                         'BUDGET_STORAGE_ERROR': 'Не удалось сохранить учёт расходов. Запрос к модели остановлен.',
                         'MODEL_NOT_ALLOWED': 'Для проекта разрешена только модель GPT-6 Luna.',
+                        'KNOWLEDGE_CONTEXT_INVALID': 'Применимость справочных фактов не подтверждена. Запрос к модели остановлен.',
                     }.get(code, 'Сервис модели не выполнил оценку.')
                     self.update(identifier,'failed',results=[],error=error_payload(code,message,retryable=retryable));return
                 except asyncio.CancelledError:

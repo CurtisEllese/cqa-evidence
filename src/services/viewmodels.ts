@@ -88,6 +88,8 @@ export function resultFromWire(
     explanation: result.explanation,
     critical: result.critical,
     applicabilityReason: result.applicability_reason,
+    assessmentStatus: result.assessment_status ?? "assessed",
+    reviewReason: result.review_reason ?? null,
     evidenceIds: [...evidenceIds],
     evidence: result.evidence.map((item) => ({
       kind: item.kind ?? "message",
@@ -119,6 +121,11 @@ export function evaluationFromWire(
   evaluation: Wire.EvaluationResult,
   messages: Message[] = [],
 ): Evaluation {
+  const status =
+    evaluation.status === "completed" &&
+    evaluation.results.some((result) => result.assessment_status === "unassessable")
+      ? "needs_review"
+      : evaluation.status;
   return {
     id: evaluation.id,
     checklist: checklistFromWire(evaluation.checklist),
@@ -127,12 +134,12 @@ export function evaluationFromWire(
     ),
     createdAt: evaluation.createdAt,
     source: evaluation.source,
-    status: evaluation.status,
+    status,
     error: evaluation.error?.message ?? null,
     errorCode: evaluation.error?.code ?? null,
     errorRetryable: evaluation.error?.retryable ?? null,
     total:
-      evaluation.status === "completed" && evaluation.score?.total != null
+      status === "completed" && evaluation.score?.total != null
         ? decimal(evaluation.score.total)
         : null,
     provenance: evaluation.provenance ?? null,

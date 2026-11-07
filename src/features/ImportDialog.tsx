@@ -85,8 +85,7 @@ export function ImportDialog({
       }}
     >
       <p className="modal-intro">
-        Добавьте транскрипты из набора организаторов. Исходные реплики и метки
-        времени сохранятся.
+        Загрузите диалоги из подключённого источника или файла.
       </p>
       <section className="dataset-import" aria-label="Загрузка по группе">
         <DatasetSummary />
@@ -126,7 +125,7 @@ export function ImportDialog({
           </Button>
         </form>
         <p id="dataset-group-hint" className="dataset-import-hint">
-          Введите только идентификатор группы, без ссылки организатора.
+          Укажите идентификатор набора в подключённом источнике.
         </p>
         {groupAttempted && loading && (
           <p role="status">Загружаем группу «{groupId.trim()}»…</p>
@@ -138,7 +137,7 @@ export function ImportDialog({
         )}
         {groupLoaded && <p role="status">Набор загружен.</p>}
       </section>
-      <h3 className="manual-import-title">Ручной импорт JSON</h3>
+      <h3 className="manual-import-title">Загрузка из файла</h3>
       <div
         className={`dropzone ${dragging ? "dragging" : ""}`}
         onDragOver={(e) => {
@@ -154,7 +153,7 @@ export function ImportDialog({
       >
         <FileJson size={32} />
         <h3>{filename || "Перетащите JSON-файл сюда"}</h3>
-        <p>Ответ API организаторов или массив записей · до 5 МБ</p>
+        <p>Файл диалогов в формате JSON · до 5 МБ</p>
         <Button disabled={busy} onClick={() => fileInput.current?.click()}>
           <Upload size={16} />
           Выбрать файл
@@ -191,8 +190,8 @@ export function ImportDialog({
         </p>
       )}
       <Notice>
-        Сервер проверит файл и сохранит диалоги. Для автоматической оценки
-        требуется подключённый сервис ИИ.
+        После загрузки диалоги появятся в списке. Оценку можно запустить
+        отдельно.
       </Notice>
       <div className="modal-actions">
         <Button disabled={busy} onClick={onClose}>

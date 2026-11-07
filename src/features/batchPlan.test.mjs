@@ -15,6 +15,30 @@ const compiled = ts.transpileModule(source, {
 const { planBatch, isBatchBlockingFailure } = await import(
   `data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`
 );
+
+test("unknown provider outcomes are excluded from both all mode and mass retry", () => {
+  const uncertain = [
+    "BATCH_OUTCOME_UNKNOWN",
+    "PROVIDER_UNAVAILABLE",
+    "PROVIDER_CONNECTION_ERROR",
+    "PROVIDER_TIMEOUT",
+    "EVALUATOR_ERROR",
+    "WORKER_INTERRUPTED",
+  ];
+  const data = {
+    conversations: uncertain.map((errorCode) => ({
+      id: errorCode,
+      evaluation: { status: "failed", errorCode },
+    })),
+    appeals: [],
+  };
+  for (const mode of ["all", "new"]) {
+    const plan = planBatch(data, [], "workspace:", mode);
+    assert.deepEqual(plan.candidates, []);
+    assert.deepEqual(plan.failed, []);
+    assert.equal(plan.selected.length, uncertain.length);
+  }
+});
 test("global budget/provider errors pause the queue irrespective of retry hints", () => {
   for (const code of [
     "BUDGET_EXCEEDED",

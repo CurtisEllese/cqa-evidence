@@ -214,6 +214,7 @@ def test_evaluation_appeal_manual_import_and_groups_survive_refresh_and_restart(
         assert repo.metadata(db, "dataset:CONTROL")["total"] == 10
         assert db.execute("SELECT COUNT(*) FROM evaluation_jobs").fetchone()[0] == 1
 
+    client.exit_stack.close()  # A real restart releases the previous worker first.
     with TestClient(create_app(*paths, organizer_url="")) as restarted:
         expected = deepcopy(state)
         expected["evaluationAvailable"] = False

@@ -19,6 +19,11 @@ from .media import audio_response, AudioProxyError
 from .domain import MAX_IMPORT_BYTES
 from .knowledge import load_knowledge_facts
 from .submission import build_submission
+from .batches import BatchService, WorkerLock
+from .contracts.v2 import StartBatchRequest, BatchCommand, EvaluationBatch, CurrentBatch
+from .security import SecuritySettings, EntraVerifier
+from .security_access import install_enterprise_access
+from .security_repository import AuditedRepository
 
 ROOT=Path(__file__).resolve().parent.parent
 load_dotenv(ROOT/'.env.local')
@@ -28,11 +33,15 @@ MAX_BODY=5*1024*1024
 # Keep transport bounded while leaving room for the versioned import envelope.
 MAX_IMPORT_BODY=6*MAX_IMPORT_BYTES+1024
 
-def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator=None,evaluation_timeout=60):
+def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator=None,evaluation_timeout=60,security_settings=None,token_verifier=None):
+    security_settings = security_settings or SecuritySettings.from_env()
+    # Validate mode/config and crypto dependency before opening a database.
+    if security_settings.mode == 'entra' and token_verifier is None:
+        token_verifier = EntraVerifier(security_settings)
     facts_path = os.getenv('KNOWLEDGE_FACTS_PATH', '').strip()
     facts = load_knowledge_facts(ROOT / facts_path if facts_path else None)
     db_path=database_path or os.getenv('DATABASE_PATH',str(ROOT/'local-data/cqa.sqlite'))
-    repo=Repository(db_path)
+    repo=AuditedRepository(db_path, enterprise=security_settings.mode == 'entra')
     source_url=organizer_url if organizer_url is not None else os.getenv('ORGANIZER_DEV_URL','')
     snapshot_path=Path(cache_path) if cache_path is not None else ROOT/'local-data/organizer-DEV.json'
     if not repo.has_dataset() and snapshot_path.is_file():
@@ -42,19 +51,29 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
         except (ValueError,KeyError,TypeError):
             pass # Corrupt old cache is refetched; never fabricate records.
     service=EvaluationService(repo,evaluator or load_adapter(os.getenv('EVALUATOR_ADAPTER','')),timeout=evaluation_timeout,knowledge_facts=facts)
+    batches=BatchService(repo,service)
+    worker_lock=WorkerLock(repo.path)
     @asynccontextmanager
     async def lifespan(app):
-        service.recover()
-        yield
+        worker_lock.acquire()
+        try:
+            batches.recover()
+            service.recover()
+            yield
+        finally:
+            await batches.close()
+            worker_lock.release()
     app=FastAPI(title='CQA Evidence API',version='2.0',lifespan=lifespan,docs_url='/api/docs',openapi_url='/api/openapi.json',redoc_url=None,responses={code:{'model':ApiError} for code in (400,403,404,405,409,413,422,500,502,503)})
     app.state.repo=repo
     app.state.evaluator=service
+    app.state.batches=batches
+    app.state.security_settings=security_settings
     def workspace():
         return to_wire_state({**repo.state(wire_decimals=True),'evaluationAvailable':service.adapter is not None})
     def failure(code,message,status,details=(),headers=None):
         return JSONResponse(error_payload(code,message,details,retryable=status in (429,502,503,504)),status_code=status,headers=headers)
     refresh_lock=asyncio.Lock()
-    allowed_origins=set(os.getenv('APP_ORIGINS','http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:4173,http://localhost:4173,http://127.0.0.1:8000,http://localhost:8000').split(','))
+    allowed_origins=set(security_settings.origins)
 
     @app.middleware('http')
     async def boundary(request,call_next):
@@ -62,7 +81,7 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             origin=request.headers.get('origin')
             if origin and origin not in allowed_origins: return failure('ORIGIN_FORBIDDEN','Источник запроса не разрешён.',403)
             host=request.url.hostname
-            if host not in ('127.0.0.1','localhost','testserver','::1'): return failure('HOST_FORBIDDEN','Сервер доступен только локально.',403)
+            if security_settings.mode == 'local' and host not in ('127.0.0.1','localhost','::1'): return failure('HOST_FORBIDDEN','Сервер доступен только локально.',403)
             if request.method in ('POST','PUT','PATCH'):
                 is_import=request.method=='POST' and request.url.path=='/api/import'
                 body_limit=MAX_IMPORT_BODY if is_import else MAX_BODY
@@ -174,6 +193,34 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
         background.add_task(service.run,result['id'])
         return to_wire_evaluation(result)
 
+    @app.get('/api/batches/current',response_model=CurrentBatch)
+    def current_batch(): return batches.current()
+
+    @app.get('/api/batches/{batch_id}',response_model=EvaluationBatch)
+    def batch(batch_id:str): return batches.get(batch_id)
+
+    @app.post('/api/batches',status_code=202,response_model=EvaluationBatch)
+    async def start_batch(body:StartBatchRequest):
+        if service.adapter is None: raise HTTPException(503,'Сервис ИИ-оценки ещё не подключён.')
+        result=batches.create(body)
+        batches.kick(result['id'])
+        return result
+
+    @app.post('/api/batches/{batch_id}/stop',response_model=EvaluationBatch)
+    def stop_batch(batch_id:str,body:BatchCommand):
+        return batches.stop(batch_id,body.expectedRevision)
+
+    @app.post('/api/batches/{batch_id}/resume',response_model=EvaluationBatch)
+    async def resume_batch(batch_id:str,body:BatchCommand):
+        if service.adapter is None: raise HTTPException(503,'Сервис ИИ-оценки ещё не подключён.')
+        result=batches.resume(batch_id,body.expectedRevision)
+        batches.kick(result['id'])
+        return result
+
+    @app.post('/api/batches/{batch_id}/cancel',response_model=EvaluationBatch)
+    def cancel_batch(batch_id:str,body:BatchCommand):
+        return batches.cancel(batch_id,body.expectedRevision)
+
     @app.get('/api/evaluations/{evaluation_id}',response_model=EvaluationResult,response_model_exclude_unset=True)
     def evaluation(evaluation_id:str):
         with repo.connect() as db:
@@ -187,8 +234,8 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             return to_wire_evaluation(result,row['conversation_id'],row['content_hash'],messages)
 
     @app.post('/api/appeals',response_model=WorkspaceState,response_model_exclude_unset=True)
-    def create_appeal(body:CreateAppealRequest):
-        repo.create_appeal(body.model_dump(exclude={'schema_version'}));return workspace()
+    def create_appeal(body:CreateAppealRequest,request:Request):
+        repo.create_appeal(body.model_dump(exclude={'schema_version'}),actor=request.state.principal);return workspace()
 
     def decision_body(body):
         value=body.model_dump(exclude_unset=True,exclude={'schema_version'})
@@ -196,8 +243,8 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
         return value
 
     @app.post('/api/appeals/{appeal_id}/decision',response_model=WorkspaceState,response_model_exclude_unset=True)
-    def decide_appeal(appeal_id:str,body:DecideAppealRequest):
-        repo.decide_appeal(appeal_id,decision_body(body));return workspace()
+    def decide_appeal(appeal_id:str,body:DecideAppealRequest,request:Request):
+        repo.decide_appeal(appeal_id,decision_body(body),actor=request.state.principal);return workspace()
 
     @app.post('/api/appeals/{appeal_id}/preview',response_model=Score,response_model_exclude_unset=True)
     def preview_appeal(appeal_id:str,body:DecideAppealRequest):
@@ -263,4 +310,5 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
         if target.is_file(): return FileResponse(target)
         if (dist/'index.html').is_file(): return FileResponse(dist/'index.html')
         raise HTTPException(404,'Соберите фронтенд командой npm run build или запустите npm run dev.')
+    install_enterprise_access(app, security_settings, verifier=token_verifier)
     return app

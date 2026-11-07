@@ -77,6 +77,7 @@ def test_explicit_old_and_new_versions_and_default_reach_adapter_without_alterin
     assert old_scale.allowedValues == ["0", "5", "10", "15", "20"]
     assert new_scale.allowedValues == ["0", "2", "5"]
     assert client.get("/api/evaluations/" + original.id).json() == original.model_dump()
+    client.exit_stack.close()  # A restart releases the first backend's single-worker lock.
     with TestClient(create_app(*paths, organizer_url="")) as restarted:
         assert EvaluationResult.model_validate(restarted.get("/api/evaluations/" + older.id).json()) == older
         assert EvaluationResult.model_validate(restarted.get("/api/evaluations/" + newer.id).json()) == newer
@@ -130,8 +131,9 @@ def test_version_selection_cannot_bypass_appeal_guard(setup, decision):
     assert EvaluationResult.model_validate(client.get("/api/evaluations/" + original.id).json()) == original
 
 
-def test_facts_pass_through_http_pipeline_and_are_stable_across_file_changes_and_restart(setup, tmp_path, monkeypatch):
-    _, _, calls, paths, adapter = setup
+def test_unscoped_facts_are_excluded_before_snapshot_across_restart(setup, tmp_path, monkeypatch):
+    initial_client, _, calls, paths, adapter = setup
+    initial_client.exit_stack.close()
     facts_path = tmp_path / "approved-synthetic.json"
     original_facts = json.loads(FACTS_FIXTURE.read_text())
     facts_path.write_text(json.dumps(original_facts, ensure_ascii=False), encoding="utf-8")
@@ -139,15 +141,17 @@ def test_facts_pass_through_http_pipeline_and_are_stable_across_file_changes_and
     app = create_app(*paths, organizer_url="", evaluator=adapter)
     with TestClient(app) as client:
         first = evaluate(client)
-        assert [f.model_dump() for f in calls[-1].knowledgeFacts] == original_facts
+        assert calls[-1].knowledgeFacts == []
+        assert calls[-1].knowledge_context.status == "excluded"
+        assert "legacy_scope_unverified" in calls[-1].knowledge_context.reason
         changed_facts = deepcopy(original_facts)
         changed_facts[0]["text"] = "Обновлённый синтетический факт. Не правило Freedom."
         facts_path.write_text(json.dumps(changed_facts), encoding="utf-8")
         second = evaluate(client)
-        assert [f.model_dump() for f in calls[-1].knowledgeFacts] == original_facts
+        assert calls[-1].knowledgeFacts == []
     with TestClient(create_app(*paths, organizer_url="", evaluator=adapter)) as restarted:
         third = evaluate(restarted)
-        assert [f.model_dump() for f in calls[-1].knowledgeFacts] == changed_facts
+        assert calls[-1].knowledgeFacts == []
         assert EvaluationResult.model_validate(restarted.get("/api/evaluations/" + first.id).json()) == first
         assert EvaluationResult.model_validate(restarted.get("/api/evaluations/" + second.id).json()) == second
         with restarted.app.state.repo.connect() as db:
@@ -155,11 +159,12 @@ def test_facts_pass_through_http_pipeline_and_are_stable_across_file_changes_and
                 request = EvaluationRequest.model_validate_json(db.execute(
                     "SELECT request FROM evaluation_jobs WHERE id=?", (result.id,),
                 ).fetchone()[0])
-                assert [f.model_dump() for f in request.knowledgeFacts] == expected
+                assert request.knowledgeFacts == []
+                assert request.knowledge_context.excluded_fact_count == len(expected)
     assert len(calls) == 3
 
 
-def test_pending_job_and_repair_use_original_fact_snapshot(setup, tmp_path):
+def test_pending_job_and_repair_use_safe_empty_knowledge_snapshot(setup, tmp_path):
     _, app, _, _, _ = setup
     path = tmp_path / "facts.json"
     path.write_bytes(FACTS_FIXTURE.read_bytes())
@@ -169,7 +174,7 @@ def test_pending_job_and_repair_use_original_fact_snapshot(setup, tmp_path):
 
     async def adapter(request):
         calls.append([fact.model_dump() for fact in request.knowledgeFacts])
-        request.knowledgeFacts[0].text = "Adapter tried to modify a synthetic fact."
+        request.knowledgeFacts.append(facts[0].model_copy(deep=True))
         return "invalid JSON" if len(calls) == 1 else model_output(request)
 
     service = EvaluationService(app.state.repo, adapter, knowledge_facts=facts)
@@ -178,7 +183,8 @@ def test_pending_job_and_repair_use_original_fact_snapshot(setup, tmp_path):
     path.write_text("[]")
     asyncio.run(service.run(job["id"]))
     assert service.get(job["id"])["status"] == "completed"
-    assert calls == [[original], [original]]
+    assert calls == [[], []]
     with app.state.repo.connect() as db:
         snapshot = json.loads(db.execute("SELECT request FROM evaluation_jobs WHERE id=?", (job["id"],)).fetchone()[0])
-        assert snapshot["knowledgeFacts"] == [original]
+        assert snapshot["knowledgeFacts"] == []
+        assert snapshot["knowledge_context"]["status"] == "excluded"

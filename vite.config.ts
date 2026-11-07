@@ -5,6 +5,7 @@ export default defineConfig(({ mode }) => {
   const proxy = { "/api": { target: env.BACKEND_URL || "http://127.0.0.1:8000", changeOrigin: true } };
   return {
     plugins: [react()],
+    build: { rollupOptions: { input: { main: "index.html", auth: "auth-redirect.html" } } },
     server: {
       proxy,
       // Test databases and Python runtimes change independently of the UI.

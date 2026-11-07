@@ -296,6 +296,29 @@
           "title": "Evidence",
           "type": "array"
         },
+        "assessment_status": {
+          "default": "assessed",
+          "enum": [
+            "assessed",
+            "unassessable"
+          ],
+          "title": "Assessment Status",
+          "type": "string"
+        },
+        "review_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Review Reason"
+        },
         "critical": {
           "title": "Critical",
           "type": "boolean"

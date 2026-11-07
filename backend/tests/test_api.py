@@ -54,6 +54,7 @@ def test_initial_state_and_restart_share_database(setup):
     assert all(isinstance(c['weight'],str) and isinstance(c['max'],str) and all(isinstance(value,str) for value in c['allowedValues']) for c in rubric['criteria'])
     response=client.post('/api/checklists/cqa-official/versions',json=wire(checklist=rubric,expectedVersion=1))
     assert response.status_code==200 and response.json()['data']['checklist']['version']==2
+    client.exit_stack.close()  # Shut down the first worker before a real restart.
     app2=create_app(path/'test.sqlite',cache,organizer_url='')
     with TestClient(app2) as other:
         assert other.get('/api/state').json()['data']['checklist']['name']=='Серверная версия'
@@ -168,6 +169,7 @@ def test_changed_seed_on_restart_does_not_rewrite_saved_checklist_or_scores(setu
     replacement=initial_checklist()
     replacement['criteria'][4]['section']='Другая секция в новой поставке'
     monkeypatch.setattr('backend.repository.initial_checklist',lambda:copy.deepcopy(replacement))
+    client.exit_stack.close()  # Restart is sequential, not two owners of one database.
     with TestClient(create_app(path/'test.sqlite',cache,organizer_url='')) as restarted:
         assert restarted.get('/api/checklists').json()==old_checklist
         assert restarted.get('/api/conversations/'+conversation['id']).json()==saved

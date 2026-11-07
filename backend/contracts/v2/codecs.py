@@ -98,6 +98,8 @@ def _wire_result(result, messages=None):
         "criterionId": result["criterionId"], "value": None if value is None else decimal_text(value),
         "explanation": result["explanation"],
         "applicability_reason": result.get("applicability_reason", result["explanation"] if value is None else None),
+        "assessment_status": result.get("assessment_status", "assessed"),
+        "review_reason": result.get("review_reason"),
         "evidence": evidence, "critical": result.get("critical", False),
     }
 
@@ -130,7 +132,7 @@ def to_wire_evaluation(evaluation: dict | None, conversation_id=None, conversati
         raise ValueError("Evaluation wire conversion requires conversation ID and content hash")
     results = [_wire_result(result, messages) for result in evaluation.get("results", [])]
     status = evaluation.get("status", "completed")
-    if status == "completed" and any(not result["evidence"] or any(item.get("verification_status") != "verified" for item in result["evidence"]) for result in results):
+    if status == "completed" and any(result["assessment_status"] != "assessed" or not result["evidence"] or any(item.get("verification_status") != "verified" for item in result["evidence"]) for result in results):
         status = "needs_review"
     score = None
     if status == "completed":
@@ -151,8 +153,9 @@ def to_wire_appeal(appeal: dict) -> dict:
     if appeal.get("schema_version") == VERSION:
         return _dump(AppealDTO.model_validate(appeal))
     item = {key: appeal[key] for key in ("id", "conversationId", "criterionId", "evaluationId", "comment", "status", "createdAt")}
-    item.update(schema_version=VERSION, originalValue=None if appeal["originalValue"] is None else decimal_text(appeal["originalValue"]))
-    for key in ("decision", "decidedAt"):
+    item.update(schema_version=VERSION, originalValue=None if appeal["originalValue"] is None else decimal_text(appeal["originalValue"]),
+                createdBy=appeal.get("createdBy"), decidedBy=appeal.get("decidedBy"))
+    for key in ("decision", "decidedAt", "createdBy", "decidedBy"):
         if key in appeal:
             item[key] = appeal[key]
     if "newValue" in appeal:

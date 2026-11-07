@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ru">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Вход · Freedom Quality</title></head>
+  <body>
+    <p id="status" role="status">Завершаем вход…</p>
+    <script type="module">
+      import { broadcastResponseToMainFrame } from "@azure/msal-browser/redirect-bridge";
+      broadcastResponseToMainFrame().catch(() => {
+        document.getElementById("status").textContent = "Не удалось завершить вход. Закройте это окно и повторите попытку.";
+      });
+    </script>
+  </body>
+</html>

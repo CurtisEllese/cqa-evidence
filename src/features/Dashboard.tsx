@@ -52,9 +52,9 @@ export function Dashboard({
   return (
     <>
       <PageHeading
-        eyebrow="CONVERSATION QUALITY ANALYTICS"
-        title="Качество начинается с диалога"
-        description="Всё, что нужно для уверенного и внимательного сервиса."
+        eyebrow="КОНТРОЛЬ КАЧЕСТВА"
+        title="Обзор качества"
+        description="Результаты оценок и апелляции команды."
         actions={
           <Button variant="primary" onClick={onImport}>
             <MessageSquare size={17} />
@@ -122,7 +122,7 @@ export function Dashboard({
               <p>
                 {evaluationAvailable
                   ? "Откройте диалог и запустите оценку. Здесь появятся проверенные результаты."
-                  : "Диалоги доступны для просмотра. Для автоматической оценки подключите сервис ИИ."}
+                  : "Диалоги доступны для просмотра. Автоматическая оценка временно недоступна."}
               </p>
               {evaluationAvailable && (
                 <Button onClick={() => onNavigate("conversations")}>

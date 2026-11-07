@@ -18,9 +18,14 @@ import {
   decideAppealRequest,
   startEvaluation,
   fetchEvaluation,
+  fetchCurrentBatch,
+  startBatchRequest,
+  commandBatch,
+  ApiRequestError,
 } from "./services/api";
 import type { ServerState, DatasetInfo } from "./services/api";
-import { isBatchBlockingFailure } from "./features/batchPlan";
+import type { EvaluationBatch, StartBatchRequest } from "./services/api";
+export type { EvaluationBatch, BatchItem } from "./services/api";
 
 const LEGACY_KEY = "freedom-quality-organizer-v2";
 export type ConversationFilters = {
@@ -31,25 +36,6 @@ export type ConversationFilters = {
   page: number;
   filtersOpen: boolean;
   ascending: boolean;
-};
-export type BatchItem = {
-  id: string;
-  status:
-    | "queued"
-    | "running"
-    | "completed"
-    | "needs_review"
-    | "failed"
-    | "uncertain";
-  error?: string;
-};
-export type EvaluationBatch = {
-  group: string;
-  version: number;
-  items: BatchItem[];
-  running: boolean;
-  stopping: boolean;
-  blockedReason?: string;
 };
 const EMPTY_DATA: AppData = {
   conversations: [],
@@ -98,6 +84,10 @@ type Store = {
   batch: EvaluationBatch | null;
   startBatch: (group: string, ids: string[], version: number) => Promise<void>;
   stopBatch: () => void;
+  resumeBatch: () => void;
+  cancelBatch: () => void;
+  batchReady: boolean;
+  batchError: string;
   data: AppData;
   dataset: DatasetInfo | null;
   datasets: DatasetInfo[];
@@ -145,8 +135,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ascending: false,
   });
   const [batch, setBatch] = useState<EvaluationBatch | null>(null);
-  const batchRunning = useRef(false);
-  const batchStop = useRef(false);
+  const currentBatch = useRef<EvaluationBatch | null>(null);
+  const [batchReady, setBatchReady] = useState(false);
+  const [batchError, setBatchError] = useState("");
+  const batchCommandPending = useRef(false);
+  const pendingBatchStart = useRef<StartBatchRequest | null>(null);
+  const lastBatchWorkspace = useRef("");
+  const acceptBatch = useCallback((incoming: EvaluationBatch | null) => {
+    const current = currentBatch.current;
+    if (
+      current &&
+      (!incoming ||
+        incoming.createdAt < current.createdAt ||
+        (incoming.id === current.id && incoming.revision < current.revision))
+    )
+      return;
+    currentBatch.current = incoming;
+    setBatch(incoming);
+    setBatchReady(true);
+    setBatchError("");
+  }, []);
   const currentSession = useRef<ServerState | null>(null);
   const [session, setSession] = useState<ServerState | null>(null);
   const [toast, setToast] = useState("");
@@ -184,7 +192,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setLoadError("");
       if (retry || !initialization) initialization = initialize();
       try {
-        const result = await initialization;
+        const [result, restoredBatch] = await Promise.all([
+          initialization,
+          fetchCurrentBatch(),
+        ]);
+        acceptBatch(restoredBatch);
+        if (restoredBatch && restoredBatch.status !== "completed")
+          setSelectedGroup(restoredBatch.group);
         acceptState(result.state);
         setLoadError(result.migrationError);
       } catch (error) {
@@ -198,7 +212,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     },
-    [acceptState],
+    [acceptState, acceptBatch],
   );
   useEffect(() => {
     void load();
@@ -241,7 +255,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         else
           throw new Error(
             job.error ??
-              "Оценка не завершена. Проверьте сообщение сервера и повторите попытку.",
+              "Оценка не завершена. Проверьте причину ошибки и повторите попытку.",
           );
         return job;
       } catch (error) {
@@ -267,10 +281,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return task;
   }
   useEffect(() => {
+    if (!batchReady) return;
     for (const conversation of session?.data.conversations ?? []) {
       if (
-        conversation.evaluation?.status === "queued" ||
-        conversation.evaluation?.status === "running"
+        !currentBatch.current?.items.some(
+          (item) => item.evaluationId === conversation.evaluation?.id,
+        ) &&
+        (conversation.evaluation?.status === "queued" ||
+          conversation.evaluation?.status === "running")
       ) {
         void trackEvaluation(conversation.id, conversation.evaluation).catch(
           () => {
@@ -279,122 +297,103 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
       }
     }
-  }, [session]);
+  }, [session, batchReady]);
   useEffect(
     () => () => {
-      batchStop.current = true;
       for (const controller of controllers.current) controller.abort();
     },
     [],
   );
+  // Observation only: mounting, reloading or opening a second tab never submits work.
+  useEffect(() => {
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    async function observe() {
+      try {
+        const incoming = await fetchCurrentBatch(controller.signal);
+        if (controller.signal.aborted) return;
+        acceptBatch(incoming);
+        const snapshotKey = incoming
+          ? `${incoming.id}:${incoming.revision}`
+          : "";
+        if (incoming && lastBatchWorkspace.current !== snapshotKey) {
+          const workspace = await fetchWorkspace();
+          if (!controller.signal.aborted) {
+            acceptState(workspace);
+            lastBatchWorkspace.current = snapshotKey;
+          }
+        }
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setBatchError(
+            error instanceof Error
+              ? error.message
+              : "Не удалось получить очередь.",
+          );
+      } finally {
+        if (!controller.signal.aborted) timer = setTimeout(observe, 1000);
+      }
+    }
+    void observe();
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [acceptBatch, acceptState]);
   async function startBatch(group: string, ids: string[], version: number) {
     if (
-      batchRunning.current ||
-      evaluationRequests.current.size ||
+      batchCommandPending.current ||
+      !batchReady ||
+      batchError ||
       !currentSession.current?.evaluationAvailable
     )
       return;
-    const allowed = [...new Set(ids)].filter(
-      (id) =>
-        currentSession.current?.data.conversations.some((c) => c.id === id) &&
-        !currentSession.current?.data.appeals.some(
-          (a) => a.conversationId === id,
-        ),
-    );
-    if (!allowed.length) return;
-    batchRunning.current = true;
-    batchStop.current = false;
-    setBatch({
-      group,
-      version,
-      items: allowed.map((id) => ({ id, status: "queued" })),
-      running: true,
-      stopping: false,
-    });
-    const updateItem = (id: string, patch: Partial<BatchItem>) =>
-      setBatch((current) =>
-        current
-          ? {
-              ...current,
-              items: current.items.map((item) =>
-                item.id === id ? { ...item, ...patch } : item,
-              ),
-            }
-          : current,
-      );
+    batchCommandPending.current = true;
     try {
-      for (const id of allowed) {
-        if (batchStop.current) break;
-        updateItem(id, { status: "running" });
-        const previousId = currentSession.current?.data.conversations.find(
-          (c) => c.id === id,
-        )?.evaluation?.id;
-        try {
-          const existing = currentSession.current?.data.conversations.find(
-            (c) => c.id === id,
-          )?.evaluation;
-          const result = await trackEvaluation(
-            id,
-            existing && ["queued", "running"].includes(existing.status)
-              ? existing
-              : undefined,
-            version,
-          );
-          if (!result) {
-            batchStop.current = true;
-            updateItem(id, {
-              status: "uncertain",
-              error:
-                "Проверка прервана. Обновите данные перед повторным запуском.",
-            });
-            break;
-          }
-          updateItem(id, {
-            status:
-              result.status === "needs_review" ? "needs_review" : "completed",
-          });
-        } catch (error) {
-          const evaluation = currentSession.current?.data.conversations.find(
-            (c) => c.id === id,
-          )?.evaluation;
-          const knownFailure =
-            evaluation &&
-            evaluation.id !== previousId &&
-            ["failed", "failed_validation", "retryable"].includes(
-              evaluation.status,
-            );
-          updateItem(id, {
-            status: knownFailure ? "failed" : "uncertain",
-            error:
-              error instanceof Error
-                ? error.message
-                : "Не удалось получить результат",
-          });
-          if (knownFailure && isBatchBlockingFailure(evaluation)) {
-            setBatch((current) =>
-              current
-                ? {
-                    ...current,
-                    blockedReason:
-                      evaluation.error ??
-                      "Проверьте доступность сервиса модели перед продолжением.",
-                  }
-                : current,
-            );
-            batchStop.current = true;
-            break;
-          }
-          if (!knownFailure) {
-            batchStop.current = true;
-            break;
-          }
-        }
+      // Retain an unresolved request's exact identity for a safe explicit retry.
+      const body = pendingBatchStart.current ?? {
+        schema_version: "2.0" as const,
+        requestId: crypto.randomUUID(),
+        group,
+        conversationIds: [...new Set(ids)],
+        checklistVersion: version,
+        expectedRevision: currentSession.current.revision,
+      };
+      pendingBatchStart.current = body;
+      const incoming = await startBatchRequest(body);
+      pendingBatchStart.current = null;
+      acceptBatch(incoming);
+      acceptState(await fetchWorkspace());
+    } catch (error) {
+      setToast(
+        error instanceof Error
+          ? error.message
+          : "Не удалось запустить очередь.",
+      );
+      // A confirmed rejection allows the user to review a fresh composition.
+      if (error instanceof ApiRequestError) pendingBatchStart.current = null;
+      try {
+        acceptBatch(await fetchCurrentBatch());
+        acceptState(await fetchWorkspace());
+      } catch {
+        /* polling reconnects */
       }
     } finally {
-      batchRunning.current = false;
-      setBatch((current) =>
-        current ? { ...current, running: false, stopping: false } : current,
+      batchCommandPending.current = false;
+    }
+  }
+  async function changeBatch(command: "stop" | "resume" | "cancel") {
+    const current = currentBatch.current;
+    if (!current || batchCommandPending.current) return;
+    batchCommandPending.current = true;
+    try {
+      acceptBatch(await commandBatch(current.id, command, current.revision));
+    } catch (error) {
+      setToast(
+        error instanceof Error ? error.message : "Не удалось изменить очередь.",
       );
+    } finally {
+      batchCommandPending.current = false;
     }
   }
   async function refreshDataset(groupId = "DEV") {
@@ -430,11 +429,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         batch,
         startBatch,
         stopBatch: () => {
-          batchStop.current = true;
-          setBatch((current) =>
-            current ? { ...current, stopping: true } : current,
-          );
+          void changeBatch("stop");
         },
+        resumeBatch: () => {
+          void changeBatch("resume");
+        },
+        cancelBatch: () => {
+          void changeBatch("cancel");
+        },
+        batchReady,
+        batchError,
         data: session?.data ?? EMPTY_DATA,
         dataset: session?.dataset ?? null,
         datasets: session?.datasets ?? [],
@@ -464,7 +468,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         saveChecklist: async (checklist, expectedVersion) => {
           const next = await saveChecklistVersion(checklist, expectedVersion);
           acceptState(next);
-          setToast("Новая версия чек-листа сохранена на сервере");
+          setToast("Новая версия чек-листа сохранена");
           return next.data.checklist;
         },
         evaluate: (conversationId, checklistVersion) => {
@@ -472,7 +476,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             (conversation) => conversation.id === conversationId,
           )?.evaluation;
           if (
-            batchRunning.current &&
+            currentBatch.current?.status !== undefined &&
+            currentBatch.current.status !== "completed" &&
             !evaluationRequests.current.has(conversationId)
           )
             return Promise.reject(

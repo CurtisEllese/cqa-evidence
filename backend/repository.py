@@ -168,6 +168,8 @@ class Repository:
             row=db.execute('SELECT * FROM conversations WHERE id=? AND active=1',(conversation_id,)).fetchone()
             if not row: raise KeyError('Диалог не найден.')
             if expected_hash!=row['content_hash']: raise Conflict('Диалог изменился во время оценки.')
+            if db.execute('SELECT 1 FROM appeals a JOIN evaluations e ON a.evaluation_id=e.id WHERE e.conversation_id=?', (conversation_id,)).fetchone():
+                raise Conflict('Во время оценки появилась апелляция. Новая оценка не применена.')
             version=evaluation.get('checklist',{}).get('version')
             stored=db.execute('SELECT body FROM checklists WHERE version=?',(version,)).fetchone()
             if not stored or json.loads(stored[0])!=evaluation.get('checklist'): raise ValueError('Оценка должна ссылаться на сохранённую версию чек-листа.')

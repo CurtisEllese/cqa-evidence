@@ -8,8 +8,24 @@ import {
   stateFromWire,
 } from "./viewmodels";
 import { toDecimal } from "./decimal";
+type ApiTransport = (path: string, options?: RequestInit) => Promise<Response>;
+let apiTransport: ApiTransport = (path, options) => fetch(path, options);
+export function configureApiTransport(transport: ApiTransport) { apiTransport = transport; }
+export const authorizedFetch: ApiTransport = (path, options) => apiTransport(path, options);
 export type { WorkspaceViewModel as ServerState } from "./viewmodels";
 export type DatasetInfo = NonNullable<Wire.WorkspaceState["dataset"]>;
+export type EvaluationBatch = Wire.EvaluationBatch;
+export type BatchItem = Wire.BatchItem;
+export type StartBatchRequest = Wire.StartBatchRequest;
+
+export const fetchCurrentBatch = async (signal?: AbortSignal) =>
+  (await request<Wire.CurrentBatch>("/api/batches/current", undefined, signal)).batch;
+export const startBatchRequest = (body: Wire.StartBatchRequest) =>
+  request<Wire.EvaluationBatch>("/api/batches", body);
+export const commandBatch = (id: string, command: "stop" | "resume" | "cancel", revision: number) =>
+  request<Wire.EvaluationBatch>(`/api/batches/${encodeURIComponent(id)}/${command}`, {
+    schema_version: "2.0", expectedRevision: revision,
+  } as Wire.BatchCommand);
 export type AppealDecision = {
   status: "accepted" | "rejected";
   decision: string;
@@ -58,7 +74,7 @@ async function requestJson(
   body?: { schema_version: "2.0" },
   signal?: AbortSignal,
 ): Promise<unknown> {
-  const response = await fetch(path, {
+  const response = await authorizedFetch(path, {
     method: body === undefined ? "GET" : "POST",
     headers: {
       Accept: "application/json",
@@ -186,7 +202,7 @@ export async function startEvaluation(
   );
 }
 export async function downloadSubmission(groupId: string) {
-  const response = await fetch(
+  const response = await authorizedFetch(
     `/api/submission?groupId=${encodeURIComponent(groupId)}`,
     { headers: { Accept: "application/json" } },
   );
@@ -231,7 +247,7 @@ export async function fetchEvaluationHistory(
   );
 }
 export async function downloadExport(conversationId?: string): Promise<void> {
-  const response = await fetch(
+  const response = await authorizedFetch(
     conversationId
       ? `/api/conversations/${encodeURIComponent(conversationId)}/export`
       : "/api/export",

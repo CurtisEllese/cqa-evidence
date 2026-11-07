@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:StartBatchRequest",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "requestId": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Requestid",
+      "type": "string"
+    },
+    "group": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Group",
+      "type": "string"
+    },
+    "conversationIds": {
+      "items": {
+        "maxLength": 512,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "minItems": 1,
+      "title": "Conversationids",
+      "type": "array"
+    },
+    "checklistVersion": {
+      "maximum": 1000000,
+      "minimum": 1,
+      "title": "Checklistversion",
+      "type": "integer"
+    },
+    "expectedRevision": {
+      "minimum": 0,
+      "title": "Expectedrevision",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "requestId",
+    "group",
+    "conversationIds",
+    "checklistVersion",
+    "expectedRevision"
+  ],
+  "title": "StartBatchRequest",
+  "type": "object"
+}

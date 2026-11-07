@@ -11,7 +11,8 @@ import type { Checklist } from "../domain/types";
 import { fetchChecklists } from "../services/api";
 import { useStore } from "../store";
 import { Button, Notice } from "../components/ui";
-import { planBatch } from "./batchPlan";
+import { planBatch, isUncertainEvaluation } from "./batchPlan";
+import { conversationTitle } from "./conversationTitle";
 
 export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
   const {
@@ -23,6 +24,10 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
     batch,
     startBatch,
     stopBatch,
+    resumeBatch,
+    cancelBatch,
+    batchReady,
+    batchError,
     evaluatingIds,
     evaluationAvailable,
     loading,
@@ -54,7 +59,7 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
       });
     return () => controller.abort();
   }, [data.checklist.version, retry]);
-  const { group, selected, locked, candidates, failed } = planBatch(
+  const { selected, locked, candidates, failed } = planBatch(
     data,
     datasets,
     selectedGroup,
@@ -67,8 +72,12 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
     (item) => item.evaluation?.status === "needs_review",
   ).length;
   const busy = !!batch?.running || evaluatingIds.length > 0 || loading;
-  const canRun = !busy && evaluationAvailable && version > 0 && !error;
-  const groupName = group?.group ?? "Всё рабочее пространство";
+  const canResume = !busy && batchReady && !batchError && evaluationAvailable;
+  const canRun =
+    canResume &&
+    version > 0 &&
+    !error &&
+    (!batch || batch.status === "completed");
   const terminal =
     batch?.items.filter((item) => !["queued", "running"].includes(item.status))
       .length ?? 0;
@@ -78,35 +87,17 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
     ? Math.round((terminal / batch.items.length) * 100)
     : 0;
   function run(ids: string[]) {
-    void startBatch(groupName, ids, version);
+    void startBatch(selectedGroup, ids, version);
   }
   return (
     <section className="panel batch-panel" aria-labelledby="batch-title">
       <div className="batch-heading">
         <div>
-          <span className="batch-eyebrow">РАБОЧИЙ ПРОЦЕСС · GPT-6 LUNA</span>
-          <h2 id="batch-title">От набора к проверенному решению</h2>
-          <p>
-            Выберите набор и правила. Затем проверьте спорные результаты и
-            доказательства.
-          </p>
+          <h2 id="batch-title">Оценка диалогов</h2>
+          <p>Выберите набор и чек-лист для оценки.</p>
         </div>
         <ShieldCheck size={30} aria-hidden="true" />
       </div>
-      <ol className="workflow-steps" aria-label="Этапы работы">
-        <li>
-          <span>1</span> Набор
-        </li>
-        <li>
-          <span>2</span> Оценка
-        </li>
-        <li>
-          <span>3</span> Доказательства
-        </li>
-        <li>
-          <span>4</span> Апелляция
-        </li>
-      </ol>
       <div className="batch-fields">
         <label>
           Набор диалогов
@@ -168,10 +159,17 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
           </Button>
         </Notice>
       )}
+      {batchError && (
+        <Notice kind="warning">
+          Связь с очередью потеряна: {batchError} Оценка на сервере
+          продолжается. Состояние обновится после восстановления связи.
+        </Notice>
+      )}
+      {!batchReady && <Notice>Подключаемся к сохранённой очереди…</Notice>}
       {!evaluationAvailable && (
         <Notice>
-          Оценка пока недоступна. Подключите GPT-6 Luna на сервере и обновите
-          данные.
+          Автоматическая оценка временно недоступна. Обратитесь к
+          администратору.
         </Notice>
       )}
       {selectedGroup && (
@@ -230,11 +228,17 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
           </div>
           <p className="batch-note">
             Новый запуск: {candidates.length} диалогов, чек-лист v
-            {version || "—"}. Каждый диалог отправляется модели отдельно; вызовы
-            расходуют бюджет API. Диалоги с историей апелляций (
+            {version || "—"}. Диалоги с историей апелляций (
             {selected.filter((item) => locked.has(item.id)).length}) защищены от
             переоценки. Поиск и фильтры таблицы не меняют состав запуска.
           </p>
+          {selected.some((item) => isUncertainEvaluation(item.evaluation)) && (
+            <Notice kind="warning">
+              Диалоги с неопределённым результатом исключены из массового
+              запуска. Проверьте их результат и расходы перед отдельной
+              переоценкой.
+            </Notice>
+          )}
           {mode === "all" && (
             <Notice kind="warning">
               Для уже оценённых диалогов будет создана новая оценка. Прежние
@@ -246,7 +250,7 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
             <ul>
               {candidates.map((item) => (
                 <li key={item.id}>
-                  {item.id} · {item.title}
+                  {item.id} · {conversationTitle(item)}
                 </li>
               ))}
               {!candidates.length && (
@@ -273,8 +277,11 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
                     : "Запуск завершён"}
               </strong>
               <p>
-                {batch.group} · чек-лист v{batch.version} · обработано{" "}
-                {terminal} из {batch.items.length}
+                {batch.group === "workspace:"
+                  ? "Всё рабочее пространство"
+                  : batch.group.replace(/^group:/, "")}{" "}
+                · чек-лист v{batch.version} · обработано {terminal} из{" "}
+                {batch.items.length}
               </p>
             </div>
             {batch.running && (
@@ -298,33 +305,32 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
                 .length
             }{" "}
             · ошибки:{" "}
-            {batch.items.filter((item) => item.status === "failed").length}
+            {batch.items.filter((item) => item.status === "failed").length} ·
+            результат неизвестен:{" "}
+            {batch.items.filter((item) => item.status === "uncertain").length}
           </span>
           <p className="batch-note">
-            Можно переходить между разделами. Остановка отменяет только
-            оставшуюся очередь: текущий запрос завершится. При закрытии или
-            обновлении страницы очередь не продолжится автоматически.
+            Оценка продолжится, даже если закрыть страницу. Остановка завершит
+            текущий диалог и приостановит оставшиеся.
           </p>
           {batch.blockedReason && (
             <Notice kind="warning">
-              Очередь остановлена: {batch.blockedReason} После устранения
-              причины можно продолжить оставшиеся диалоги. Неуспешный диалог
-              доступен через «Повторить ошибки».
+              {batch.blockedReason} Неопределённые запросы не повторяются при
+              продолжении; сначала проверьте их результат и расходы.
             </Notice>
           )}
           {!batch.running && remaining.length > 0 && (
-            <Button
-              disabled={!canRun}
-              onClick={() =>
-                void startBatch(
-                  batch.group,
-                  remaining.map((item) => item.id),
-                  batch.version,
-                )
-              }
-            >
+            <Button disabled={!canResume} onClick={resumeBatch}>
               <Play size={16} />
               Продолжить оставшиеся · {remaining.length}
+            </Button>
+          )}
+          {remaining.length > 0 && (
+            <Button
+              disabled={!batchReady || !!batchError}
+              onClick={cancelBatch}
+            >
+              Отменить оставшиеся · {remaining.length}
             </Button>
           )}
           <details className="batch-composition">
@@ -346,6 +352,7 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
                         needs_review: "Требует проверки",
                         failed: "Ошибка",
                         uncertain: "Статус нужно уточнить",
+                        cancelled: "Отменено до отправки",
                       }[item.status]
                     }
                   </span>
@@ -356,9 +363,8 @@ export function BatchEvaluation({ onOpen }: { onOpen: (id: string) => void }) {
           </details>
           {batch.items.some((item) => item.status === "uncertain") && (
             <Notice kind="warning">
-              Связь с сервером прервана или результат не подтверждён. Очередь
-              остановлена, чтобы не создавать лишние вызовы. Обновите данные и
-              проверьте текущий диалог перед повтором.
+              Результат одного из запросов неизвестен. Проверьте этот диалог и
+              расходы перед отдельным повтором.
             </Notice>
           )}
         </div>

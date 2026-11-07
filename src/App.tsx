@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ArrowUpRight,
   Check,
   ChevronRight,
   CircleHelp,
@@ -21,8 +20,8 @@ import { ConversationDetail } from "./features/ConversationDetail";
 import { ChecklistEditor } from "./features/ChecklistEditor";
 import { Appeals } from "./features/Appeals";
 import { ImportDialog } from "./features/ImportDialog";
-import { DatasetSummary } from "./features/DatasetSummary";
 import { BatchEvaluation } from "./features/BatchEvaluation";
+import { AuthGate, SignOutButton } from "./components/AuthGate";
 
 const navigation = [
   { id: "overview", label: "Обзор", icon: LayoutDashboard },
@@ -39,9 +38,11 @@ function getRoute() {
 }
 export default function App() {
   return (
-    <StoreProvider>
-      <Workspace />
-    </StoreProvider>
+    <AuthGate>
+      <StoreProvider>
+        <Workspace />
+      </StoreProvider>
+    </AuthGate>
   );
 }
 function Workspace() {
@@ -169,29 +170,6 @@ function Workspace() {
           ))}
         </nav>
         <div className="sidebar-spacer" />
-        <div className="sidebar-promo">
-          <div className="promo-art" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="promo-eyebrow">FREEDOM QUALITY</div>
-          <h3>
-            От разговора
-            <br />к доверию.
-          </h3>
-          <p>
-            Больше ясности.
-            <br />
-            Выше качество.
-          </p>
-          <button onClick={() => setHelpOpen(true)}>
-            О платформе
-            <ArrowUpRight size={17} />
-          </button>
-        </div>
         <button className="sidebar-help" onClick={() => setHelpOpen(true)}>
           <CircleHelp size={18} />
           <span>Помощь и информация</span>
@@ -254,6 +232,7 @@ function Workspace() {
             </form>
             <span className="topbar-divider" />
             <Avatar name="КК" small />
+            <SignOutButton />
           </div>
         </header>
         <main
@@ -261,7 +240,7 @@ function Workspace() {
           tabIndex={-1}
           className={`main-content ${route.startsWith("dialog/") ? "main-content-detail" : ""}`}
         >
-          {loading && <Notice>Загружаем диалоги заказчика…</Notice>}
+          {loading && <Notice>Загружаем диалоги…</Notice>}
           {loadError && (
             <Notice kind="warning">
               {loadError}{" "}
@@ -306,8 +285,8 @@ function Workspace() {
             <>
               <PageHeading
                 eyebrow="РАБОТА С ДИАЛОГАМИ"
-                title="Качество начинается с деталей"
-                description="Оцените набор, проверьте основания и помогите команде стать лучше."
+                title="Диалоги"
+                description="Оценки, нарушения и результаты проверки."
                 actions={
                   <Button variant="primary" onClick={() => setImportOpen(true)}>
                     <Plus size={18} />
@@ -381,7 +360,7 @@ function Workspace() {
       )}
       {helpOpen && (
         <Modal
-          title="Знакомьтесь: Freedom Quality"
+          title="Помощь"
           onClose={() => {
             setHelpOpen(false);
           }}
@@ -416,19 +395,6 @@ function Workspace() {
                 </div>
               </div>
             ))}
-          </div>
-          <DatasetSummary />
-          <Notice>
-            Рабочее пространство может содержать несколько наборов и диалоги из
-            ручного импорта JSON. Последний загруженный набор не определяет
-            группу остальных диалогов. Диалоги, версии чек-листа и решения по
-            апелляциям сохраняются на сервере.
-          </Notice>
-          <div className="help-links">
-            <a href="https://fbroker.kz/" target="_blank" rel="noreferrer">
-              Визуальный ориентир — Freedom Инвестиции
-              <ArrowUpRight size={15} />
-            </a>
           </div>
           <div className="modal-actions">
             <Button

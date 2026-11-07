@@ -107,6 +107,30 @@
       ],
       "default": null,
       "title": "Decidedat"
+    },
+    "createdBy": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Createdby"
+    },
+    "decidedBy": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decidedby"
     }
   },
   "required": [

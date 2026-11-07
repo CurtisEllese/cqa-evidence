@@ -144,6 +144,65 @@
       "title": "Criterion",
       "type": "object"
     },
+    "KnowledgeAudit": {
+      "additionalProperties": false,
+      "properties": {
+        "policy_version": {
+          "const": "scoped-knowledge-1",
+          "default": "scoped-knowledge-1",
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "excluded",
+            "not_configured",
+            "scoped_verified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Reason",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KnowledgeScope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "included_fact_ids": {
+          "items": {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Included Fact Ids",
+          "type": "array"
+        },
+        "excluded_fact_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Excluded Fact Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "reason"
+      ],
+      "title": "KnowledgeAudit",
+      "type": "object"
+    },
     "KnowledgeFact": {
       "additionalProperties": false,
       "properties": {
@@ -192,6 +251,63 @@
         "verified_by"
       ],
       "title": "KnowledgeFact",
+      "type": "object"
+    },
+    "KnowledgeScope": {
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Entity",
+          "type": "string"
+        },
+        "jurisdiction": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Jurisdiction",
+          "type": "string"
+        },
+        "product": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Product",
+          "type": "string"
+        },
+        "conversation_date": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Conversation Date",
+          "type": "string"
+        },
+        "date_source": {
+          "const": "conversation",
+          "title": "Date Source",
+          "type": "string"
+        },
+        "verified_by": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Verified By",
+          "type": "string"
+        },
+        "verification_reference": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Verification Reference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity",
+        "jurisdiction",
+        "product",
+        "conversation_date",
+        "date_source",
+        "verified_by",
+        "verification_reference"
+      ],
+      "title": "KnowledgeScope",
       "type": "object"
     },
     "MessageDTO": {
@@ -325,6 +441,17 @@
       },
       "title": "Knowledgefacts",
       "type": "array"
+    },
+    "knowledge_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/KnowledgeAudit"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "repair_feedback": {
       "anyOf": [

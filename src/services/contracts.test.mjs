@@ -136,6 +136,24 @@ const criterionResult = {
   evidence: [evidence],
   critical: false,
 };
+
+test("unassessable maps to missing data, separately from N/A and legacy assessed values", () => {
+  const unknown = models.resultFromWire({
+    ...criterionResult, value: null, assessment_status: "unassessable",
+    review_reason: "Нет применимого источника", applicability_reason: null,
+  }, messages);
+  assert.equal(unknown.assessmentStatus, "unassessable");
+  assert.equal(unknown.reviewReason, "Нет применимого источника");
+  assert.equal(unknown.value, null);
+  assert.equal(unknown.applicabilityReason, null);
+  const na = models.resultFromWire({
+    ...criterionResult, value: null, applicability_reason: "Не требуется по рубрике",
+  }, messages);
+  assert.equal(na.assessmentStatus, "assessed");
+  assert.equal(na.reviewReason, null);
+  assert.equal(na.applicabilityReason, "Не требуется по рубрике");
+  assert.equal(models.resultFromWire(criterionResult, messages).assessmentStatus, "assessed");
+});
 const score = {
   schema_version: "2.0",
   total: "100",
@@ -181,6 +199,20 @@ const state = {
   evaluationAvailable: true,
   revision: 1,
 };
+
+test("unassessable criterion suppresses a stale completed total in the UI", () => {
+  const unsafe = {
+    ...evaluation,
+    results: [{ ...criterionResult, value: null, assessment_status: "unassessable",
+      review_reason: "Не хватает фактов", applicability_reason: null }],
+  };
+  const view = models.evaluationFromWire(unsafe, messages);
+  assert.equal(view.status, "needs_review");
+  assert.equal(view.total, null);
+  const mapped = models.stateFromWire({ ...state, data: { ...state.data,
+    conversations: [{ ...conversation, evaluation: unsafe }] } });
+  assert.equal(mapped.data.conversations[0].scores, undefined);
+});
 
 test("decimal fields round-trip without rounding, excessive precision stays invalid", () => {
   const view = models.checklistFromWire(checklist);

@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:CurrentBatch",
+  "$defs": {
+    "BatchItem": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "evaluationId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Evaluationid",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "completed",
+            "needs_review",
+            "failed",
+            "uncertain",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "id",
+        "evaluationId",
+        "status"
+      ],
+      "title": "BatchItem",
+      "type": "object"
+    },
+    "Checklist": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "name",
+        "version",
+        "criteria"
+      ],
+      "title": "Checklist",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Description",
+          "type": "string"
+        },
+        "section": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Section",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "yes_no",
+            "scale",
+            "flag"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "max": {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Max",
+          "type": "string"
+        },
+        "allowedValues": {
+          "items": {
+            "maxLength": 32,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "minItems": 2,
+          "title": "Allowedvalues",
+          "type": "array"
+        },
+        "allowNA": {
+          "title": "Allowna",
+          "type": "boolean"
+        },
+        "naCondition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nacondition"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "section",
+        "type",
+        "weight",
+        "max",
+        "allowedValues",
+        "allowNA"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
+    "EvaluationBatch": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "group": {
+          "title": "Group",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "checklist": {
+          "$ref": "#/$defs/Checklist"
+        },
+        "revision": {
+          "minimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "stopping",
+            "paused",
+            "completed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "running": {
+          "title": "Running",
+          "type": "boolean"
+        },
+        "stopping": {
+          "title": "Stopping",
+          "type": "boolean"
+        },
+        "blockedReason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blockedreason"
+        },
+        "createdAt": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Createdat",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/BatchItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "group",
+        "version",
+        "checklist",
+        "revision",
+        "status",
+        "running",
+        "stopping",
+        "createdAt",
+        "items"
+      ],
+      "title": "EvaluationBatch",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "batch": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluationBatch"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "batch"
+  ],
+  "title": "CurrentBatch",
+  "type": "object"
+}

@@ -270,13 +270,14 @@ def main():
             page.get_by_role("button", name="Сбросить", exact=True).click()
         check("filters search and page preserved through detail", filters_preserved)
 
-        def submission():
+        def customer_workspace():
             go("conversations")
-            with page.expect_download() as download:
-                page.get_by_role("button", name="Файл для сдачи", exact=True).click()
-            assert download.value.suggested_filename == "results.json"
-            assert api.exports == [dict(path="/api/submission", query={"groupId": [GROUP]})]
-        check("administrator official export uses selected group route", submission)
+            expect(page.get_by_role("button", name="Файл для сдачи", exact=True)).to_have_count(0)
+            expect(page.get_by_role("button", name="Резервная копия", exact=True)).to_have_count(0)
+            expect(page.locator(".batch-heading")).to_contain_text("Оценка диалогов")
+            expect(page.locator(".batch-heading")).not_to_contain_text("GPT")
+            assert api.exports == []
+        check("customer workspace excludes competition and maintenance controls", customer_workspace)
 
         def evidence():
             go("dialog/SYN-CHAT-DISSATISFACTION")

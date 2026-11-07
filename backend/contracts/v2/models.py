@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from datetime import date
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
@@ -101,6 +102,41 @@ class KnowledgeFact(Contract):
     verified_by: NonEmpty
 
 
+class KnowledgeScope(Contract):
+    entity: NonEmpty
+    jurisdiction: NonEmpty
+    product: NonEmpty
+    conversation_date: NonEmpty
+    date_source: Literal["conversation"]
+    verified_by: NonEmpty
+    verification_reference: NonEmpty
+
+    @model_validator(mode="after")
+    def valid_date(self):
+        if date.fromisoformat(self.conversation_date).isoformat() != self.conversation_date:
+            raise ValueError("conversation_date must be YYYY-MM-DD")
+        return self
+
+
+class KnowledgeAudit(Contract):
+    policy_version: Literal["scoped-knowledge-1"] = "scoped-knowledge-1"
+    status: Literal["excluded", "not_configured", "scoped_verified"]
+    reason: NonEmpty
+    scope: KnowledgeScope | None = None
+    included_fact_ids: list[Identifier] = Field(default_factory=list)
+    excluded_fact_count: NonnegativeInt = 0
+
+    @model_validator(mode="after")
+    def verified_scope(self):
+        if self.status == "scoped_verified" and (self.scope is None or not self.included_fact_ids):
+            raise ValueError("verified knowledge requires scope and fact IDs")
+        if self.status != "scoped_verified" and self.included_fact_ids:
+            raise ValueError("unverified knowledge cannot include facts")
+        if len(set(self.included_fact_ids)) != len(self.included_fact_ids):
+            raise ValueError("fact IDs must be unique")
+        return self
+
+
 class EvaluationRequest(RootContract):
     conversationId: Identifier
     conversationHash: NonEmpty
@@ -109,6 +145,7 @@ class EvaluationRequest(RootContract):
     checklist: Checklist
     messages: Annotated[list[MessageDTO], Field(min_length=1)]
     knowledgeFacts: list[KnowledgeFact] = Field(default_factory=list)
+    knowledge_context: KnowledgeAudit | None = None
     repair_feedback: list[ValidationIssue] | None = None
 
     @field_validator("messages")
@@ -133,9 +170,19 @@ class ModelCriterionResult(Contract):
     explanation: Annotated[NonEmpty, Field(max_length=20_000)]
     applicability_reason: str | None
     evidence: list[Evidence]
+    assessment_status: Literal["assessed", "unassessable"] = "assessed"
+    review_reason: NonEmpty | None = None
 
     @model_validator(mode="after")
     def applicable_reason(self):
+        if self.assessment_status == "unassessable":
+            if self.value is not None or self.applicability_reason is not None or self.review_reason is None:
+                raise ValueError("unassessable requires null value, no N/A reason and a review reason")
+            if any(ev.kind == "not_applicable" for ev in self.evidence):
+                raise ValueError("unassessable is not N/A evidence")
+            return self
+        if self.review_reason is not None:
+            raise ValueError("assessed result cannot carry an unresolved review reason")
         if self.value is None and (self.applicability_reason is None or not self.applicability_reason.strip()):
             raise ValueError("N/A requires applicability_reason")
         if self.value is not None and Decimal(self.value) > 1_000_000:
@@ -190,6 +237,8 @@ class Score(RootContract):
 
     @model_validator(mode="after")
     def confirmed_score(self):
+        if any(result.assessment_status != "assessed" for result in self.results):
+            raise ValueError("unassessable criteria cannot have a confirmed score")
         if self.total is not None and Decimal(self.total) > 100:
             raise ValueError("normalized total must be within 0..100")
         if Decimal(self.possible) == 0 and self.total is not None:
@@ -223,6 +272,8 @@ class EvaluationResult(RootContract):
         if self.status != "completed" and self.score is not None:
             raise ValueError("noncompleted evaluations must not expose a score")
         if self.status == "completed":
+            if any(result.assessment_status != "assessed" for result in self.results):
+                raise ValueError("completed evaluations cannot contain unassessable criteria")
             if self.score is None:
                 raise ValueError("completed evaluations require a score")
             if {result.criterionId for result in self.results} != {criterion.id for criterion in self.checklist.criteria} or len(self.results) != len(self.checklist.criteria):
@@ -268,6 +319,8 @@ class AppealDTO(RootContract):
     decision: str | None = None
     newValue: DecimalString | None = None
     decidedAt: str | None = None
+    createdBy: str | None = None
+    decidedBy: str | None = None
 
 
 class DatasetInfo(Contract):
@@ -329,6 +382,43 @@ class DecideAppealRequest(RootContract):
 class StartEvaluationRequest(RootContract):
     conversationId: Identifier
     checklistVersion: PositiveInt | None = None
+
+
+class StartBatchRequest(RootContract):
+    requestId: Identifier
+    group: Identifier
+    conversationIds: Annotated[list[Identifier], Field(min_length=1, max_length=1000)]
+    checklistVersion: PositiveInt
+    expectedRevision: NonnegativeInt
+
+
+class BatchCommand(RootContract):
+    expectedRevision: NonnegativeInt
+
+
+class BatchItem(Contract):
+    id: Identifier
+    evaluationId: Identifier
+    status: Literal['queued', 'running', 'completed', 'needs_review', 'failed', 'uncertain', 'cancelled']
+    error: str | None = None
+
+
+class EvaluationBatch(RootContract):
+    id: Identifier
+    group: str
+    version: PositiveInt
+    checklist: Checklist
+    revision: NonnegativeInt
+    status: Literal['running', 'stopping', 'paused', 'completed']
+    running: bool
+    stopping: bool
+    blockedReason: str | None = None
+    createdAt: NonEmpty
+    items: list[BatchItem]
+
+
+class CurrentBatch(RootContract):
+    batch: EvaluationBatch | None
 
 
 class RefreshRequest(RootContract):

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:KnowledgeScope",
+  "additionalProperties": false,
+  "properties": {
+    "entity": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Entity",
+      "type": "string"
+    },
+    "jurisdiction": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Jurisdiction",
+      "type": "string"
+    },
+    "product": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Product",
+      "type": "string"
+    },
+    "conversation_date": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Conversation Date",
+      "type": "string"
+    },
+    "date_source": {
+      "const": "conversation",
+      "title": "Date Source",
+      "type": "string"
+    },
+    "verified_by": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Verified By",
+      "type": "string"
+    },
+    "verification_reference": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Verification Reference",
+      "type": "string"
+    }
+  },
+  "required": [
+    "entity",
+    "jurisdiction",
+    "product",
+    "conversation_date",
+    "date_source",
+    "verified_by",
+    "verification_reference"
+  ],
+  "title": "KnowledgeScope",
+  "type": "object"
+}

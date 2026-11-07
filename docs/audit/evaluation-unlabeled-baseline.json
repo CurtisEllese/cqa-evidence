@@ -1,0 +1,378 @@
+{
+  "schemaVersion": "human-evaluation-1",
+  "realAdjudicatedCases": 0,
+  "datasetHash": "085168418e694965e24b14062624c87a5e10b605d3eaabd9d82016f64f1887ff",
+  "labelSetHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "predictionSetHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "accuracyClaim": "not_established",
+  "notice": "Synthetic results are regression checks. Human identity, independence, expertise and representativeness require external audit. No hidden Freedom labels are fabricated.",
+  "slices": {
+    "real": {
+      "calibration/RU": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "calibration/KZ": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "calibration/EN": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "holdout/RU": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "holdout/KZ": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "holdout/EN": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      }
+    },
+    "synthetic": {
+      "calibration/RU": {
+        "cases": 1,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": [
+          {
+            "caseId": "annotation-demo-ru",
+            "reason": "missing_adjudication"
+          }
+        ]
+      },
+      "calibration/KZ": {
+        "cases": 1,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": [
+          {
+            "caseId": "annotation-demo-kz",
+            "reason": "missing_adjudication"
+          }
+        ]
+      },
+      "calibration/EN": {
+        "cases": 1,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": [
+          {
+            "caseId": "annotation-demo-en",
+            "reason": "missing_adjudication"
+          }
+        ]
+      },
+      "holdout/RU": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "holdout/KZ": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      },
+      "holdout/EN": {
+        "cases": 0,
+        "adjudicatedCases": 0,
+        "predictedCases": 0,
+        "expertAgreement": {},
+        "expertScoreAgreement": {},
+        "expertCriticalAgreement": {},
+        "modelVsAdjudicatedByCriterion": {},
+        "score": {
+          "pairedCases": 0,
+          "maePoints": null,
+          "maxAbsoluteErrorPoints": null
+        },
+        "criticalErrors": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0,
+          "pairedDecisions": 0,
+          "exactAgreement": null,
+          "cohenKappa": null,
+          "categoryCountsA": {},
+          "categoryCountsB": {},
+          "precision": null,
+          "recall": null
+        },
+        "disagreements": [],
+        "coverageGaps": []
+      }
+    }
+  }
+}

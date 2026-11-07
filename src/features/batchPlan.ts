@@ -1,6 +1,20 @@
 import type { AppData, Evaluation } from "../domain/types";
 import type { DatasetInfo } from "../services/api";
 
+export function isUncertainEvaluation(
+  evaluation: Evaluation | null | undefined,
+) {
+  const code = evaluation?.errorCode ?? "";
+  if (code.startsWith("PROVIDER_") && code !== "PROVIDER_RATE_LIMIT")
+    return true;
+  return [
+    "BATCH_OUTCOME_UNKNOWN",
+    "PROVIDER_TIMEOUT",
+    "EVALUATOR_ERROR",
+    "WORKER_INTERRUPTED",
+  ].includes(code);
+}
+
 export function isEvaluationFailure(evaluation: Evaluation | null | undefined) {
   return (
     !!evaluation &&
@@ -38,6 +52,7 @@ export function planBatch(
   const eligible = selected.filter(
     (item) =>
       !locked.has(item.id) &&
+      !isUncertainEvaluation(item.evaluation) &&
       !["queued", "running"].includes(item.evaluation?.status ?? ""),
   );
   return {

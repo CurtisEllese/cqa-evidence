@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  ArrowDownToLine,
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
@@ -11,18 +10,15 @@ import {
   X,
 } from "lucide-react";
 import type { Conversation } from "../domain/types";
-import { downloadExport, downloadSubmission } from "../services/api";
+import {
+  callDateLabel,
+  callTimeLabel,
+  conversationTitle,
+} from "./conversationTitle";
 import { evaluationLabel, evaluationTone } from "./evaluationStatus";
 import { originalCriticalStatus } from "./criticalStatus";
 import { useStore } from "../store";
-import {
-  Avatar,
-  Badge,
-  Button,
-  EmptyState,
-  Notice,
-  Score,
-} from "../components/ui";
+import { Avatar, Badge, Button, EmptyState, Score } from "../components/ui";
 
 export function ConversationTable({
   onOpen,
@@ -36,39 +32,6 @@ export function ConversationTable({
   onSearchChange?: (query: string) => void;
 }) {
   const { data, datasets, selectedGroup, filters, setFilters } = useStore();
-  const [exporting, setExporting] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [exportError, setExportError] = useState("");
-  async function exportWorkspace() {
-    if (exporting) return;
-    setExporting(true);
-    setExportError("");
-    try {
-      await downloadExport();
-    } catch (error) {
-      setExportError(
-        error instanceof Error ? error.message : "Не удалось выгрузить данные.",
-      );
-    } finally {
-      setExporting(false);
-    }
-  }
-  async function exportSubmission() {
-    if (!group || submitting) return;
-    setSubmitting(true);
-    setExportError("");
-    try {
-      await downloadSubmission(group.group);
-    } catch (error) {
-      setExportError(
-        error instanceof Error
-          ? error.message
-          : "Не удалось скачать файл для сдачи.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
   const [localSearch, setLocalSearch] = useState("");
   const [compactAscending, setCompactAscending] = useState(false);
   const search = onSearchChange ? query : localSearch;
@@ -102,9 +65,10 @@ export function ConversationTable({
     () =>
       data.conversations
         .filter((item) => {
-          const matches = `${item.id} ${item.title} ${item.operator}`
-            .toLowerCase()
-            .includes(search.toLowerCase());
+          const matches =
+            `${item.id} ${item.title} ${conversationTitle(item)} ${item.operator}`
+              .toLowerCase()
+              .includes(search.toLowerCase());
           const hasAppeal = data.appeals.some(
             (a) =>
               a.conversationId === item.id &&
@@ -202,41 +166,7 @@ export function ConversationTable({
           </h2>
           {compact && <p>От деталей разговора — к качеству сервиса</p>}
         </div>
-        {compact ? (
-          <span className="subtle-label">Рабочий набор</span>
-        ) : (
-          <div className="table-export-actions">
-            <Button
-              disabled={submitting || !group}
-              onClick={() => void exportSubmission()}
-            >
-              <ArrowDownToLine size={16} />
-              {submitting ? "Готовим файл…" : "Файл для сдачи"}
-            </Button>
-            <Button
-              disabled={exporting}
-              title="Все диалоги, оценки и апелляции рабочего пространства"
-              onClick={() => void exportWorkspace()}
-            >
-              <ArrowDownToLine size={16} />
-              {exporting ? "Выгружаем…" : "Резервная копия"}
-            </Button>
-          </div>
-        )}
       </div>
-      {exportError && <Notice kind="error">{exportError}</Notice>}
-      {!compact && (
-        <p className="submission-note">
-          Файл для сдачи:{" "}
-          {group
-            ? `набор ${group.group}`
-            : "сначала выберите загруженный набор"}
-          . Используются исходные оценки ИИ по 8 критериям; апелляции их не
-          меняют. Неоценённые, неподтверждённые результаты и изменённая
-          конфигурация чек-листа выгружаются со статусом error. Резервная копия
-          содержит всё рабочее пространство.
-        </p>
-      )}
       {!compact && (
         <>
           <div className="table-toolbar">
@@ -370,7 +300,7 @@ export function ConversationTable({
                     className="dialog-link"
                     onClick={() => onOpen(item.id)}
                   >
-                    {item.title}
+                    {conversationTitle(item)}
                   </button>
                   <span className="table-caption">{item.id}</span>
                   {originalCriticalStatus(item) === "present" && (
@@ -408,23 +338,31 @@ export function ConversationTable({
                 </td>
                 <td>
                   <span className="table-date">
-                    {item.date
-                      ? new Intl.DateTimeFormat("ru-RU", {
-                          day: "2-digit",
-                          month: "short",
-                          timeZone: "Asia/Qyzylorda",
-                        }).format(new Date(item.date))
-                      : "Дата не указана"}
+                    {item.channel === "voice call"
+                      ? (callDateLabel(item) ?? "Дата не указана")
+                      : item.date
+                        ? new Intl.DateTimeFormat("ru-RU", {
+                            day: "2-digit",
+                            month: "short",
+                            timeZone: "Asia/Qyzylorda",
+                          }).format(new Date(item.date))
+                        : "Дата не указана"}
                   </span>
-                  {item.date && (
-                    <span className="table-caption">
-                      {new Intl.DateTimeFormat("ru-RU", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Asia/Qyzylorda",
-                      }).format(new Date(item.date))}
-                    </span>
-                  )}
+                  {item.channel === "voice call"
+                    ? callTimeLabel(item) && (
+                        <span className="table-caption">
+                          {callTimeLabel(item)}
+                        </span>
+                      )
+                    : item.date?.includes("T") && (
+                        <span className="table-caption">
+                          {new Intl.DateTimeFormat("ru-RU", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            timeZone: "Asia/Qyzylorda",
+                          }).format(new Date(item.date))}
+                        </span>
+                      )}
                 </td>
                 <td>
                   <Score value={item.scores?.final.total ?? null} />

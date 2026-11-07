@@ -24,6 +24,20 @@ export type AppealDTO = {
   "decision"?: string | null;
   "newValue"?: string | null;
   "decidedAt"?: string | null;
+  "createdBy"?: string | null;
+  "decidedBy"?: string | null;
+};
+
+export type BatchCommand = {
+  "schema_version": "2.0";
+  "expectedRevision": number;
+};
+
+export type BatchItem = {
+  "id": string;
+  "evaluationId": string;
+  "status": "queued" | "running" | "completed" | "needs_review" | "failed" | "uncertain" | "cancelled";
+  "error"?: string | null;
 };
 
 export type Checklist = {
@@ -104,7 +118,14 @@ export type CriterionResult = {
   "explanation": string;
   "applicability_reason": string | null;
   "evidence": Array<VerifiedEvidence>;
+  "assessment_status"?: "assessed" | "unassessable";
+  "review_reason"?: string | null;
   "critical": boolean;
+};
+
+export type CurrentBatch = {
+  "schema_version": "2.0";
+  "batch": EvaluationBatch | null;
 };
 
 export type DatasetInfo = {
@@ -122,6 +143,21 @@ export type DecideAppealRequest = {
   "newValue"?: string | null;
 };
 
+export type EvaluationBatch = {
+  "schema_version": "2.0";
+  "id": string;
+  "group": string;
+  "version": number;
+  "checklist": Checklist;
+  "revision": number;
+  "status": "running" | "stopping" | "paused" | "completed";
+  "running": boolean;
+  "stopping": boolean;
+  "blockedReason"?: string | null;
+  "createdAt": string;
+  "items": Array<BatchItem>;
+};
+
 export type EvaluationProvenance = {
   "provider": string;
   "model": string;
@@ -137,6 +173,7 @@ export type EvaluationRequest = {
   "checklist": Checklist;
   "messages": Array<MessageDTO>;
   "knowledgeFacts"?: Array<KnowledgeFact>;
+  "knowledge_context"?: KnowledgeAudit | null;
   "repair_feedback"?: Array<ValidationIssue> | null;
 };
 
@@ -175,6 +212,15 @@ export type ImportRequest = {
   "text": string;
 };
 
+export type KnowledgeAudit = {
+  "policy_version"?: "scoped-knowledge-1";
+  "status": "excluded" | "not_configured" | "scoped_verified";
+  "reason": string;
+  "scope"?: KnowledgeScope | null;
+  "included_fact_ids"?: Array<string>;
+  "excluded_fact_count"?: number;
+};
+
 export type KnowledgeFact = {
   "text": string;
   "source": string;
@@ -182,6 +228,16 @@ export type KnowledgeFact = {
   "product": string;
   "jurisdiction": string;
   "verified_by": string;
+};
+
+export type KnowledgeScope = {
+  "entity": string;
+  "jurisdiction": string;
+  "product": string;
+  "conversation_date": string;
+  "date_source": "conversation";
+  "verified_by": string;
+  "verification_reference": string;
 };
 
 export type MessageDTO = {
@@ -203,6 +259,8 @@ export type ModelCriterionResult = {
   "explanation": string;
   "applicability_reason": string | null;
   "evidence": Array<Evidence>;
+  "assessment_status"?: "assessed" | "unassessable";
+  "review_reason"?: string | null;
 };
 
 export type ModelResponse = {
@@ -224,6 +282,15 @@ export type Score = {
   "critical": boolean;
   "results": Array<CriterionResult>;
   "breakdown"?: Record<string, CriterionContribution>;
+};
+
+export type StartBatchRequest = {
+  "schema_version": "2.0";
+  "requestId": string;
+  "group": string;
+  "conversationIds": Array<string>;
+  "checklistVersion": number;
+  "expectedRevision": number;
 };
 
 export type StartEvaluationRequest = {

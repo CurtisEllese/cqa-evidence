@@ -14,7 +14,9 @@ from evaluator.settings import OpenAISettings
 
 def request():
     path = Path(__file__).parents[1] / "evaluator/fixtures/synthetic_v2.json"
-    return EvaluationRequest.model_validate(json.loads(path.read_text())[0]["request"])
+    raw = json.loads(path.read_text())[0]["request"]
+    raw["knowledgeFacts"] = []  # legacy fixture facts have no confirmed applicability
+    return EvaluationRequest.model_validate(raw)
 
 
 def answer():
@@ -62,7 +64,10 @@ def test_request_contract_strict_schema_and_safe_usage():
     assert str(sent.url) == "https://api.openai.com/v1/responses"
     assert sent.headers["authorization"] == "Bearer test-secret"
     assert payload["store"] is False
-    assert json.loads(payload["input"][0]["content"]) == request().model_dump(mode="json")
+    expected = request().model_dump(mode="json")
+    # v2 cannot prove the conversation/entity/date scope of a legacy fact.
+    expected["knowledgeFacts"] = []
+    assert json.loads(payload["input"][0]["content"]) == expected
     assert payload["text"]["format"]["strict"] is True
     schema = payload["text"]["format"]["schema"]
     assert schema == openai_schema(ModelResponse.model_json_schema())
