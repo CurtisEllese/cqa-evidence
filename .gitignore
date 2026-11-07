@@ -18,4 +18,5 @@ artifacts/
 __pycache__/
 .venv/
 .pytest_cache/
+.hypothesis/
 .DS_Store

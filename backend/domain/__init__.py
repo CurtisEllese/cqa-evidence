@@ -49,7 +49,7 @@ def _date(value, allow_date_only=False):
 
 def initial_checklist() -> dict:
     """Load a fresh copy of the official rubric, never shared mutable process state."""
-    payload = json.loads(Path(__file__).with_name("rubric.json").read_text(encoding="utf-8"))
+    payload = json.loads((Path(__file__).resolve().parents[1] / "rubric.json").read_text(encoding="utf-8"))
     return validate_checklist(payload)
 
 
@@ -82,7 +82,13 @@ def validate_checklist(checklist: dict) -> dict:
         kind = criterion.get("type")
         if kind not in ("binary", "scale", "flag"):
             raise ValueError("Тип критерия должен быть binary, scale или flag.")
-        weight = _number(criterion.get("weight"), "Вес критерия")
+        raw_weight = criterion.get("weight")
+        if isinstance(raw_weight, str):
+            if not re.fullmatch(r"(0|[1-9][0-9]*)(\.[0-9]{1,6})?", raw_weight):
+                raise ValueError("Вес должен быть неотрицательной десятичной строкой.")
+            weight = Decimal(raw_weight)
+        else:
+            weight = _number(raw_weight, "Вес критерия")
         maximum = _number(criterion.get("max"), "Максимум шкалы")
         if maximum <= 0:
             raise ValueError("Максимум шкалы должен быть больше нуля.")
@@ -324,7 +330,7 @@ def score_evaluation(evaluation: dict, appeals=()) -> dict:
             value = by_id[identifier]["value"]
             if criterion["type"] == "flag":
                 critical = critical or value == 1
-            elif value is not None and criterion["weight"] > 0:
+            elif value is not None and Decimal(str(criterion["weight"])) > 0:
                 weight = Decimal(str(criterion["weight"]))
                 earned += Decimal(str(value)) / Decimal(str(criterion["max"])) * weight
                 possible += weight

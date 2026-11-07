@@ -241,6 +241,9 @@ export function ConversationDetail({
                 {hasAccepted ? "ФИНАЛЬНАЯ ОЦЕНКА" : "ОЦЕНКА КАЧЕСТВА"}
               </div>
               <Score value={final?.total ?? null} size="large" />
+              {conversation.evaluationStatus === "needs_review" && (
+                <Notice>Предварительно: {conversation.provisionalScore ?? "—"}. Требуется проверка доказательств.</Notice>
+              )}
               {hasAccepted && (
                 <div className="original-score">
                   Исходная оценка: {original?.total ?? "—"}
@@ -407,6 +410,7 @@ export function ConversationDetail({
                           </strong>
                         </div>
                         <p>{result.explanation}</p>
+                        {result.evidenceStatus === "unverified" && <Notice>Доказательство не подтверждено.</Notice>}
                         <div className="result-evidence">
                           {result.evidenceIds.length > 0 ? (
                             <button
@@ -429,6 +433,8 @@ export function ConversationDetail({
                             ) : (
                               <>
                                 Вес {criterion.weight}
+                                {result.effectiveWeight != null ? ` · эффективный вес ${Number(result.effectiveWeight).toFixed(2)}` : ""}
+                                {result.contribution != null ? ` · вклад ${Number(result.contribution).toFixed(2)}` : ""}
                                 {result.value === null
                                   ? " · исключён из расчёта"
                                   : ""}
@@ -449,6 +455,8 @@ export function ConversationDetail({
                             </button>
                           ) : (
                             <button
+                              disabled={evaluation.contractVersion === "1.0"}
+                              title={evaluation.contractVersion === "1.0" ? "Пересмотр этой оценки пока недоступен" : undefined}
                               onClick={() => setAppealCriterion(criterion)}
                             >
                               Оспорить

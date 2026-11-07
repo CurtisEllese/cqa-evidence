@@ -1,5 +1,8 @@
 # CQA Evidence
 
+Backend PR: [контрактная оценка, запуск и проверка](docs/backend-first-pr.md).
+`make test` — все backend/контрактные тесты, `make run` — сервер. Асинхронная граница оценщика реализована; реальный адаптер модели подключается AI-потоком через `create_app(evaluator=...)`. Наличие API-ключа не подменяет отсутствующий адаптер.
+
 Прототип Conversation Quality Analytics для Freedom Broker CQA Hackathon.
 
 **Статус: React-фронтенд подключён к FastAPI и SQLite; все 65 диалогов DEV и записи звонков доступны. ИИ-оценщик пока не подключён.**
@@ -9,6 +12,8 @@
 
 ## Документация
 
+- [Утверждённый сетевой контракт v1.0](contracts/README.md) — единый источник для backend, AI и UI.
+- [Фактическая проверка Gemini API](docs/gemini-check.md)
 - [Требования и точный расчёт](docs/requirements.md)
 - [Архитектура и контракты](docs/architecture.md)
 - [Проверенные готовые решения](docs/open-source.md)

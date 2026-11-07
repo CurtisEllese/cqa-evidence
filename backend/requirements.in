@@ -1,0 +1,7 @@
+fastapi
+httpx
+pydantic>=2.7,<3
+python-dotenv
+uvicorn
+pytest>=8,<10
+hypothesis>=6,<7

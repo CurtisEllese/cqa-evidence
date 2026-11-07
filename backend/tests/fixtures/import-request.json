@@ -1,0 +1,3 @@
+{
+  "text": "[{\"conversation_id\": \"synthetic-kz\", \"language\": \"KZ\", \"channel\": \"agent chat\", \"audio_url\": null, \"transcript\": [{\"timestamp\": \"00:00\", \"speaker\": \"system\", \"text\": \"Идентификация подтверждена\"}, {\"timestamp\": \"00:01\", \"speaker\": \"bot\", \"text\": \"Сәлеметсіз бе!\"}, {\"timestamp\": \"00:02\", \"speaker\": \"client\", \"text\": \"Көмектесіңізші\"}, {\"timestamp\": \"00:03\", \"speaker\": \"operator\", \"text\": \"Сәлеметсіз бе! Мен Дана.\"}]}]"
+}

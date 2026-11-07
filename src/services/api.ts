@@ -1,4 +1,5 @@
 import type { AppData, EvaluationScore } from "../domain/types";
+import { mapServerState } from "./evaluation";
 
 export type DatasetInfo = {
   group: string;
@@ -46,11 +47,13 @@ export async function apiRequest<T>(
     throw new Error(
       typeof payload?.error === "string"
         ? payload.error
+        : typeof payload?.error?.message === "string"
+          ? payload.error.message
         : typeof payload?.message === "string"
           ? payload.message
           : "Не удалось выполнить запрос. Повторите попытку.",
     );
-  return payload as T;
+  return (payload?.data?.conversations && payload?.data?.checklist ? mapServerState(payload) : payload) as T;
 }
 
 export const previewAppeal = (

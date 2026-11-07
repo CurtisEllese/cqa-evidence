@@ -12,6 +12,7 @@ export type Criterion = {
   title: string;
   description: string;
   weight: number;
+  wireWeight?: string;
   type: "binary" | "scale" | "flag";
   max: number;
   allowNA: boolean;
@@ -31,6 +32,9 @@ export type CriterionResult = {
   explanation: string;
   evidenceIds: string[];
   critical: boolean;
+  evidenceStatus?: "verified" | "unverified";
+  effectiveWeight?: string | null;
+  contribution?: string | null;
 };
 export type Evaluation = {
   id: string;
@@ -38,6 +42,7 @@ export type Evaluation = {
   results: CriterionResult[];
   createdAt: string;
   source: "api";
+  contractVersion?: "1.0";
 };
 export type Conversation = {
   id: string;
@@ -53,6 +58,8 @@ export type Conversation = {
   audioUrl: string | null;
   audioPageUrl?: string | null;
   evaluation: Evaluation | null;
+  evaluationStatus?: "completed" | "needs_review";
+  provisionalScore?: string | null;
   scores?: {
     original: EvaluationScore;
     final: EvaluationScore;
@@ -61,10 +68,10 @@ export type Conversation = {
 };
 export type EvaluationScore = {
   total: number | null;
-  earned: number;
-  possible: number;
+  earned?: number;
+  possible?: number;
   applicable: number;
-  critical: boolean;
+  critical: boolean | null;
   results: CriterionResult[];
 };
 export type Appeal = {

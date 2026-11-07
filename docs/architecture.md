@@ -2,7 +2,9 @@
 
 Реализован локальный контур React → FastAPI → SQLite. Актуальные маршруты и границы компонентов: [TEAM-HANDOFF.md](TEAM-HANDOFF.md). Ниже сохранён проектный план, включая ещё не реализованный оценщик и очередь задач.
 
-Цель первого сквозного запуска — за 60 минут. Полный обязательный контур — за 150 минут. Модель и API пока не подтверждены. Платная подписка в чат-приложении не является подтверждением API-ключа.
+Уточнение для интеграции: обязательные типы, message_id, ошибки и внутрипроцессный Python-адаптер закреплены в [контракте v1.0](../contracts/README.md). При расхождении этот контракт приоритетнее предварительных полей ниже. Gemini API проверен; [результат](gemini-check.md).
+
+Цель первого сквозного запуска — за 60 минут. Полный обязательный контур — за 150 минут. Gemini API подтверждён пробным запросом; OpenAI с балансом коллеги — основной кандидат после проверки доступа и точности. Платная подписка в чат-приложении не является подтверждением API-ключа.
 
 ## Компоненты
 
@@ -63,7 +65,7 @@ React/TypeScript/Vite — предложение при знакомстве к�
 | POST | /api/checklists | новая конфигурация |
 | POST | /api/checklists/{id}/versions | новая неизменяемая версия |
 | GET | /api/checklists | доступные версии |
-| POST | /api/evaluations | conversation_id + checklist_version_id → job/evaluation ID |
+| POST | /api/evaluations | conversation_id + checklist_id + checklist_version → EvaluationJob (202) |
 | GET | /api/evaluations/{id} | статус либо полный результат и доказательства |
 | POST | /api/appeals | evaluation_id + criterion_id + comment |
 | POST | /api/appeals/{id}/decision | confirm/change + final value + reason → пересчитанный итог |

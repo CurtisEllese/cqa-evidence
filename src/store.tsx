@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import type { AppData, Checklist } from "./domain/types";
 import { apiRequest } from "./services/api";
 import type { ServerState, DatasetInfo } from "./services/api";
+import type { EvaluationJob } from "./services/evaluation";
 
 const LEGACY_KEY = "freedom-quality-organizer-v2";
 const EMPTY_DATA: AppData = {
@@ -168,14 +169,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         saveChecklist: async (checklist, expectedVersion) => {
           const next = await mutate(
             `/api/checklists/${encodeURIComponent(checklist.id)}/versions`,
-            { checklist, expectedVersion },
+            { checklist: { ...checklist, criteria: checklist.criteria.map(c => ({
+                ...c, weight: c.wireWeight !== undefined && Number(c.wireWeight) === c.weight ? c.wireWeight : String(c.weight),
+              })) }, expectedVersion },
           );
           setToast("Новая версия чек-листа сохранена на сервере");
           return next.data.checklist;
         },
         evaluate: async (conversationId) => {
-          await mutate("/api/evaluations", { conversationId });
-          setToast("Оценка готова");
+          if (!session) throw new Error("Сначала загрузите чек-лист.");
+          let job = await apiRequest<EvaluationJob>("/api/evaluations", {
+            conversation_id: conversationId, checklist_id: session.data.checklist.id,
+            checklist_version: session.data.checklist.version,
+          });
+          const deadline = Date.now() + 150_000;
+          while (job.status === "queued" || job.status === "running") {
+            if (Date.now() > deadline) throw new Error(`Оценка ещё выполняется. Номер задачи: ${job.id}`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            job = await apiRequest<EvaluationJob>(`/api/evaluations/${encodeURIComponent(job.id)}`);
+          }
+          if (job.status === "failed") throw new Error(job.error?.error.message ?? "Оценка не завершена.");
+          acceptState(await apiRequest<ServerState>("/api/state"));
+          setToast(job.status === "needs_review" ? "Предварительная оценка требует проверки" : "Оценка готова");
         },
         createAppeal: async (appeal) => {
           await mutate("/api/appeals", appeal);

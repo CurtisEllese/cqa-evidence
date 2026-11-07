@@ -88,7 +88,9 @@ def test_evaluation_and_appeal_preview_decision_persistence(setup):
     item=next(c for c in saved.json()['data']['conversations'] if c['id']==conversation['id'])
     assert item['scores']['original']['critical'] is False and item['scores']['final']['critical'] is True
     assert client.post('/api/appeals/'+appeal['id']+'/decision',json=change).status_code==409
-    assert client.get('/api/evaluations/'+evaluation['id']).json()['results'][-1]['value']==0
+    # Legacy records stay in storage; the HTTP route now serves canonical jobs.
+    with repo.connect() as db:
+        assert repo.evaluation(db,evaluation['id'])[1]['results'][-1]['value']==0
 
 
 def test_invalid_appeal_value_and_wrong_conversation_rejected(setup):
@@ -107,7 +109,7 @@ def test_refresh_failure_preserves_all_data_and_no_fake_evaluation(setup):
     before=repo.state()
     assert client.post('/api/organizer/refresh').status_code==503
     assert repo.state()==before
-    assert client.post('/api/evaluations',json={'conversationId':'test-only-0'}).status_code==503
+    assert client.post('/api/evaluations',json={'conversation_id':'test-only-0','checklist_id':'cqa-official','checklist_version':1}).status_code==503
     assert all(c['evaluation'] is None for c in repo.state()['data']['conversations'])
 
 
@@ -116,7 +118,8 @@ def test_changed_transcript_invalidates_current_score_but_preserves_history(setu
     payload=dev_payload();payload['data']['records'][0]['transcript'][0]['text']='Другой синтетический запрос'
     repo.replace_dev(payload)
     assert repo.state()['data']['conversations'][0]['evaluation'] is None
-    assert client.get('/api/evaluations/'+evaluation['id']).status_code==200
+    with repo.connect() as db:
+        assert repo.evaluation(db,evaluation['id'])[1]['id']==evaluation['id']
 
 
 def test_local_migration_is_idempotent_and_refuses_overwriting_server_edits(setup):

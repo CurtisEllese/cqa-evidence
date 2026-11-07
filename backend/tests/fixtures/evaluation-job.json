@@ -1,0 +1,518 @@
+{
+  "schema_version": "1.0",
+  "id": "synthetic-2",
+  "status": "completed",
+  "evaluation": {
+    "schema_version": "1.0",
+    "id": "synthetic-2",
+    "conversation_id": "synthetic-kz",
+    "conversation_hash": "3202520bacd3a9bb366195cc41c41d3439b4540e3fba956b0e9ebff54902a639",
+    "checklist": {
+      "schema_version": "1.0",
+      "id": "cqa-official",
+      "version": 1,
+      "name": "CQA — официальный чек-лист",
+      "channel": "any",
+      "criteria": [
+        {
+          "id": "greeting",
+          "title": "Установление контакта",
+          "description": "В первом ответе оператор поздоровался на языке клиента И представился. Приветствие бота не считается.",
+          "type": "binary",
+          "weight": "10",
+          "max": 1,
+          "allowed_values": [
+            0,
+            1
+          ],
+          "allow_na": false,
+          "na_condition": null,
+          "section": "Начало и понимание запроса"
+        },
+        {
+          "id": "discovery",
+          "title": "Выявление потребности",
+          "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+          "type": "binary",
+          "weight": "15",
+          "max": 1,
+          "allowed_values": [
+            0,
+            1
+          ],
+          "allow_na": true,
+          "na_condition": "Данных изначально достаточно для ответа на запрос.",
+          "section": "Начало и понимание запроса"
+        },
+        {
+          "id": "identification",
+          "title": "Идентификация",
+          "description": "Проверка подтверждена ДО раскрытия данных или защищённого действия. Неподтверждённая обязательная проверка — Нет. Согласие на обработку данных не равно идентификации.",
+          "type": "binary",
+          "weight": "20",
+          "max": 1,
+          "allowed_values": [
+            0,
+            1
+          ],
+          "allow_na": true,
+          "na_condition": "Запрос не требует идентификации клиента.",
+          "section": "Безопасность и решение"
+        },
+        {
+          "id": "consultation",
+          "title": "Корректная и полная консультация",
+          "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+          "type": "scale",
+          "weight": "20",
+          "max": 20,
+          "allowed_values": [
+            0,
+            5,
+            10,
+            15,
+            20
+          ],
+          "allow_na": true,
+          "na_condition": "Разговор закончился до формулировки запроса.",
+          "section": "Безопасность и решение"
+        },
+        {
+          "id": "empathy",
+          "title": "Эмпатия и клиентоориентированность",
+          "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+          "type": "binary",
+          "weight": "15",
+          "max": 1,
+          "allowed_values": [
+            0,
+            1
+          ],
+          "allow_na": false,
+          "na_condition": null,
+          "section": "Ведение и завершение диалога"
+        },
+        {
+          "id": "dialogue",
+          "title": "Управление диалогом, скорость и грамотность",
+          "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+          "type": "scale",
+          "weight": "15",
+          "max": 10,
+          "allowed_values": [
+            0,
+            4,
+            7,
+            10
+          ],
+          "allow_na": false,
+          "na_condition": null,
+          "section": "Ведение и завершение диалога"
+        },
+        {
+          "id": "closing",
+          "title": "Завершение",
+          "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+          "type": "binary",
+          "weight": "5",
+          "max": 1,
+          "allowed_values": [
+            0,
+            1
+          ],
+          "allow_na": true,
+          "na_condition": "Диалог оборвался до возможности корректного завершения.",
+          "section": "Ведение и завершение диалога"
+        },
+        {
+          "id": "gross-errors",
+          "title": "Грубые ошибки",
+          "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+          "type": "flag",
+          "weight": "0",
+          "max": 1,
+          "allowed_values": [
+            0,
+            1
+          ],
+          "allow_na": false,
+          "na_condition": null,
+          "section": "Грубые нарушения"
+        }
+      ]
+    },
+    "created_at": "2026-11-07T00:00:00Z",
+    "revision": 0,
+    "original": {
+      "status": "completed",
+      "results": [
+        {
+          "criterion_id": "greeting",
+          "value": 1,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "10",
+          "effective_weight": "15.38461538461538461538461538461538461538461538461538",
+          "contribution": "15.38461538461538461538461538461538461538461538461538"
+        },
+        {
+          "criterion_id": "discovery",
+          "value": null,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": "Условие неприменимости выполнено в тестовом примере.",
+          "evidence": {
+            "kind": "not_applicable",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "15",
+          "effective_weight": null,
+          "contribution": null
+        },
+        {
+          "criterion_id": "identification",
+          "value": null,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": "Условие неприменимости выполнено в тестовом примере.",
+          "evidence": {
+            "kind": "not_applicable",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "20",
+          "effective_weight": null,
+          "contribution": null
+        },
+        {
+          "criterion_id": "consultation",
+          "value": 15,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "20",
+          "effective_weight": "30.76923076923076923076923076923076923076923076923077",
+          "contribution": "23.07692307692307692307692307692307692307692307692308"
+        },
+        {
+          "criterion_id": "empathy",
+          "value": 1,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "15",
+          "effective_weight": "23.07692307692307692307692307692307692307692307692308",
+          "contribution": "23.07692307692307692307692307692307692307692307692308"
+        },
+        {
+          "criterion_id": "dialogue",
+          "value": 7,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "15",
+          "effective_weight": "23.07692307692307692307692307692307692307692307692308",
+          "contribution": "16.15384615384615384615384615384615384615384615384615"
+        },
+        {
+          "criterion_id": "closing",
+          "value": 1,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "5",
+          "effective_weight": "7.692307692307692307692307692307692307692307692307692",
+          "contribution": "7.692307692307692307692307692307692307692307692307692"
+        },
+        {
+          "criterion_id": "gross-errors",
+          "value": 0,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "0",
+          "effective_weight": "0",
+          "contribution": "0"
+        }
+      ],
+      "total_score": "85.38",
+      "provisional_total_score": null,
+      "score_unavailable_reason": null,
+      "critical_error": false,
+      "sections": [
+        {
+          "section": "Безопасность и решение",
+          "score": "75.00"
+        },
+        {
+          "section": "Ведение и завершение диалога",
+          "score": "87.14"
+        },
+        {
+          "section": "Грубые нарушения",
+          "score": null
+        },
+        {
+          "section": "Начало и понимание запроса",
+          "score": "100.00"
+        }
+      ],
+      "validation_issues": []
+    },
+    "final": {
+      "status": "completed",
+      "results": [
+        {
+          "criterion_id": "greeting",
+          "value": 1,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "10",
+          "effective_weight": "15.38461538461538461538461538461538461538461538461538",
+          "contribution": "15.38461538461538461538461538461538461538461538461538"
+        },
+        {
+          "criterion_id": "discovery",
+          "value": null,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": "Условие неприменимости выполнено в тестовом примере.",
+          "evidence": {
+            "kind": "not_applicable",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "15",
+          "effective_weight": null,
+          "contribution": null
+        },
+        {
+          "criterion_id": "identification",
+          "value": null,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": "Условие неприменимости выполнено в тестовом примере.",
+          "evidence": {
+            "kind": "not_applicable",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "20",
+          "effective_weight": null,
+          "contribution": null
+        },
+        {
+          "criterion_id": "consultation",
+          "value": 15,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "20",
+          "effective_weight": "30.76923076923076923076923076923076923076923076923077",
+          "contribution": "23.07692307692307692307692307692307692307692307692308"
+        },
+        {
+          "criterion_id": "empathy",
+          "value": 1,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "15",
+          "effective_weight": "23.07692307692307692307692307692307692307692307692308",
+          "contribution": "23.07692307692307692307692307692307692307692307692308"
+        },
+        {
+          "criterion_id": "dialogue",
+          "value": 7,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "15",
+          "effective_weight": "23.07692307692307692307692307692307692307692307692308",
+          "contribution": "16.15384615384615384615384615384615384615384615384615"
+        },
+        {
+          "criterion_id": "closing",
+          "value": 1,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "5",
+          "effective_weight": "7.692307692307692307692307692307692307692307692307692",
+          "contribution": "7.692307692307692307692307692307692307692307692307692"
+        },
+        {
+          "criterion_id": "gross-errors",
+          "value": 0,
+          "explanation": "Синтетическое экспертное решение.",
+          "na_reason": null,
+          "evidence": {
+            "kind": "message",
+            "message_ids": [
+              "synthetic-kz-m1"
+            ],
+            "start_message_id": null,
+            "end_message_id": null,
+            "quote": "Идентификация подтверждена"
+          },
+          "evidence_status": "verified",
+          "weight": "0",
+          "effective_weight": "0",
+          "contribution": "0"
+        }
+      ],
+      "total_score": "85.38",
+      "provisional_total_score": null,
+      "score_unavailable_reason": null,
+      "critical_error": false,
+      "sections": [
+        {
+          "section": "Безопасность и решение",
+          "score": "75.00"
+        },
+        {
+          "section": "Ведение и завершение диалога",
+          "score": "87.14"
+        },
+        {
+          "section": "Грубые нарушения",
+          "score": null
+        },
+        {
+          "section": "Начало и понимание запроса",
+          "score": "100.00"
+        }
+      ],
+      "validation_issues": []
+    },
+    "decisions": [],
+    "provenance": {
+      "provider": "test-only",
+      "model": "synthetic",
+      "prompt_version": "v1",
+      "knowledge_version": "none",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": null
+    }
+  },
+  "error": null
+}
