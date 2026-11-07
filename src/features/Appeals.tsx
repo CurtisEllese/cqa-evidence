@@ -1,0 +1,422 @@
+import { useState } from "react";
+import {
+  ArrowUpRight,
+  Check,
+  Flag,
+  MessageSquare,
+  ShieldCheck,
+} from "lucide-react";
+import { useStore } from "../store";
+import {
+  Avatar,
+  Badge,
+  Button,
+  EmptyState,
+  Modal,
+  Notice,
+  PageHeading,
+  Score,
+} from "../components/ui";
+import { scoreEvaluation } from "../domain/scoring";
+import type { Appeal } from "../domain/types";
+
+export function Appeals({ onOpen }: { onOpen: (id: string) => void }) {
+  const { data } = useStore();
+  const [filter, setFilter] = useState("pending");
+  const [selected, setSelected] = useState<Appeal | null>(null);
+  const appeals = data.appeals.filter(
+    (item) => filter === "all" || item.status === filter,
+  );
+  return (
+    <>
+      <PageHeading
+        eyebrow="ОБРАТНАЯ СВЯЗЬ"
+        title="Каждая оценка заслуживает внимания"
+        description="Рассматривайте спорные критерии и сохраняйте обоснованные решения."
+      />
+      <div className="appeals-intro">
+        <ShieldCheck size={23} />
+        <div>
+          <strong>Прозрачность на каждом этапе</strong>
+          <p>
+            Исходная оценка, комментарий оператора и решение проверяющего
+            сохраняются вместе.
+          </p>
+        </div>
+      </div>
+      <div className="list-tabs" role="tablist" aria-label="Статус апелляции">
+        {[
+          ["pending", "На рассмотрении"],
+          ["accepted", "Принятые"],
+          ["rejected", "Отклонённые"],
+          ["all", "Все"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            role="tab"
+            aria-selected={filter === value}
+            onClick={() => setFilter(value)}
+          >
+            {label}
+            <span>
+              {
+                data.appeals.filter(
+                  (a) => value === "all" || a.status === value,
+                ).length
+              }
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="appeals-grid">
+        {appeals.map((appeal) => {
+          const conversation = data.conversations.find(
+            (c) => c.id === appeal.conversationId,
+          );
+          const evaluation = conversation?.evaluation;
+          const criterion = evaluation?.checklist.criteria.find(
+            (c) => c.id === appeal.criterionId,
+          );
+          return (
+            <article className="panel appeal-card" key={appeal.id}>
+              <div className="appeal-card-header">
+                <Badge
+                  tone={
+                    appeal.status === "pending"
+                      ? "amber"
+                      : appeal.status === "accepted"
+                        ? "green"
+                        : "neutral"
+                  }
+                >
+                  {appeal.status === "pending"
+                    ? "На рассмотрении"
+                    : appeal.status === "accepted"
+                      ? "Принята"
+                      : "Отклонена"}
+                </Badge>
+                <span>
+                  {new Intl.DateTimeFormat("ru-RU", {
+                    day: "2-digit",
+                    month: "short",
+                    timeZone: "Asia/Qyzylorda",
+                  }).format(new Date(appeal.createdAt))}
+                </span>
+              </div>
+              <h2>{criterion?.title || "Критерий предыдущей оценки"}</h2>
+              <button
+                className="appeal-conversation"
+                onClick={() => onOpen(appeal.conversationId)}
+              >
+                <MessageSquare size={15} />
+                {conversation?.title || appeal.conversationId}
+                <ArrowUpRight size={14} />
+              </button>
+              <blockquote>{appeal.comment}</blockquote>
+              <div className="appeal-author">
+                <Avatar name={conversation?.initials || "ОП"} small />
+                <div>
+                  <strong>{conversation?.operator || "Оператор"}</strong>
+                  <span>Автор обращения</span>
+                </div>
+              </div>
+              {appeal.decision && (
+                <div className="decision-note">
+                  <Check size={16} />
+                  <div>
+                    <strong>Решение проверяющего</strong>
+                    <p>{appeal.decision}</p>
+                  </div>
+                </div>
+              )}
+              <div className="appeal-card-bottom">
+                <span>
+                  Исходное значение <b>{appeal.originalValue ?? "N/A"}</b>
+                  {appeal.status === "accepted" && (
+                    <>
+                      {" "}
+                      → <b>{appeal.newValue ?? "N/A"}</b>
+                    </>
+                  )}
+                </span>
+                {appeal.status === "pending" ? (
+                  <Button onClick={() => setSelected(appeal)}>
+                    Рассмотреть
+                    <ArrowUpRight size={15} />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => onOpen(appeal.conversationId)}
+                  >
+                    К результату
+                    <ArrowUpRight size={15} />
+                  </Button>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      {!appeals.length && (
+        <div className="panel">
+          <EmptyState
+            title={
+              filter === "pending"
+                ? "Все обращения рассмотрены"
+                : "Здесь пока нет обращений"
+            }
+            description="Новая апелляция появится здесь после отправки из карточки диалога."
+          />
+        </div>
+      )}
+      {selected && (
+        <ReviewDialog
+          appeal={selected}
+          onClose={() => setSelected(null)}
+          onOpen={onOpen}
+        />
+      )}
+    </>
+  );
+}
+function ReviewDialog({
+  appeal,
+  onClose,
+  onOpen,
+}: {
+  appeal: Appeal;
+  onClose: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const { data, decideAppeal } = useStore();
+  const [decision, setDecision] = useState("");
+  const [outcome, setOutcome] = useState<"accepted" | "rejected">("accepted");
+  const [value, setValue] = useState(
+    appeal.originalValue === null ? "na" : String(appeal.originalValue),
+  );
+  const conversation = data.conversations.find(
+    (c) => c.id === appeal.conversationId,
+  );
+  const evaluation = conversation?.evaluation;
+  const criterion = evaluation?.checklist.criteria.find(
+    (c) => c.id === appeal.criterionId,
+  );
+  const result = evaluation?.results.find(
+    (r) => r.criterionId === appeal.criterionId,
+  );
+  if (
+    !conversation ||
+    !evaluation ||
+    !criterion ||
+    evaluation.id !== appeal.evaluationId
+  )
+    return (
+      <Modal title="Оценка была обновлена" onClose={onClose}>
+        <Notice>
+          Для этого обращения нужна сохранённая версия оценки. Вернитесь к
+          карточке диалога.
+        </Notice>
+        <div className="modal-actions">
+          <Button onClick={onClose}>Закрыть</Button>
+        </div>
+      </Modal>
+    );
+  const newValue = value === "na" ? null : Number(value);
+  const valueValid =
+    value === "na"
+      ? criterion.allowNA && criterion.type !== "flag"
+      : value.trim() !== "" &&
+        Number.isInteger(newValue) &&
+        newValue! >= 0 &&
+        newValue! <= criterion.max &&
+        ((criterion.type !== "binary" && criterion.type !== "flag") ||
+          newValue === 0 ||
+          newValue === 1) &&
+        (criterion.allowedValues === undefined ||
+          criterion.allowedValues.includes(newValue!));
+  const valid =
+    decision.trim().length >= 10 && (outcome === "rejected" || valueValid);
+  const preview = scoreEvaluation(
+    evaluation,
+    outcome === "rejected" || valueValid
+      ? [
+          ...data.appeals.filter((a) => a.id !== appeal.id),
+          {
+            ...appeal,
+            status: outcome,
+            newValue: outcome === "rejected" ? appeal.originalValue : newValue,
+          },
+        ]
+      : data.appeals,
+  );
+  return (
+    <Modal title="Рассмотрение апелляции" onClose={onClose} wide>
+      <div className="review-grid">
+        <div>
+          <div className="appeal-criterion">
+            <Flag size={19} />
+            <div>
+              <strong>{criterion.title}</strong>
+              <span>
+                Исходное значение: {appeal.originalValue ?? "N/A"} · вес{" "}
+                {criterion.weight}
+              </span>
+            </div>
+          </div>
+          <h3 className="field-label">Комментарий оператора</h3>
+          <blockquote className="review-quote">{appeal.comment}</blockquote>
+          <h3 className="field-label">Фрагмент диалога</h3>
+          {conversation.transcript
+            .filter((m) => result?.evidenceIds.includes(m.id))
+            .map((m) => (
+              <blockquote key={m.id} className="review-evidence">
+                <small>
+                  {m.speaker === "operator" ? "Оператор" : "Клиент"} ·{" "}
+                  {m.timestamp}
+                </small>
+                {m.text}
+              </blockquote>
+            ))}
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onClose();
+              onOpen(conversation.id);
+            }}
+          >
+            Открыть полный диалог
+            <ArrowUpRight size={15} />
+          </Button>
+        </div>
+        <div>
+          <label className="field-label" htmlFor="review-outcome">
+            Решение
+          </label>
+          <select
+            id="review-outcome"
+            value={outcome}
+            onChange={(e) =>
+              setOutcome(e.target.value as "accepted" | "rejected")
+            }
+          >
+            <option value="accepted">Изменить оценку</option>
+            <option value="rejected">Подтвердить исходную оценку</option>
+          </select>
+          {outcome === "accepted" && (
+            <>
+              <label className="field-label" htmlFor="review-value">
+                Новое значение
+              </label>
+              {criterion.type === "binary" ||
+              criterion.type === "flag" ||
+              criterion.allowedValues !== undefined ? (
+                <select
+                  id="review-value"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                >
+                  {(criterion.allowedValues ?? [0, 1]).map((option) => (
+                    <option key={option} value={option}>
+                      {criterion.type === "flag"
+                        ? option === 1
+                          ? "Да, есть нарушение · 1"
+                          : "Нет нарушения · 0"
+                        : criterion.type === "binary"
+                          ? option === 1
+                            ? "Да · 1"
+                            : "Нет · 0"
+                          : `${option} баллов`}
+                    </option>
+                  ))}
+                  {criterion.allowNA && criterion.type !== "flag" && (
+                    <option value="na">Не применимо · N/A</option>
+                  )}
+                </select>
+              ) : (
+                <>
+                  <input
+                    id="review-value"
+                    type="number"
+                    min="0"
+                    max={criterion.max}
+                    step="1"
+                    disabled={value === "na"}
+                    value={value === "na" ? "" : value}
+                    onChange={(e) => setValue(e.target.value)}
+                  />
+                  <span className="field-hint">От 0 до {criterion.max}</span>
+                  {criterion.allowNA && (
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={value === "na"}
+                        onChange={(e) =>
+                          setValue(e.target.checked ? "na" : "0")
+                        }
+                      />
+                      Не применимо (N/A)
+                    </label>
+                  )}
+                </>
+              )}
+              {criterion.type === "flag" && (
+                <Notice kind="warning">
+                  Флаг грубой ошибки отображается отдельно и не меняет числовой
+                  итог.
+                </Notice>
+              )}
+              {criterion.allowNA && criterion.naCondition && (
+                <span className="field-hint">
+                  «Не применимо»: {criterion.naCondition}
+                </span>
+              )}
+              {!valueValid && (
+                <Notice kind="error">
+                  Выберите допустимое значение по сохранённой версии чек-листа.
+                </Notice>
+              )}
+            </>
+          )}
+          <label className="field-label" htmlFor="review-reason">
+            Обоснование решения
+          </label>
+          <textarea
+            id="review-reason"
+            value={decision}
+            onChange={(e) => setDecision(e.target.value)}
+            rows={4}
+            maxLength={2000}
+            placeholder="Объясните, почему оценка изменена или подтверждена…"
+          />
+          <span className="field-hint">Минимум 10 символов</span>
+          <div className="review-total">
+            <span>Итог после решения</span>
+            <Score value={preview.total} />
+          </div>
+          {preview.critical && <Badge tone="red">Есть грубая ошибка</Badge>}
+        </div>
+      </div>
+      <div className="modal-actions">
+        <Button onClick={onClose}>Отмена</Button>
+        <Button
+          variant="primary"
+          disabled={!valid}
+          onClick={() => {
+            if (!valid) return;
+            decideAppeal(
+              appeal.id,
+              outcome,
+              decision.trim(),
+              outcome === "rejected" ? appeal.originalValue : newValue,
+            );
+            onClose();
+          }}
+        >
+          Сохранить решение
+          <Check size={16} />
+        </Button>
+      </div>
+    </Modal>
+  );
+}
