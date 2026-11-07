@@ -1,0 +1,136 @@
+{
+  "$defs": {
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "binary",
+            "scale",
+            "flag"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "max": {
+          "exclusiveMinimum": 0,
+          "title": "Max",
+          "type": "integer"
+        },
+        "allowed_values": {
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "title": "Allowed Values",
+          "type": "array"
+        },
+        "allow_na": {
+          "title": "Allow Na",
+          "type": "boolean"
+        },
+        "na_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Na Condition"
+        },
+        "section": {
+          "minLength": 1,
+          "title": "Section",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "type",
+        "weight",
+        "max",
+        "allowed_values",
+        "allow_na",
+        "na_condition",
+        "section"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "channel": {
+      "enum": [
+        "agent chat",
+        "voice call",
+        "any"
+      ],
+      "title": "Channel",
+      "type": "string"
+    },
+    "criteria": {
+      "items": {
+        "$ref": "#/$defs/Criterion"
+      },
+      "minItems": 1,
+      "title": "Criteria",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "name",
+    "channel",
+    "criteria"
+  ],
+  "title": "Checklist",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

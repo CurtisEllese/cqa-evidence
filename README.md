@@ -16,6 +16,9 @@ Conversation Quality Analytics для Freedom Broker CQA Hackathon: React/TypeSc
 - [Подключение API организатора](docs/api-setup.md)
 - [План проверки точности](docs/evaluation.md)
 - [Визуальные источники Freedom](docs/BRAND.md)
+- [План команды и владельцы задач](docs/team-plan.md)
+- [Исследование готовых решений](docs/open-source.md)
+- [Архивный контракт v1](contracts/README.md)
 
 Опубликованный `contracts/v1.py` и его схемы остаются замороженной версией. Источник активных типов — `backend/contracts/v2`; `contracts/v2/*.schema.json` и `src/generated/contracts.ts` генерируются. Приложение не принимает смесь v1/v2.
 
