@@ -83,7 +83,9 @@ with sync_playwright() as p:
     # The global retry must repeat the failed group, not merely GET /api/state.
     dialog.get_by_role('button', name='Закрыть', exact=True).click()
     page.get_by_role('button', name='Повторить загрузку', exact=True).click()
-    expect(page.get_by_role('button', name='Повторить загрузку', exact=True)).to_be_disabled()
+    # Starting the retry clears the old error banner and its button.
+    expect(page.get_by_role('button', name='Повторить загрузку', exact=True)).to_have_count(0)
+    expect(page.get_by_text('Загружаем диалоги заказчика…', exact=True)).to_be_visible()
     page.wait_for_timeout(150)
     assert requests[-1] == dict(schema_version='2.0', groupId='BROKEN')
     assert len(requests) == 3

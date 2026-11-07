@@ -1,6 +1,7 @@
 import type * as Wire from "../generated/contracts";
 import type { Checklist, Evaluation } from "../domain/types";
 import {
+  checklistFromWire,
   checklistToWire,
   evaluationFromWire,
   scoreFromWire,
@@ -52,11 +53,11 @@ function responseError(payload: unknown): Error {
     "Сервер вернул ошибку в неподдерживаемом формате. Повторите попытку.",
   );
 }
-async function request<T extends { schema_version: "2.0" }>(
+async function requestJson(
   path: string,
   body?: { schema_version: "2.0" },
   signal?: AbortSignal,
-): Promise<T> {
+): Promise<unknown> {
   const response = await fetch(path, {
     method: body === undefined ? "GET" : "POST",
     headers: {
@@ -75,11 +76,30 @@ async function request<T extends { schema_version: "2.0" }>(
     );
   }
   if (!response.ok) throw responseError(payload);
+  return payload;
+}
+async function request<T extends { schema_version: "2.0" }>(
+  path: string,
+  body?: { schema_version: "2.0" },
+  signal?: AbortSignal,
+): Promise<T> {
+  const payload = await requestJson(path, body, signal);
   if (!isObject(payload) || payload.schema_version !== "2.0")
     throw new Error(
       "Версия ответа сервера не поддерживается. Требуется контракт v2.0.",
     );
   return payload as T;
+}
+export async function fetchChecklists(
+  signal?: AbortSignal,
+): Promise<Checklist[]> {
+  const payload = await requestJson("/api/checklists", undefined, signal);
+  if (
+    !Array.isArray(payload) ||
+    payload.some((item) => !isObject(item) || item.schema_version !== "2.0")
+  )
+    throw new Error("Список версий чек-листа не соответствует контракту v2.0.");
+  return (payload as Wire.Checklist[]).map(checklistFromWire);
 }
 export const fetchWorkspace = async () =>
   stateFromWire(await request<Wire.WorkspaceState>("/api/state"));
@@ -154,10 +174,12 @@ export async function previewAppeal(
 }
 export async function startEvaluation(
   conversationId: string,
+  checklistVersion?: number,
 ): Promise<Evaluation> {
   const body: Wire.StartEvaluationRequest = {
     schema_version: "2.0",
     conversationId,
+    ...(checklistVersion === undefined ? {} : { checklistVersion }),
   };
   return evaluationFromWire(
     await request<Wire.EvaluationResult>("/api/evaluations", body),

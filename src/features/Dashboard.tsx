@@ -22,7 +22,7 @@ export function Dashboard({
   onNavigate: (page: string) => void;
   onImport: () => void;
 }) {
-  const { data } = useStore();
+  const { data, evaluationAvailable } = useStore();
   const evaluated = data.conversations.filter(
     (item) => item.evaluation?.status === "completed",
   );
@@ -120,9 +120,15 @@ export function Dashboard({
               <Sparkles size={28} />
               <h3>Оценок пока нет</h3>
               <p>
-                Диалоги загружены для просмотра. Автоматическая оценка появится
-                после подключения сервиса ИИ.
+                {evaluationAvailable
+                  ? "Откройте диалог и запустите оценку. Здесь появятся проверенные результаты."
+                  : "Диалоги доступны для просмотра. Для автоматической оценки подключите сервис ИИ."}
               </p>
+              {evaluationAvailable && (
+                <Button onClick={() => onNavigate("conversations")}>
+                  Перейти к оценке диалога <ArrowRight size={16} />
+                </Button>
+              )}
             </div>
           ) : (
             <div className="quality-chart">

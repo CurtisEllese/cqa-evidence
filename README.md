@@ -6,6 +6,7 @@ Conversation Quality Analytics для Freedom Broker CQA Hackathon: React/TypeSc
 
 ## Документация
 
+- [Интегрированный сценарий: группы, фильтр грубых ошибок, версии и проверки](docs/jury-flow-integration.md)
 - [Официальные уточнения Freedom и текущие приоритеты](docs/organizer-clarifications.md)
 - [Сценарий живой защиты](docs/live-demo.md) и [синтетические входные данные](demo/README.md)
 - [Источники продуктовых фактов — кандидаты для проверки применимости](docs/product/knowledge-sources.md)

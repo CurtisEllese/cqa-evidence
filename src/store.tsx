@@ -81,7 +81,7 @@ type Store = {
     list: Checklist,
     expectedVersion: number,
   ) => Promise<Checklist>;
-  evaluate: (id: string) => Promise<void>;
+  evaluate: (id: string, checklistVersion?: number) => Promise<void>;
   createAppeal: (appeal: {
     conversationId: string;
     evaluationId: string;
@@ -149,6 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   function trackEvaluation(
     conversationId: string,
     existing?: Evaluation,
+    checklistVersion?: number,
   ): Promise<void> {
     const active = evaluationRequests.current.get(conversationId);
     if (active) return active;
@@ -162,7 +163,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
     const task = (async () => {
       try {
-        let job = existing ?? (await startEvaluation(conversationId));
+        let job =
+          existing ?? (await startEvaluation(conversationId, checklistVersion));
         acceptState(await fetchWorkspace());
         while (job.status === "queued" || job.status === "running") {
           await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -277,7 +279,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setToast("Новая версия чек-листа сохранена на сервере");
           return next.data.checklist;
         },
-        evaluate: (conversationId) => {
+        evaluate: (conversationId, checklistVersion) => {
           const existing = session?.data.conversations.find(
             (conversation) => conversation.id === conversationId,
           )?.evaluation;
@@ -287,6 +289,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               (existing.status === "queued" || existing.status === "running")
               ? existing
               : undefined,
+            checklistVersion,
           );
         },
         createAppeal: async (appeal) => {

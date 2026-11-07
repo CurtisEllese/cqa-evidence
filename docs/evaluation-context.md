@@ -83,7 +83,8 @@ curl -sS http://127.0.0.1:8000/api/evaluations -H 'Content-Type: application/jso
 
 Во время обработки UI показывает версию **задачи**, а не глобальную текущую.
 В JSON Schema и `src/generated/contracts.ts` поле сгенерировано из Pydantic.
-UI-селектор делает Krutoi312; здесь его нет.
+В интеграционной поставке UI-селектор подключён через GET `/api/checklists`;
+описание поведения и проверки — [jury-flow-integration.md](jury-flow-integration.md).
 
 Важное уточнение аудита: прежняя блокировка переоценки после апелляции находилась
 в UI, но отсутствовала в `EvaluationService.create`. Теперь этот же запрет действует

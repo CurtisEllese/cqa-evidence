@@ -1181,6 +1181,40 @@ tbody tr:hover {
   width: 135px;
   font-size: 12px;
 }
+.table-toolbar > select[aria-label="Грубые ошибки"] {
+  width: 225px;
+  max-width: 100%;
+}
+.evaluation-controls {
+  margin-top: 16px;
+}
+.checklist-version-field {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.checklist-version-field select {
+  min-width: 0;
+  width: 100%;
+}
+.original-findings {
+  padding: 18px;
+  margin-top: 14px;
+  border-left: 3px solid #b5684b;
+  overflow-wrap: anywhere;
+}
+.original-findings h2 {
+  font-size: 15px;
+}
+.original-findings h3 {
+  margin-top: 14px;
+  font-size: 13px;
+}
+.original-findings p {
+  margin: 8px 0 12px;
+  font-size: 12px;
+}
 .filter-panel {
   display: flex;
   gap: 14px;
