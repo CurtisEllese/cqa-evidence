@@ -27,6 +27,8 @@ import {
 } from "../components/ui";
 import { downloadExport } from "../services/api";
 import { evaluationLabel, evaluationTone } from "./evaluationStatus";
+import { EvaluationControls } from "./EvaluationControls";
+import { originalCriticalStatus } from "./criticalStatus";
 
 export function ConversationDetail({
   id,
@@ -72,12 +74,19 @@ export function ConversationDetail({
       item.conversationId === id && item.evaluationId === evaluation?.id,
   );
   const hasAccepted = appeals.some((a) => a.status === "accepted");
-  async function runEvaluation() {
-    if (!evaluationAvailable || appeals.length > 0 || evaluating) return;
+  const hasAppealHistory = data.appeals.some(
+    (item) => item.conversationId === id,
+  );
+  const originalFindings =
+    originalCriticalStatus(conversation) === "present"
+      ? (original?.results.filter((result) => result.critical) ?? [])
+      : [];
+  async function runEvaluation(checklistVersion: number) {
+    if (!evaluationAvailable || hasAppealHistory || evaluating) return;
     setBusy(true);
     setError("");
     try {
-      await evaluate(id);
+      await evaluate(id, checklistVersion);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось выполнить оценку");
     } finally {
@@ -279,37 +288,46 @@ export function ConversationDetail({
               </div>
             )}
           </div>
-          <div className="evaluation-actions">
-            <Button
-              variant="primary"
-              onClick={runEvaluation}
-              disabled={
-                evaluating || !evaluationAvailable || appeals.length > 0
-              }
+          {originalFindings.length > 0 && (
+            <section
+              className="panel original-findings"
+              aria-label="Грубые ошибки исходной оценки"
             >
-              <Sparkles size={16} />{" "}
-              {evaluating
-                ? "Оцениваем…"
-                : !evaluationAvailable
-                  ? "Оценка пока недоступна"
-                  : appeals.length > 0
-                    ? "Оценка зафиксирована"
-                    : evaluation &&
-                        (evaluation.status === "queued" ||
-                          evaluation.status === "running")
-                      ? "Проверить результат"
-                      : evaluation
-                        ? "Обновить оценку"
-                        : "Оценить диалог"}
-            </Button>
-            <span>
-              {appeals.length
-                ? "История апелляций сохранена"
-                : !evaluationAvailable
-                  ? "Сервис автоматической оценки ещё не подключён"
-                  : "На текущей версии чек-листа"}
-            </span>
-          </div>
+              <h2>Грубые ошибки исходной оценки ИИ</h2>
+              <p>
+                {final?.critical
+                  ? "Флаг в итоговой оценке: есть нарушение."
+                  : "После апелляции флаг снят. Исходное обнаружение сохранено."}
+              </p>
+              {originalFindings.map((finding) => (
+                <div key={finding.criterionId}>
+                  <h3>
+                    {
+                      evaluation?.checklist.criteria.find(
+                        (item) => item.id === finding.criterionId,
+                      )?.title
+                    }
+                  </h3>
+                  <p>{finding.explanation}</p>
+                  <Button
+                    disabled={!finding.evidenceIds.length}
+                    onClick={() => showEvidence(finding.evidenceIds)}
+                  >
+                    <Link2 size={14} /> Показать основание исходного флага
+                  </Button>
+                </div>
+              ))}
+            </section>
+          )}
+          <EvaluationControls
+            key={id}
+            latestVersion={data.checklist.version}
+            available={evaluationAvailable}
+            busy={evaluating}
+            locked={hasAppealHistory}
+            hasEvaluation={!!evaluation}
+            onRun={runEvaluation}
+          />
           {(error || evaluationErrors[id]) && (
             <Notice kind="error">{error || evaluationErrors[id]}</Notice>
           )}

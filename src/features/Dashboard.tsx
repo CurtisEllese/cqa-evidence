@@ -11,6 +11,7 @@ import {
 import { useStore } from "../store";
 import { Button, PageHeading, TextLink } from "../components/ui";
 import { ConversationTable } from "./Conversations";
+import { DatasetSummary } from "./DatasetSummary";
 
 export function Dashboard({
   onOpen,
@@ -21,7 +22,7 @@ export function Dashboard({
   onNavigate: (page: string) => void;
   onImport: () => void;
 }) {
-  const { data, dataset, loading, refreshDataset } = useStore();
+  const { data, evaluationAvailable } = useStore();
   const evaluated = data.conversations.filter(
     (item) => item.evaluation?.status === "completed",
   );
@@ -62,17 +63,10 @@ export function Dashboard({
         }
       />
       <div className="dataset-banner">
-        <span className="dataset-indicator" />
-        <span>
-          <strong>DEV · Данные заказчика</strong>{" "}
-          <span className="dataset-description">
-            {dataset
-              ? `${dataset.total} диалогов · обновлено ${new Date(dataset.fetchedAt).toLocaleString("ru-RU")}`
-              : "Ожидаем загрузку набора"}
-          </span>
-        </span>
-        <button disabled={loading} onClick={() => void refreshDataset()}>
-          {loading ? "Загрузка…" : "Обновить DEV"} <ArrowUpRight size={15} />
+        <span className="dataset-indicator" aria-hidden="true" />
+        <DatasetSummary />
+        <button onClick={onImport}>
+          Загрузить диалоги <ArrowUpRight size={15} />
         </button>
       </div>
       <div className="stats-grid">
@@ -126,9 +120,15 @@ export function Dashboard({
               <Sparkles size={28} />
               <h3>Оценок пока нет</h3>
               <p>
-                Диалоги загружены для просмотра. Автоматическая оценка появится
-                после подключения сервиса ИИ.
+                {evaluationAvailable
+                  ? "Откройте диалог и запустите оценку. Здесь появятся проверенные результаты."
+                  : "Диалоги доступны для просмотра. Для автоматической оценки подключите сервис ИИ."}
               </p>
+              {evaluationAvailable && (
+                <Button onClick={() => onNavigate("conversations")}>
+                  Перейти к оценке диалога <ArrowRight size={16} />
+                </Button>
+              )}
             </div>
           ) : (
             <div className="quality-chart">

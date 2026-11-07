@@ -313,10 +313,11 @@ class DecideAppealRequest(RootContract):
 
 class StartEvaluationRequest(RootContract):
     conversationId: Identifier
+    checklistVersion: PositiveInt | None = None
 
 
 class RefreshRequest(RootContract):
-    pass
+    groupId: Annotated[str, StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=512)] = "DEV"
 
 
 class ConversationPage(RootContract):

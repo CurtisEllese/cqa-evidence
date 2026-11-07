@@ -13,6 +13,7 @@ import {
 import type { Conversation } from "../domain/types";
 import { downloadExport } from "../services/api";
 import { evaluationLabel, evaluationTone } from "./evaluationStatus";
+import { originalCriticalStatus } from "./criticalStatus";
 import { useStore } from "../store";
 import {
   Avatar,
@@ -57,6 +58,7 @@ export function ConversationTable({
   const [language, setLanguage] = useState("all");
   const [channel, setChannel] = useState("all");
   const [status, setStatus] = useState("all");
+  const [critical, setCritical] = useState("all");
   const [page, setPage] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [ascending, setAscending] = useState(false);
@@ -77,6 +79,7 @@ export function ConversationTable({
             matches &&
             (language === "all" || item.language === language) &&
             (channel === "all" || item.channel === channel) &&
+            (critical === "all" || originalCriticalStatus(item) === critical) &&
             (status === "all" ||
               (status === "done" && item.evaluation?.status === "completed") ||
               (status === "pending" &&
@@ -91,7 +94,7 @@ export function ConversationTable({
             ? Date.parse(a.date) - Date.parse(b.date)
             : Date.parse(b.date) - Date.parse(a.date);
         }),
-    [data, search, query, language, channel, status, ascending],
+    [data, search, query, language, channel, status, critical, ascending],
   );
   const pageSize = compact ? 5 : 8;
   const currentPage = Math.min(
@@ -106,6 +109,7 @@ export function ConversationTable({
     setLanguage("all");
     setChannel("all");
     setStatus("all");
+    setCritical("all");
     setSearch("");
     setPage(0);
   }
@@ -186,6 +190,19 @@ export function ConversationTable({
               <option>RU</option>
               <option>KZ</option>
               <option>EN</option>
+            </select>
+            <select
+              aria-label="Грубые ошибки"
+              value={critical}
+              onChange={(event) => {
+                setCritical(event.target.value);
+                setPage(0);
+              }}
+            >
+              <option value="all">Грубые ошибки: все</option>
+              <option value="present">Есть грубые ошибки (ИИ)</option>
+              <option value="absent">Не выявлены (ИИ)</option>
+              <option value="unknown">Нет подтверждённой оценки</option>
             </select>
             <Button
               aria-expanded={filtersOpen}
@@ -271,6 +288,19 @@ export function ConversationTable({
                     {item.title}
                   </button>
                   <span className="table-caption">{item.id}</span>
+                  {originalCriticalStatus(item) === "present" && (
+                    <span className="table-caption">
+                      <Badge tone="red">ИИ: грубая ошибка</Badge>
+                      {item.scores?.final.critical === false &&
+                        " · снята после апелляции"}
+                    </span>
+                  )}
+                  {originalCriticalStatus(item) === "absent" &&
+                    item.scores?.final.critical && (
+                      <span className="table-caption">
+                        Грубая ошибка добавлена после апелляции
+                      </span>
+                    )}
                 </td>
                 <td>
                   <div className="operator-cell">

@@ -68,7 +68,7 @@ type Store = {
   loading: boolean;
   loadError: string;
   reloadState: () => Promise<void>;
-  refreshDataset: () => Promise<void>;
+  refreshDataset: (groupId?: string) => Promise<boolean>;
   evaluationAvailable: boolean;
   evaluatingIds: string[];
   evaluationErrors: Record<string, string>;
@@ -81,7 +81,7 @@ type Store = {
     list: Checklist,
     expectedVersion: number,
   ) => Promise<Checklist>;
-  evaluate: (id: string) => Promise<void>;
+  evaluate: (id: string, checklistVersion?: number) => Promise<void>;
   createAppeal: (appeal: {
     conversationId: string;
     evaluationId: string;
@@ -102,6 +102,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [checklistDirty, setChecklistDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const datasetRequestPending = useRef(false);
+  const failedDatasetGroup = useRef<string | null>(null);
   const [evaluatingIds, setEvaluatingIds] = useState<string[]>([]);
   const [evaluationErrors, setEvaluationErrors] = useState<
     Record<string, string>
@@ -115,6 +117,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
   const load = useCallback(
     async (retry = false) => {
+      failedDatasetGroup.current = null;
       setLoading(true);
       setLoadError("");
       if (retry || !initialization) initialization = initialize();
@@ -146,6 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   function trackEvaluation(
     conversationId: string,
     existing?: Evaluation,
+    checklistVersion?: number,
   ): Promise<void> {
     const active = evaluationRequests.current.get(conversationId);
     if (active) return active;
@@ -159,7 +163,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
     const task = (async () => {
       try {
-        let job = existing ?? (await startEvaluation(conversationId));
+        let job =
+          existing ?? (await startEvaluation(conversationId, checklistVersion));
         acceptState(await fetchWorkspace());
         while (job.status === "queued" || job.status === "running") {
           await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -218,17 +223,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
-  async function refreshDataset() {
+  async function refreshDataset(groupId = "DEV") {
+    if (datasetRequestPending.current) return false;
+    datasetRequestPending.current = true;
     setLoading(true);
     setLoadError("");
     try {
-      acceptState(await refreshWorkspace());
-      setToast("Набор заказчика обновлён");
+      const next = await refreshWorkspace(groupId.trim());
+      acceptState(next);
+      failedDatasetGroup.current = null;
+      setToast("Набор загружен");
+      return true;
     } catch (error) {
+      failedDatasetGroup.current = groupId.trim();
       setLoadError(
         error instanceof Error ? error.message : "Не удалось обновить набор.",
       );
+      return false;
     } finally {
+      datasetRequestPending.current = false;
       setLoading(false);
     }
   }
@@ -240,7 +253,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ready: session !== null,
         loading,
         loadError,
-        reloadState: () => load(true),
+        reloadState: () => {
+          const group = failedDatasetGroup.current;
+          return group === null
+            ? load(true)
+            : refreshDataset(group).then(() => {});
+        },
         refreshDataset,
         evaluationAvailable: session?.evaluationAvailable ?? false,
         evaluatingIds,
@@ -261,7 +279,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setToast("Новая версия чек-листа сохранена на сервере");
           return next.data.checklist;
         },
-        evaluate: (conversationId) => {
+        evaluate: (conversationId, checklistVersion) => {
           const existing = session?.data.conversations.find(
             (conversation) => conversation.id === conversationId,
           )?.evaluation;
@@ -271,6 +289,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               (existing.status === "queued" || existing.status === "running")
               ? existing
               : undefined,
+            checklistVersion,
           );
         },
         createAppeal: async (appeal) => {

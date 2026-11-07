@@ -27,6 +27,9 @@ const apiUrl = await moduleUrl("./api.ts", {
 const decimal = await import(decimalUrl);
 const models = await import(modelsUrl);
 const api = await import(apiUrl);
+const criticalStatus = await import(
+  await moduleUrl("../features/criticalStatus.ts")
+);
 
 const checklist = {
   schema_version: "2.0",
@@ -223,6 +226,36 @@ test("outgoing mutation JSON uses generated v2 decimal and yes_no fields", async
   }
 });
 
+test("organizer refresh sends the selected group and keeps dataset totals separate", async () => {
+  const prior = globalThis.fetch;
+  const calls = [];
+  const dataset = {
+    group: "CONTROL / Каз",
+    total: 0,
+    conversationIds: [],
+    source: "live",
+    fetchedAt: "2026-11-07T10:00:00Z",
+  };
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, method: init.method, body: JSON.parse(init.body) });
+    return Response.json({ ...state, dataset });
+  };
+  try {
+    const result = await api.refreshWorkspace(dataset.group);
+    assert.deepEqual(calls[0], {
+      url: "/api/organizer/refresh",
+      method: "POST",
+      body: { schema_version: "2.0", groupId: dataset.group },
+    });
+    assert.deepEqual(result.dataset, dataset);
+    assert.equal(result.data.conversations.length, 1);
+    await api.refreshWorkspace();
+    assert.equal(calls[1].body.groupId, "DEV");
+  } finally {
+    globalThis.fetch = prior;
+  }
+});
+
 test("structured API errors preserve retry and request metadata", async () => {
   const prior = globalThis.fetch;
   globalThis.fetch = async () =>
@@ -273,6 +306,84 @@ test("evaluation endpoints accept direct jobs and version every POST", async () 
       conversationId: "c1",
     });
     assert.equal(calls[1].url, "/api/evaluations/job1");
+  } finally {
+    globalThis.fetch = prior;
+  }
+});
+
+test("original critical filter retains findings removed by appeals and excludes unknown jobs", () => {
+  const view = models.stateFromWire(state).data.conversations[0];
+  const flagged = {
+    ...view,
+    scores: {
+      ...view.scores,
+      original: { ...view.scores.original, critical: true },
+      final: { ...view.scores.final, critical: false },
+    },
+  };
+  assert.equal(criticalStatus.originalCriticalStatus(flagged), "present");
+  assert.equal(
+    criticalStatus.originalCriticalStatus({
+      ...view,
+      scores: {
+        ...view.scores,
+        final: { ...view.scores.final, critical: true },
+      },
+    }),
+    "absent",
+  );
+  for (const status of [
+    "queued",
+    "running",
+    "needs_review",
+    "failed_validation",
+    "failed",
+    "retryable",
+  ])
+    assert.equal(
+      criticalStatus.originalCriticalStatus({
+        ...flagged,
+        evaluation: { ...view.evaluation, status },
+      }),
+      "unknown",
+    );
+  assert.equal(
+    criticalStatus.originalCriticalStatus({ ...flagged, evaluation: null }),
+    "unknown",
+  );
+  assert.equal(
+    criticalStatus.originalCriticalStatus({ ...view, scores: undefined }),
+    "unknown",
+  );
+});
+
+test("saved versions use the list contract and evaluation sends the explicit selected version", async () => {
+  const prior = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url, init) => {
+    requests.push({ url, init });
+    return Response.json(
+      url === "/api/checklists"
+        ? [{ ...checklist, version: 2 }, checklist]
+        : { ...evaluation, status: "queued", score: null },
+    );
+  };
+  try {
+    const lists = await api.fetchChecklists();
+    assert.deepEqual(
+      lists.map((item) => item.version),
+      [2, 1],
+    );
+    assert.equal(lists[1].criteria[0].weight, 0.125);
+    await api.startEvaluation("c1", 1);
+    assert.deepEqual(JSON.parse(requests[1].init.body), {
+      schema_version: "2.0",
+      conversationId: "c1",
+      checklistVersion: 1,
+    });
+    globalThis.fetch = async () =>
+      Response.json([{ ...checklist, schema_version: "1.0" }]);
+    await assert.rejects(api.fetchChecklists(), /контракту v2.0/);
   } finally {
     globalThis.fetch = prior;
   }
