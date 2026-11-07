@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from backend.contracts.v2 import (
     ApiError, Checklist, Criterion, DecideAppealRequest, EvaluationRequest, EvaluationResult,
-    ModelResponse, Score, StartEvaluationRequest, WorkspaceState, decimal_text,
+    ModelResponse, RefreshRequest, Score, StartEvaluationRequest, WorkspaceState, decimal_text,
     from_wire_checklist, internal_number, to_wire_checklist, to_wire_evaluation,
     to_wire_score, to_wire_state,
 )
@@ -55,6 +55,18 @@ def test_schema_version_required_and_v1_never_silently_accepted():
         with pytest.raises(ValidationError):
             StartEvaluationRequest.model_validate(payload)
     assert StartEvaluationRequest.model_validate({"schema_version": "2.0", "conversationId": "x"}).conversationId == "x"
+
+
+def test_refresh_group_defaults_to_dev_and_preserves_organizer_identifier():
+    assert RefreshRequest.model_validate({"schema_version": "2.0"}).groupId == "DEV"
+    request = RefreshRequest.model_validate({"schema_version": "2.0", "groupId": "  бақылау / final + 10?  "})
+    assert request.groupId == "бақылау / final + 10?"
+
+
+@pytest.mark.parametrize("group", [None, 10, True, [], "", " \t\n", "x" * 513])
+def test_refresh_rejects_invalid_group_without_coercion(group):
+    with pytest.raises(ValidationError):
+        RefreshRequest.model_validate({"schema_version": "2.0", "groupId": group})
 
 
 def test_all_structured_models_forbid_unknown_fields():

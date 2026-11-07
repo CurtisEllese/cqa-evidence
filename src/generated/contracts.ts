@@ -199,6 +199,7 @@ export type ModelResponse = {
 
 export type RefreshRequest = {
   "schema_version": "2.0";
+  "groupId"?: string;
 };
 
 export type Score = {
