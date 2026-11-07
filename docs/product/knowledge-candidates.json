@@ -1,0 +1,90 @@
+{
+  "kind": "source_candidates_not_runtime_knowledge_facts",
+  "notice": "Public source content checked. Exact applicability to DEV and effective dates are not confirmed. Updated/observed dates are not effective_date. Do not pass this file to the runtime KnowledgeFact loader; it intentionally has a separate review schema.",
+  "items": [
+    {
+      "id": "tariff-report",
+      "text": "Текущий тариф можно проверить в сформированном отчёте брокера, в информации о счёте. FAQ описывает получение отчёта через мобильную и веб-платформу.",
+      "source": "https://fbroker.kz/faq/question/how-to-find-out-your-tariff-2709",
+      "source_updated_at": "2026-11-02",
+      "observed_at": "2026-11-07",
+      "effective_date": null,
+      "product": "Freedom Broker, тариф и отчёт",
+      "source_entity": "Freedom Finance Global PLC",
+      "dataset_jurisdiction_confirmed": false,
+      "reviewer": "assistant checked public primary source; not customer expert approval",
+      "activation_status": "candidate_not_loaded_into_evaluator",
+      "limits": "Не утверждает, что другой краткий путь в кабинете неверен; не содержит ставок комиссии."
+    },
+    {
+      "id": "report-period",
+      "text": "Пользователь может задать период брокерского отчёта. Документ содержит сведения об операциях, позициях, комиссиях и движении средств.",
+      "source": "https://fbroker.kz/faq/question/how-to-obtain-a-broker-s-report-3814",
+      "source_updated_at": "2026-09-22",
+      "observed_at": "2026-11-07",
+      "effective_date": null,
+      "product": "Freedom Broker, отчёт брокера",
+      "source_entity": "Freedom Finance Global PLC",
+      "dataset_jurisdiction_confirmed": false,
+      "reviewer": "assistant checked public primary source; not customer expert approval",
+      "activation_status": "candidate_not_loaded_into_evaluator",
+      "limits": "Не заменяет корпоративную финансовую отчётность и не подтверждает конкретную комиссию клиента."
+    },
+    {
+      "id": "profile-update",
+      "text": "В мобильном приложении FAQ указывает путь Меню → Поручения → Персональные данные → Изменение сведений; веб-путь отличается. Подача поручения требует торгового счёта и сессии безопасности.",
+      "source": "https://fbroker.kz/faq/question/how-can-i-update-my-data-3815",
+      "source_updated_at": "2026-09-22",
+      "observed_at": "2026-11-07",
+      "effective_date": null,
+      "product": "Freedom Broker, изменение персональных данных",
+      "source_entity": "Freedom Finance Global PLC",
+      "dataset_jurisdiction_confirmed": false,
+      "reviewer": "assistant checked public primary source; not customer expert approval",
+      "activation_status": "candidate_not_loaded_into_evaluator",
+      "limits": "Различать поиск раздела и полное выполнение операции; не требовать перечисления всех шагов, если клиент спросил только где находится раздел."
+    },
+    {
+      "id": "1042-language",
+      "text": "FAQ для клиентов Freedom Finance Global PLC указывает, что форма 1042-S доступна на английском языке.",
+      "source": "https://fbroker.kz/faq/question/what-is-1042-s-form",
+      "source_updated_at": "2026-09-22",
+      "observed_at": "2026-11-07",
+      "effective_date": null,
+      "product": "Freedom Finance Global PLC, форма 1042-S",
+      "source_entity": "Freedom Finance Global PLC",
+      "dataset_jurisdiction_confirmed": false,
+      "reviewer": "assistant checked public primary source; not customer expert approval",
+      "activation_status": "candidate_not_loaded_into_evaluator",
+      "limits": "Не распространять на другие документы или налоговые последствия; не делать вывод о праве на зачёт налога."
+    },
+    {
+      "id": "1042-location",
+      "text": "Для получения 1042-S FAQ описывает веб-версию платформы, раздел Кабинет → Форма 1042-S и выбор нужного года; документ можно скачать как PDF.",
+      "source": "https://fbroker.kz/faq/question/what-is-1042-s-form",
+      "source_updated_at": "2026-09-22",
+      "observed_at": "2026-11-07",
+      "effective_date": null,
+      "product": "Freedom Finance Global PLC, форма 1042-S",
+      "source_entity": "Freedom Finance Global PLC",
+      "dataset_jurisdiction_confirmed": false,
+      "reviewer": "assistant checked public primary source; not customer expert approval",
+      "activation_status": "candidate_not_loaded_into_evaluator",
+      "limits": "Доступность документа конкретному клиенту и сроки формирования не проверены этим фактом."
+    },
+    {
+      "id": "corporate-financials",
+      "text": "Публичный сайт инвесторов Freedom Holding Corp. содержит раздел Financial Info с финансовыми результатами и отчётами; это отдельный источник корпоративной отчётности.",
+      "source": "https://ir.freedomholdingcorp.com/financial-information",
+      "source_updated_at": null,
+      "observed_at": "2026-11-07",
+      "effective_date": null,
+      "product": "Freedom Holding Corp., investor relations",
+      "source_entity": "Freedom Holding Corp.",
+      "dataset_jurisdiction_confirmed": false,
+      "reviewer": "assistant checked public primary source; not customer expert approval",
+      "activation_status": "candidate_not_loaded_into_evaluator",
+      "limits": "Не путать с отчётом по личному брокерскому счёту и не штрафовать за близкий по смыслу вариант названия меню."
+    }
+  ]
+}

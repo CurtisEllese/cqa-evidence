@@ -1,0 +1,139 @@
+[
+  {
+    "conversation_id": "demo-only-ru-insult",
+    "channel": "agent chat",
+    "language": "RU",
+    "transcript": [
+      {
+        "timestamp": "00:00",
+        "speaker": "client",
+        "text": "Здравствуйте, где скачать отчёт за октябрь?"
+      },
+      {
+        "timestamp": "00:05",
+        "speaker": "operator",
+        "text": "Здравствуйте, я Анна. Вы вообще читать умеете? Всё же написано в меню."
+      },
+      {
+        "timestamp": "00:10",
+        "speaker": "client",
+        "text": "Пожалуйста, объясните без грубости, я здесь впервые."
+      },
+      {
+        "timestamp": "00:15",
+        "speaker": "operator",
+        "text": "Откройте раздел отчётов брокера и выберите нужный период."
+      },
+      {
+        "timestamp": "00:20",
+        "speaker": "client",
+        "text": "Нашёл. Спасибо."
+      },
+      {
+        "timestamp": "00:25",
+        "speaker": "operator",
+        "text": "Отчёт можно получить в этом разделе. До свидания."
+      }
+    ],
+    "audio_url": null
+  },
+  {
+    "conversation_id": "demo-only-kz-report",
+    "channel": "agent chat",
+    "language": "KZ",
+    "transcript": [
+      {
+        "timestamp": "00:00",
+        "speaker": "client",
+        "text": "Сәлеметсіз бе, брокерлік есепті қайдан жүктей аламын?"
+      },
+      {
+        "timestamp": "00:05",
+        "speaker": "operator",
+        "text": "Сәлеметсіз бе! Мен Дана. Қосымшадағы «Отчёты и документы» бөлімін ашып, «Отчёты брокера» тармағын таңдаңыз. Қажетті кезеңді көрсетіңіз."
+      },
+      {
+        "timestamp": "00:10",
+        "speaker": "client",
+        "text": "Таптым, есеп жүктелді. Рақмет!"
+      },
+      {
+        "timestamp": "00:15",
+        "speaker": "operator",
+        "text": "Есепті жүктеп алдыңыз. Басқа сұрағыңыз болса, көмектесуге дайынмын. Сау болыңыз!"
+      }
+    ],
+    "audio_url": null
+  },
+  {
+    "conversation_id": "demo-only-en-private-fee",
+    "channel": "agent chat",
+    "language": "EN",
+    "transcript": [
+      {
+        "timestamp": "00:00",
+        "speaker": "client",
+        "text": "Hello, where can I find information about bonds in the application?"
+      },
+      {
+        "timestamp": "00:05",
+        "speaker": "operator",
+        "text": "Hello, I am Alex. You can search by name or ticker in Quotes."
+      },
+      {
+        "timestamp": "00:10",
+        "speaker": "client",
+        "text": "I found the search. Thank you."
+      },
+      {
+        "timestamp": "00:15",
+        "speaker": "operator",
+        "text": "Send me your personal phone number. I charge a private fee and can advise you after work outside the company."
+      },
+      {
+        "timestamp": "00:20",
+        "speaker": "client",
+        "text": "No, I only wanted help with the application."
+      },
+      {
+        "timestamp": "00:25",
+        "speaker": "system",
+        "text": "Operator closed the chat."
+      }
+    ],
+    "audio_url": null
+  },
+  {
+    "conversation_id": "demo-only-ru-incomplete-call",
+    "channel": "voice call",
+    "language": "RU",
+    "transcript": [
+      {
+        "timestamp": "2026-11-07T10:00:00+05:00",
+        "speaker": "system",
+        "text": "Началась запись. Синтетический пример, аудио не предоставлено."
+      },
+      {
+        "timestamp": "2026-11-07T10:00:05+05:00",
+        "speaker": "client",
+        "text": "Здравствуйте. Какая комиссия будет за мою операцию?"
+      },
+      {
+        "timestamp": "2026-11-07T10:00:10+05:00",
+        "speaker": "operator",
+        "text": "Здравствуйте, я Ольга. По этим данным точную комиссию подтвердить не могу. Уточните, пожалуйста, вид операции, рынок и тариф."
+      },
+      {
+        "timestamp": "2026-11-07T10:00:15+05:00",
+        "speaker": "client",
+        "text": "[Фрагмент неразборчив в транскрипции]"
+      },
+      {
+        "timestamp": "2026-11-07T10:00:20+05:00",
+        "speaker": "system",
+        "text": "Соединение с клиентом прервано."
+      }
+    ],
+    "audio_url": null
+  }
+]
