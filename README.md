@@ -9,6 +9,8 @@
 
 ## Документация
 
+- [Утверждённый сетевой контракт v1.0](contracts/README.md) — единый источник для backend, AI и UI.
+- [Фактическая проверка Gemini API](docs/gemini-check.md)
 - [Требования и точный расчёт](docs/requirements.md)
 - [Архитектура и контракты](docs/architecture.md)
 - [Проверенные готовые решения](docs/open-source.md)

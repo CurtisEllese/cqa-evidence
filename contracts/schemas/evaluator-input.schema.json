@@ -1,0 +1,269 @@
+{
+  "$defs": {
+    "Checklist": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "channel": {
+          "enum": [
+            "agent chat",
+            "voice call",
+            "any"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "version",
+        "name",
+        "channel",
+        "criteria"
+      ],
+      "title": "Checklist",
+      "type": "object"
+    },
+    "Conversation": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "RU",
+            "KZ",
+            "EN"
+          ],
+          "title": "Language",
+          "type": "string"
+        },
+        "channel": {
+          "enum": [
+            "agent chat",
+            "voice call"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "transcript": {
+          "items": {
+            "$ref": "#/$defs/Message"
+          },
+          "minItems": 1,
+          "title": "Transcript",
+          "type": "array"
+        },
+        "audio_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Audio Url"
+        }
+      },
+      "required": [
+        "id",
+        "content_hash",
+        "language",
+        "channel",
+        "transcript",
+        "audio_url"
+      ],
+      "title": "Conversation",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "binary",
+            "scale",
+            "flag"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "max": {
+          "exclusiveMinimum": 0,
+          "title": "Max",
+          "type": "integer"
+        },
+        "allowed_values": {
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "title": "Allowed Values",
+          "type": "array"
+        },
+        "allow_na": {
+          "title": "Allow Na",
+          "type": "boolean"
+        },
+        "na_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Na Condition"
+        },
+        "section": {
+          "minLength": 1,
+          "title": "Section",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "type",
+        "weight",
+        "max",
+        "allowed_values",
+        "allow_na",
+        "na_condition",
+        "section"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
+    "Message": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "minLength": 1,
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "speaker": {
+          "enum": [
+            "operator",
+            "client",
+            "bot",
+            "system"
+          ],
+          "title": "Speaker",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "timestamp",
+        "speaker",
+        "text"
+      ],
+      "title": "Message",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "conversation": {
+      "$ref": "#/$defs/Conversation"
+    },
+    "checklist": {
+      "$ref": "#/$defs/Checklist"
+    },
+    "knowledge_context": {
+      "title": "Knowledge Context",
+      "type": "string"
+    },
+    "prompt_version": {
+      "minLength": 1,
+      "title": "Prompt Version",
+      "type": "string"
+    },
+    "knowledge_version": {
+      "minLength": 1,
+      "title": "Knowledge Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "conversation",
+    "checklist",
+    "knowledge_context",
+    "prompt_version",
+    "knowledge_version"
+  ],
+  "title": "EvaluatorInput",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

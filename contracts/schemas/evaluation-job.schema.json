@@ -1,0 +1,793 @@
+{
+  "$defs": {
+    "Checklist": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "channel": {
+          "enum": [
+            "agent chat",
+            "voice call",
+            "any"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "version",
+        "name",
+        "channel",
+        "criteria"
+      ],
+      "title": "Checklist",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "binary",
+            "scale",
+            "flag"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "max": {
+          "exclusiveMinimum": 0,
+          "title": "Max",
+          "type": "integer"
+        },
+        "allowed_values": {
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "title": "Allowed Values",
+          "type": "array"
+        },
+        "allow_na": {
+          "title": "Allow Na",
+          "type": "boolean"
+        },
+        "na_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Na Condition"
+        },
+        "section": {
+          "minLength": 1,
+          "title": "Section",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "type",
+        "weight",
+        "max",
+        "allowed_values",
+        "allow_na",
+        "na_condition",
+        "section"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
+    "CriterionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "criterion_id": {
+          "minLength": 1,
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "na_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Na Reason"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "evidence_status": {
+          "enum": [
+            "verified",
+            "unverified"
+          ],
+          "title": "Evidence Status",
+          "type": "string"
+        },
+        "weight": {
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "effective_weight": {
+          "anyOf": [
+            {
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Effective Weight"
+        },
+        "contribution": {
+          "anyOf": [
+            {
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Contribution"
+        }
+      },
+      "required": [
+        "criterion_id",
+        "value",
+        "explanation",
+        "na_reason",
+        "evidence",
+        "evidence_status",
+        "weight",
+        "effective_weight",
+        "contribution"
+      ],
+      "title": "CriterionResult",
+      "type": "object"
+    },
+    "ErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_REQUEST",
+            "INVALID_CHECKLIST",
+            "MODEL_OUTPUT_INVALID",
+            "PROVIDER_RATE_LIMIT",
+            "PROVIDER_UNAVAILABLE",
+            "MODEL_REFUSAL",
+            "NOT_FOUND",
+            "REVISION_CONFLICT",
+            "INTERNAL_ERROR"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "retry_after_seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry After Seconds"
+        },
+        "details": {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "title": "Details",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "retry_after_seconds",
+        "details"
+      ],
+      "title": "ErrorBody",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "request_id": {
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "error": {
+          "$ref": "#/$defs/ErrorBody"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "error"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "Evaluation": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "conversation_id": {
+          "minLength": 1,
+          "title": "Conversation Id",
+          "type": "string"
+        },
+        "conversation_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Conversation Hash",
+          "type": "string"
+        },
+        "checklist": {
+          "$ref": "#/$defs/Checklist"
+        },
+        "created_at": {
+          "minLength": 1,
+          "title": "Created At",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "original": {
+          "$ref": "#/$defs/ScoreSnapshot"
+        },
+        "final": {
+          "$ref": "#/$defs/ScoreSnapshot"
+        },
+        "decisions": {
+          "items": {
+            "$ref": "#/$defs/ReviewDecision"
+          },
+          "title": "Decisions",
+          "type": "array"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "conversation_id",
+        "conversation_hash",
+        "checklist",
+        "created_at",
+        "revision",
+        "original",
+        "final",
+        "decisions",
+        "provenance"
+      ],
+      "title": "Evaluation",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "message",
+            "absence",
+            "not_applicable"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "message_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Message Ids",
+          "type": "array"
+        },
+        "start_message_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start Message Id"
+        },
+        "end_message_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End Message Id"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Quote"
+        }
+      },
+      "required": [
+        "kind",
+        "message_ids",
+        "start_message_id",
+        "end_message_id",
+        "quote"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "minLength": 1,
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "prompt_version": {
+          "minLength": 1,
+          "title": "Prompt Version",
+          "type": "string"
+        },
+        "knowledge_version": {
+          "minLength": 1,
+          "title": "Knowledge Version",
+          "type": "string"
+        },
+        "input_tokens": {
+          "minimum": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cost Usd"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "prompt_version",
+        "knowledge_version",
+        "input_tokens",
+        "output_tokens",
+        "cost_usd"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "ReviewDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "appeal_id": {
+          "minLength": 1,
+          "title": "Appeal Id",
+          "type": "string"
+        },
+        "criterion_id": {
+          "minLength": 1,
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "confirm",
+            "change"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "previous_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous Value"
+        },
+        "final_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Final Value"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "created_at": {
+          "minLength": 1,
+          "title": "Created At",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "appeal_id",
+        "criterion_id",
+        "action",
+        "previous_value",
+        "final_value",
+        "reason",
+        "created_at",
+        "revision"
+      ],
+      "title": "ReviewDecision",
+      "type": "object"
+    },
+    "ScoreSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "completed",
+            "needs_review"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CriterionResult"
+          },
+          "title": "Results",
+          "type": "array"
+        },
+        "total_score": {
+          "anyOf": [
+            {
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{2})$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Score"
+        },
+        "provisional_total_score": {
+          "anyOf": [
+            {
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{2})$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Provisional Total Score"
+        },
+        "score_unavailable_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "unverified_evidence",
+                "no_applicable_weight"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score Unavailable Reason"
+        },
+        "critical_error": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Critical Error"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/SectionScore"
+          },
+          "title": "Sections",
+          "type": "array"
+        },
+        "validation_issues": {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "title": "Validation Issues",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "results",
+        "total_score",
+        "provisional_total_score",
+        "score_unavailable_reason",
+        "critical_error",
+        "sections",
+        "validation_issues"
+      ],
+      "title": "ScoreSnapshot",
+      "type": "object"
+    },
+    "SectionScore": {
+      "additionalProperties": false,
+      "properties": {
+        "section": {
+          "minLength": 1,
+          "title": "Section",
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{2})$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        }
+      },
+      "required": [
+        "section",
+        "score"
+      ],
+      "title": "SectionScore",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "criterion_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Criterion Id"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "criterion_id",
+        "path",
+        "message"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "completed",
+        "needs_review",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "evaluation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Evaluation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ErrorResponse"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "status",
+    "evaluation",
+    "error"
+  ],
+  "title": "EvaluationJob",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
