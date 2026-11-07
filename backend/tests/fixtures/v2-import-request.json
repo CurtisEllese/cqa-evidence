@@ -1,0 +1,4 @@
+{
+  "schema_version": "2.0",
+  "text": "[{\"conversation_id\":\"v2-synthetic-demo\",\"channel\":\"agent chat\",\"language\":\"RU\",\"audio_url\":null,\"transcript\":[{\"timestamp\":\"00:00\",\"speaker\":\"client\",\"text\":\"Здравствуйте. Это учебный диалог, вопрос уже решён.\"},{\"timestamp\":\"00:05\",\"speaker\":\"operator\",\"text\":\"Здравствуйте! Меня зовут Анна. Рада, что вопрос решён. Если появятся вопросы, обращайтесь. Хорошего дня!\"}]}]"
+}

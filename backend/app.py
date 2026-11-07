@@ -101,9 +101,10 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             raise HTTPException(502,'Не удалось получить проверенный набор DEV. Сохранённые данные не изменены.') from None
 
     async def ensure_dataset():
-        if not repo.has_dataset():
+        # Manual imports must remain usable without the organizer service, including after restart.
+        if source_url and not repo.has_dataset() and not repo.has_conversations():
             async with refresh_lock:
-                if not repo.has_dataset(): await refresh()
+                if not repo.has_dataset() and not repo.has_conversations(): await refresh()
 
     @app.get('/api/health',response_model=Health)
     def health(): return {'schema_version':'2.0','status':'ok','database':'sqlite','evaluationAvailable':service.adapter is not None}

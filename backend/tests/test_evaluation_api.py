@@ -196,3 +196,74 @@ def test_structural_failure_two_attempts_and_versioned_request_errors(paths):
         assert result.error.code == "MODEL_OUTPUT_INVALID" and calls == 2
         missing = client.get("/api/evaluations/nonexistent")
         assert missing.status_code == 404 and ApiError.model_validate(missing.json()).code == "NOT_FOUND"
+
+
+@pytest.mark.parametrize("language,channel,text", [
+    ("RU", "agent chat", "Здравствуйте! Это учебный диалог."),
+    ("KZ", "voice call", "Сәлеметсіз бе! Бұл оқу диалогы."),
+    ("EN", "agent chat", "Hello! This is a training conversation."),
+])
+def test_manual_import_evaluation_and_restart_without_organizer(tmp_path, monkeypatch, language, channel, text):
+    monkeypatch.delenv("EVALUATOR_ADAPTER", raising=False)
+    calls = []
+
+    async def adapter(request):
+        calls.append(request)
+        response = model_output(request)
+        for result in response["results"]:
+            result["evidence"][0]["quote"] = request.messages[1].text
+        return response
+
+    database, cache = tmp_path / "manual.sqlite", tmp_path / "missing-cache.json"
+    timestamp = "2026-11-07T12:00:00+05:00" if channel == "voice call" else "00:00"
+    record = {
+        "conversation_id": "manual-synthetic", "language": language, "channel": channel, "audio_url": None,
+        "transcript": [{"speaker": role, "timestamp": timestamp, "text": text}
+                       for role in ("client", "operator", "bot", "system")],
+    }
+    with TestClient(create_app(database, cache, organizer_url="", evaluator=adapter)) as client:
+        empty = client.get("/api/state")
+        assert empty.status_code == 200
+        assert WorkspaceState.model_validate(empty.json()).data.conversations == []
+        imported = client.post("/api/import", json={"schema_version": "2.0", "text": json.dumps([record])})
+        assert imported.status_code == 200 and imported.json()["imported"] == 1
+        original = poll(client, start(client, "manual-synthetic"))
+        assert original.status == "completed" and original.score.total == "85.38"
+        assert client.get("/api/state").status_code == 200
+        current = WorkspaceState.model_validate(client.get("/api/state").json()).data.conversations[0]
+        assert current.evaluation == original
+        assert current.scores.final.total == "85.38"
+        assert calls[0].language == language and calls[0].channel == channel
+        assert [message.id for message in calls[0].messages] == [f"manual-synthetic-m{i}" for i in range(1, 5)]
+        assert all(message.timestamp == timestamp for message in calls[0].messages)
+    with TestClient(create_app(database, cache, organizer_url="https://organizer.invalid/unavailable", evaluator=adapter)) as restarted:
+        assert poll(restarted, original.id) == original
+        current = WorkspaceState.model_validate(restarted.get("/api/state").json()).data.conversations[0]
+        assert current.evaluation == original and len(calls) == 1
+
+
+def test_changed_scale_reaches_adapter_and_old_evaluation_keeps_original_version(paths):
+    calls = []
+
+    async def adapter(request):
+        calls.append(request)
+        response = model_output(request)
+        if request.checklist.version == 2:
+            next(result for result in response["results"] if result["criterionId"] == "consultation")["value"] = "2"
+        return response
+
+    with TestClient(app_for(paths, adapter)) as client:
+        original = poll(client, start(client))
+        checklist = client.get("/api/checklists").json()[0]
+        criterion = next(item for item in checklist["criteria"] if item["id"] == "consultation")
+        criterion.update(max="5", allowedValues=["0", "2", "5"], description="Новое правило для проверки передачи конфигурации.")
+        changed = client.post(f"/api/checklists/{checklist['id']}/versions", json={
+            "schema_version": "2.0", "checklist": checklist, "expectedVersion": 1,
+        })
+        assert changed.status_code == 200
+        updated = poll(client, start(client))
+        assert updated.checklist.version == 2 and updated.score.total == "74.62"
+        supplied = next(item for item in calls[1].checklist.criteria if item.id == "consultation")
+        assert supplied.allowedValues == ["0", "2", "5"] and supplied.description == criterion["description"]
+        assert poll(client, original.id) == original
+        assert original.checklist.version == 1 and original.score.total == "85.38"
