@@ -99,6 +99,8 @@ DEV: 60 чатов и 5 звонков; RU 35, KZ 15, EN 15. Эталонных 
 
 ## Командная работа
 
+Актуальные подробные задания и зависимости: [ТЗ каждому участнику по приоритету](docs/tasks/README.md). Они заменяют первоначальный план разработки с нуля.
+
 AI/evaluation — Adalbala, backend/data/scoring — naki707, frontend/appeals — Krutoi312; интеграция и контракт согласуются между потоками. Изменение wire-формата проходит через Pydantic, генератор, mapper и тесты в одном PR. Не подменяйте контракт формой текущего UI и не исправляйте generated-файлы вручную.
 
 Задачи: [AI](https://github.com/CurtisEllese/cqa-evidence/issues/1), [backend](https://github.com/CurtisEllese/cqa-evidence/issues/2), [frontend](https://github.com/CurtisEllese/cqa-evidence/issues/3), [интеграция](https://github.com/CurtisEllese/cqa-evidence/issues/4).
