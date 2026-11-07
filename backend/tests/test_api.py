@@ -165,7 +165,7 @@ def test_local_migration_is_idempotent_and_refuses_overwriting_server_edits(setu
 def test_limits_origin_errors_and_unknown_routes(setup):
     client,repo,*_=setup
     assert_api_error(client.post('/api/import',json=wire(text='[]'),headers={'Origin':'https://unrelated.example'}),403)
-    assert client.post('/api/import',content=b'x'*(5*1024*1024+1),headers={'content-type':'application/json'}).status_code==413
+    assert client.post('/api/import',json=wire(text='x'*(5*1024*1024+1))).status_code==413
     assert_api_error(client.post('/api/appeals',json=wire(secret='must-not-echo')),422)
     assert 'must-not-echo' not in client.post('/api/appeals',json=wire(secret='must-not-echo')).text
     assert_api_error(client.get('/api/unknown'),404)

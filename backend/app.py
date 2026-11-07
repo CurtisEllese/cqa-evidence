@@ -16,11 +16,15 @@ from .contracts.v2 import (ImportRequest, VersionRequest, MigrationRequest, Crea
 from .evaluator import EvaluationService, load_adapter, error_payload
 from .repository import Repository, Conflict
 from .media import audio_response, AudioProxyError
+from .domain import MAX_IMPORT_BYTES
 
 ROOT=Path(__file__).resolve().parent.parent
 load_dotenv(ROOT/'.env.local')
 load_dotenv(ROOT/'.env')
 MAX_BODY=5*1024*1024
+# A UTF-8 source byte can occupy up to six bytes as a JSON \uXXXX escape.
+# Keep transport bounded while leaving room for the versioned import envelope.
+MAX_IMPORT_BODY=6*MAX_IMPORT_BYTES+1024
 
 def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator=None,evaluation_timeout=60):
     db_path=database_path or os.getenv('DATABASE_PATH',str(ROOT/'local-data/cqa.sqlite'))
@@ -56,13 +60,16 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             host=request.url.hostname
             if host not in ('127.0.0.1','localhost','testserver','::1'): return failure('HOST_FORBIDDEN','Сервер доступен только локально.',403)
             if request.method in ('POST','PUT','PATCH'):
+                is_import=request.method=='POST' and request.url.path=='/api/import'
+                body_limit=MAX_IMPORT_BODY if is_import else MAX_BODY
+                size_message='Слишком большой запрос импорта.' if is_import else 'Максимальный размер запроса — 5 МБ.'
                 try:
-                    if int(request.headers.get('content-length','0'))>MAX_BODY: return failure('REQUEST_TOO_LARGE','Максимальный размер запроса — 5 МБ.',413)
+                    if int(request.headers.get('content-length','0'))>body_limit: return failure('REQUEST_TOO_LARGE',size_message,413)
                 except ValueError: return failure('INVALID_REQUEST','Некорректный размер запроса.',400)
                 chunks=[];length=0
                 async for chunk in request.stream():
                     length+=len(chunk)
-                    if length>MAX_BODY: return failure('REQUEST_TOO_LARGE','Максимальный размер запроса — 5 МБ.',413)
+                    if length>body_limit: return failure('REQUEST_TOO_LARGE',size_message,413)
                     chunks.append(chunk)
                 request._body=b''.join(chunks)
         response=await call_next(request)
@@ -122,6 +129,8 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
 
     @app.post('/api/import',response_model=WorkspaceState,response_model_exclude_unset=True)
     def import_data(body:ImportRequest):
+        if len(body.text.encode('utf-8'))>MAX_IMPORT_BYTES:
+            return failure('REQUEST_TOO_LARGE','Размер JSON не должен превышать 5 МБ.',413)
         imported=repo.import_data(body.text)
         return {**workspace(),'imported':imported}
 

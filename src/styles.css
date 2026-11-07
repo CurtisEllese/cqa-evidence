@@ -558,6 +558,7 @@ input[type="checkbox"] {
 }
 .dataset-banner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 13px 16px;
@@ -572,6 +573,18 @@ input[type="checkbox"] {
   font-weight: 500;
   color: #54734a;
   margin-right: 12px;
+}
+.dataset-summary {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.dataset-banner .dataset-summary {
+  flex: 1 1 240px;
 }
 .dataset-indicator {
   width: 6px;
@@ -1283,6 +1296,32 @@ tbody tr:hover {
   background: #fff1ee;
   color: #ac5b4e;
   border-color: #f2d9d3;
+}
+.dataset-import {
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.dataset-import-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.dataset-import-controls input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.dataset-import-controls .button {
+  flex: 1 1 180px;
+}
+.dataset-import-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.manual-import-title {
+  margin-bottom: 12px;
 }
 .dropzone {
   border: 1.5px dashed #cdddc6;
