@@ -84,10 +84,10 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
     @app.exception_handler(Exception)
     async def unexpected_error(request,exc): return failure('INTERNAL_ERROR','Не удалось обработать запрос.',500)
 
-    async def refresh():
+    async def refresh(group_id: str = 'DEV'):
         if not source_url or urlparse(source_url).scheme!='https': raise HTTPException(503,'Укажите ORGANIZER_DEV_URL в .env.local и перезапустите бэкенд.')
         try:
-            endpoint=httpx.URL(source_url).copy_merge_params({'group_id':'DEV'})
+            endpoint=httpx.URL(source_url).copy_merge_params({'group_id':group_id})
             async with httpx.AsyncClient(timeout=30,follow_redirects=False) as client:
                 async with client.stream('GET',endpoint,headers={'Accept':'application/json'}) as response:
                     response.raise_for_status();chunks=[];length=0
@@ -96,9 +96,11 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
                         if length>MAX_BODY: raise ValueError('oversized')
                         chunks.append(chunk)
             payload=json.loads(b''.join(chunks))
-            repo.replace_dev(payload)
+            repo.save_dataset(payload,group_id)
+        except Conflict:
+            raise
         except (httpx.HTTPError,ValueError,TypeError,KeyError):
-            raise HTTPException(502,'Не удалось получить проверенный набор DEV. Сохранённые данные не изменены.') from None
+            raise HTTPException(502,'Не удалось получить проверенный набор указанной группы. Сохранённые данные не изменены.') from None
 
     async def ensure_dataset():
         # Manual imports must remain usable without the organizer service, including after restart.
@@ -115,7 +117,7 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
 
     @app.post('/api/organizer/refresh',response_model=WorkspaceState,response_model_exclude_unset=True)
     async def organizer_refresh(body:RefreshRequest):
-        async with refresh_lock: await refresh()
+        async with refresh_lock: await refresh(body.groupId)
         return workspace()
 
     @app.post('/api/import',response_model=WorkspaceState,response_model_exclude_unset=True)

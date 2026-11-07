@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from backend.app import create_app
 from backend.domain import initial_checklist
-from backend.repository import Repository
+from backend.repository import Repository, Conflict
 
 VERSION = '2.0'
 
@@ -140,11 +140,13 @@ def test_refresh_failure_preserves_all_data_and_no_fake_evaluation(setup):
     assert all(c['evaluation'] is None for c in repo.state()['data']['conversations'])
 
 
-def test_changed_transcript_invalidates_current_score_but_preserves_history(setup):
+def test_changed_transcript_is_rejected_and_preserves_current_score(setup):
     client,repo,*_=setup;conversation,evaluation=evaluated(repo)
     payload=dev_payload();payload['data']['records'][0]['transcript'][0]['text']='Другой синтетический запрос'
-    repo.replace_dev(payload)
-    assert repo.state()['data']['conversations'][0]['evaluation'] is None
+    before=repo.state()
+    with pytest.raises(Conflict): repo.replace_dev(payload)
+    assert repo.state()==before
+    assert repo.state()['data']['conversations'][0]['evaluation']['id']==evaluation['id']
     assert client.get('/api/evaluations/'+evaluation['id']).status_code==200
 
 

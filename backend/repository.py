@@ -8,7 +8,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 from uuid import uuid4
-from .domain import initial_checklist, normalize_import, score_evaluation, validate_checklist, validate_evaluation
+from .domain import initial_checklist, normalize_import, normalize_organizer_dataset, score_evaluation, validate_checklist, validate_evaluation
+
+ORGANIZER_SOURCE_PREFIX = 'organizer:'
+
+
+def organizer_source(source: str) -> bool:
+    # DEV was the only trusted source in databases created before group support.
+    return source == 'DEV' or source.startswith(ORGANIZER_SOURCE_PREFIX)
 
 
 def now():
@@ -92,29 +99,53 @@ class Repository:
             db.execute('INSERT INTO conversations VALUES(?,?,?,?,1) ON CONFLICT(id) DO UPDATE SET body=excluded.body,source=excluded.source,content_hash=excluded.content_hash,active=1',
                        (item['id'],dump(clean),source,content_hash(clean)))
 
-    def replace_dev(self,payload,fetched_at=None,source='live'):
-        data = payload.get('data') if isinstance(payload,dict) else None
-        records = data.get('records') if isinstance(data,dict) else None
-        if not isinstance(payload,dict) or payload.get('isSuccess') is not True or not isinstance(data,dict) or data.get('dataset_group_id') != 'DEV' or not isinstance(records,list) or len(records)!=65 or data.get('total_records')!=65:
-            raise ValueError('Источник должен вернуть набор DEV из 65 диалогов.')
-        conversations = normalize_import(payload)
-        if len(conversations)!=65: raise ValueError('В DEV должны быть 65 уникальных диалогов.')
+    @staticmethod
+    def preserve_conversations(db: sqlite3.Connection, conversations: list[dict], source: str) -> int:
+        inserts, reactivations = [], []
+        for item in conversations:
+            clean = copy.deepcopy(item)
+            clean['evaluation'] = None
+            row = db.execute('SELECT body,active FROM conversations WHERE id=?', (item['id'],)).fetchone()
+            if row:
+                if json.loads(row['body']) != clean:
+                    raise Conflict('Диалог с таким ID уже сохранён с другим содержимым. Набор не изменён.')
+                if not row['active']:
+                    reactivations.append((item['id'],))
+            else:
+                inserts.append((item['id'], dump(clean), source, content_hash(clean)))
+        # Check every collision before writing; existing provenance and results remain intact.
+        db.executemany('INSERT INTO conversations VALUES(?,?,?,?,1)', inserts)
+        db.executemany('UPDATE conversations SET active=1 WHERE id=?', reactivations)
+        return len(inserts) + len(reactivations)
+
+    def save_dataset(self, payload: object, group_id: str, fetched_at: str | None = None, source: str = 'live') -> None:
+        conversations = normalize_organizer_dataset(payload, group_id)
         timestamp=fetched_at or now()
         try: datetime.fromisoformat(timestamp.replace('Z','+00:00'))
-        except (ValueError,AttributeError): raise ValueError('Некорректная дата загрузки DEV.') from None
+        except (ValueError,AttributeError): raise ValueError('Некорректная дата загрузки набора.') from None
+        if source not in ('live', 'cache'):
+            raise ValueError('Некорректный источник набора.')
+        dataset = {'group':group_id,'fetchedAt':timestamp,'source':source,'total':len(conversations),'conversationIds':[c['id'] for c in conversations]}
         with self.connect(write=True) as db:
-            db.execute("UPDATE conversations SET active=0 WHERE source='DEV'")
-            self.put_conversations(db,conversations,'DEV')
-            self.set_metadata(db,'dataset',{'group':'DEV','fetchedAt':timestamp,'source':source,'total':65,'conversationIds':[c['id'] for c in conversations]})
+            self.preserve_conversations(db, conversations, ORGANIZER_SOURCE_PREFIX + group_id)
+            previous = self.metadata(db, 'dataset')
+            if previous:
+                self.set_metadata(db, 'dataset:' + previous['group'], previous)
+            self.set_metadata(db, 'dataset:' + group_id, dataset)
+            self.set_metadata(db,'dataset',dataset)
             self.bump(db)
 
+    def replace_dev(self,payload,fetched_at=None,source='live'):
+        """Compatibility for existing DEV cache readers; no longer replaces other data."""
+        self.save_dataset(payload, 'DEV', fetched_at, source)
+
     def import_data(self,text):
+        items=normalize_import(text)
         with self.connect(write=True) as db:
-            existing=[r[0] for r in db.execute('SELECT id FROM conversations WHERE active=1')]
-            items=normalize_import(text,existing)
-            if not items: raise ValueError('Все диалоги уже загружены. Выберите другой набор.')
-            self.put_conversations(db,items,'manual'); self.bump(db)
-            return len(items)
+            imported=self.preserve_conversations(db,items,'manual')
+            if not imported: raise ValueError('Все диалоги уже загружены. Выберите другой набор.')
+            self.bump(db)
+            return imported
 
     def save_checklist(self,checklist,expected_version):
         clean=validate_checklist(checklist)
@@ -185,7 +216,7 @@ class Repository:
         with self.connect() as db:
             row=db.execute('SELECT body,source FROM conversations WHERE id=? AND active=1',(conversation_id,)).fetchone()
             if not row: raise KeyError('Диалог не найден.')
-            return json.loads(row['body']).get('audioUrl'),row['source']=='DEV'
+            return json.loads(row['body']).get('audioUrl'),organizer_source(row['source'])
 
     def state(self,*,wire_decimals=False):
         with self.connect() as db:
@@ -198,8 +229,8 @@ class Repository:
                 item['contentHash']=row['content_hash']
                 if item.get('audioUrl'):
                     path=f"/api/conversations/{quote(item['id'],safe='')}/audio"
-                    item['audioPageUrl']=path+'-page' if row['source']=='DEV' else item['audioUrl']
-                    item['audioUrl']=path if row['source']=='DEV' else item['audioUrl']
+                    item['audioPageUrl']=path+'-page' if organizer_source(row['source']) else item['audioUrl']
+                    item['audioUrl']=path if organizer_source(row['source']) else item['audioUrl']
                 if found:
                     evaluation=item['evaluation'];sections={}
                     for section in dict.fromkeys(c['section'] for c in evaluation['checklist']['criteria']):

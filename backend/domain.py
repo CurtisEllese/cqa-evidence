@@ -162,6 +162,23 @@ def normalize_import(payload, existing_ids=()) -> list[dict]:
     return unique
 
 
+def normalize_organizer_dataset(payload: object, group_id: str) -> list[dict]:
+    """Reject an inconsistent organizer envelope instead of silently deduplicating it."""
+    payload = _import_payload(payload)
+    data = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(payload, dict) or payload.get("isSuccess") is not True or not isinstance(data, dict):
+        raise ValueError("Источник должен вернуть успешный ответ с данными набора.")
+    records, total = data.get("records"), data.get("total_records")
+    if data.get("dataset_group_id") != group_id:
+        raise ValueError("Источник вернул другую группу.")
+    if not isinstance(records, list) or type(total) is not int or total != len(records):
+        raise ValueError("Количество записей не соответствует ответу источника.")
+    conversations = normalize_import(records) if records else []
+    if len(conversations) != total:
+        raise ValueError("В наборе обнаружены повторяющиеся ID диалогов.")
+    return conversations
+
+
 def _normalize_record(record):
     if not isinstance(record, dict):
         raise ValueError("ожидается объект диалога.")
