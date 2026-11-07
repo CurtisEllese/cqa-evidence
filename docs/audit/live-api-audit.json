@@ -1,0 +1,27 @@
+{
+  "kind": "live_synthetic_api_audit",
+  "model": "gpt-6-luna",
+  "checks": [
+    {
+      "case": "new_dialog_real_evaluation",
+      "status": "completed",
+      "score": "100",
+      "criteria": 8
+    },
+    {
+      "case": "appeal_keeps_original_and_recalculates",
+      "original": "100",
+      "final": "92.31"
+    },
+    {
+      "case": "changed_scale_and_old_version_preserved",
+      "old_version": 1,
+      "new_version": 2,
+      "custom_value": "5"
+    },
+    {
+      "case": "export",
+      "conversations": 2
+    }
+  ]
+}

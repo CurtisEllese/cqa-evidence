@@ -1,0 +1,68 @@
+{
+  "notice": "Synthetic semantic regression, not independent human accuracy. No score was injected into the app.",
+  "model": "gpt-6-luna",
+  "cases": [
+    {
+      "case": "steps_and_confirmation",
+      "expected": "5",
+      "actual": "5",
+      "explanation": "The operator gave clear steps for changing the app language, and the client confirmed that the steps solved the question.",
+      "valid": true,
+      "errors": [],
+      "reviews": []
+    },
+    {
+      "case": "steps_no_confirmation",
+      "expected": "2",
+      "actual": "2",
+      "explanation": "The operator gave steps for changing the language, but the client did not confirm that the solution worked.",
+      "valid": true,
+      "errors": [],
+      "reviews": []
+    },
+    {
+      "case": "no_steps",
+      "expected": "0",
+      "actual": "0",
+      "explanation": "The operator gave no steps for changing the app language.",
+      "valid": true,
+      "errors": [],
+      "reviews": []
+    }
+  ],
+  "attempts": [
+    {
+      "fingerprint": "8a7f92cb29983871f33034dc4abecc7c139d3af0c5d54a259082c01e16a33956",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-6-luna",
+      "outcome": "parsed",
+      "seconds": 8.132,
+      "input_tokens": 2284,
+      "output_tokens": 914,
+      "provider": "openai",
+      "cost_usd": null
+    },
+    {
+      "fingerprint": "7bdcbcbf6441e513fd2d23dd96623e9754aa3779bcb62f8d33901035114e31ef",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-6-luna",
+      "outcome": "parsed",
+      "seconds": 8.058,
+      "input_tokens": 2278,
+      "output_tokens": 932,
+      "provider": "openai",
+      "cost_usd": null
+    },
+    {
+      "fingerprint": "9fff369d72c6e64e66d0e9b686b4c7319ed43c2d0a43341e5bf7f94cfd8f6c10",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-6-luna",
+      "outcome": "parsed",
+      "seconds": 9.781,
+      "input_tokens": 2273,
+      "output_tokens": 1174,
+      "provider": "openai",
+      "cost_usd": null
+    }
+  ]
+}

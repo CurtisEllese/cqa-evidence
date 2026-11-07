@@ -10,6 +10,7 @@ Conversation Quality Analytics для Freedom Broker CQA Hackathon: React/TypeSc
 - [Сценарий живой защиты](docs/live-demo.md) и [синтетические входные данные](demo/README.md)
 - [Источники продуктовых фактов — кандидаты для проверки применимости](docs/product/knowledge-sources.md)
 
+- [Свежая проверка Luna: живые сценарии, совместимость веток и приоритеты](docs/audit/readiness-2026-11-07-luna.md)
 - [Командный аудит 7 ноября: проверенная готовность, найденные ошибки и следующие задачи](docs/team-audit-2026-11-07.md)
 
 - [Активный контракт v2.0 и отличия от v1](docs/contracts-v2.md)
