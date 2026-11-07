@@ -16,6 +16,8 @@ Conversation Quality Analytics для Freedom Broker CQA Hackathon: React/TypeSc
 
 ## Документация
 
+[Полный проход текстов Telegram: Freedom Broker, Organizers и Announcements](docs/telegram-full-review-2026-11-08.md) — официальные уточнения, ссылки и границы охвата.
+
 - [Сверка с выданным ТЗ: исправления и оставшаяся приёмка](docs/submission-readiness.md)
 - [Модель и примерная стоимость оценки, включая повторные вызовы](docs/evaluation-cost.md)
 - [Интегрированный сценарий: группы, фильтр грубых ошибок, версии и проверки](docs/jury-flow-integration.md)
