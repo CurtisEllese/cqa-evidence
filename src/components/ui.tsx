@@ -48,7 +48,10 @@ export function Modal({
     <dialog
       ref={ref}
       className={`modal ${wide ? "modal-wide" : ""}`}
-      onCancel={onClose}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
       onClick={(event) => {
         if (event.target === ref.current) {
           const rect = ref.current.getBoundingClientRect();
@@ -81,7 +84,10 @@ export function Notice({
   kind?: "info" | "warning" | "error";
 }) {
   return (
-    <div className={`notice notice-${kind}`}>
+    <div
+      className={`notice notice-${kind}`}
+      role={kind === "error" ? "alert" : undefined}
+    >
       <AlertCircle size={17} aria-hidden="true" />
       <div>{children}</div>
     </div>

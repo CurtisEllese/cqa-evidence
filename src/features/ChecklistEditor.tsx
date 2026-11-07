@@ -68,6 +68,8 @@ export function ChecklistEditor() {
   );
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [allowedValueInputs, setAllowedValueInputs] = useState<
     Record<string, string>
   >({});
@@ -134,12 +136,13 @@ export function ChecklistEditor() {
     }));
     setSelectedId(id);
   }
-  function save() {
-    if (!valid || !dirty) return;
+  async function save() {
+    if (!valid || !dirty || busy) return;
+    setBusy(true);
+    setSaveError("");
     const next = {
       ...draft,
       name: draft.name.trim(),
-      version: data.checklist.version + 1,
       criteria: draft.criteria.map((item) => ({
         ...item,
         title: item.title.trim(),
@@ -151,10 +154,20 @@ export function ChecklistEditor() {
         naCondition: item.allowNA ? item.naCondition?.trim() : undefined,
       })),
     };
-    saveChecklist(next);
-    setDraft(next);
-    setBaseline(JSON.stringify(next));
-    setAllowedValueInputs({});
+    try {
+      const saved = await saveChecklist(next, draft.version);
+      setDraft(saved);
+      setBaseline(JSON.stringify(saved));
+      setAllowedValueInputs({});
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось сохранить чек-лист.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
   function removeCriterion() {
     const remaining = draft.criteria.filter((item) => item.id !== deleteId);
@@ -171,7 +184,17 @@ export function ChecklistEditor() {
   }
 
   return (
-    <div className="checklist-page">
+    <fieldset
+      disabled={busy}
+      className="checklist-page"
+      style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}
+      aria-busy={busy}
+    >
+      {saveError && (
+        <Notice kind="error">
+          {saveError} Изменения остаются в редакторе.
+        </Notice>
+      )}
       <PageHeading
         eyebrow="СТАНДАРТЫ КАЧЕСТВА"
         title="Чек-лист оценки"
@@ -189,7 +212,7 @@ export function ChecklistEditor() {
               disabled={!dirty || !valid}
             >
               <Save size={17} />
-              Сохранить версию
+              {busy ? "Сохраняем…" : "Сохранить версию"}
             </Button>
           </>
         }
@@ -674,7 +697,7 @@ export function ChecklistEditor() {
           ? valid
             ? "Изменения готовы к сохранению. Сохраните версию перед переходом в другой раздел."
             : "Заполните обязательные поля и исправьте параметры, чтобы сохранить версию."
-          : "Изменения сохраняются локально в этом браузере."}
+          : "Изменения сохраняются на сервере."}
       </div>
 
       {deleteId && (
@@ -711,6 +734,6 @@ export function ChecklistEditor() {
           </div>
         </Modal>
       )}
-    </div>
+    </fieldset>
   );
 }

@@ -11,20 +11,17 @@ import {
   X,
 } from "lucide-react";
 import type { Conversation } from "../domain/types";
-import { scoreEvaluation } from "../domain/scoring";
+import { downloadExport } from "../services/api";
 import { useStore } from "../store";
-import { Avatar, Badge, Button, EmptyState, Score } from "../components/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  EmptyState,
+  Notice,
+  Score,
+} from "../components/ui";
 
-export function exportData(data: unknown, name: string) {
-  const url = URL.createObjectURL(
-    new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${name}.json`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 export function ConversationTable({
   onOpen,
   compact = false,
@@ -37,6 +34,22 @@ export function ConversationTable({
   onSearchChange?: (query: string) => void;
 }) {
   const { data } = useStore();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+  async function exportWorkspace() {
+    if (exporting) return;
+    setExporting(true);
+    setExportError("");
+    try {
+      await downloadExport();
+    } catch (error) {
+      setExportError(
+        error instanceof Error ? error.message : "Не удалось выгрузить данные.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
   const [localSearch, setLocalSearch] = useState("");
   const search = onSearchChange ? query : localSearch;
   const setSearch = onSearchChange ?? setLocalSearch;
@@ -134,12 +147,13 @@ export function ConversationTable({
         {compact ? (
           <span className="subtle-label">Рабочий набор</span>
         ) : (
-          <Button onClick={() => exportData(filtered, "freedom-conversations")}>
+          <Button disabled={exporting} onClick={() => void exportWorkspace()}>
             <ArrowDownToLine size={16} />
-            Экспорт
+            {exporting ? "Выгружаем…" : "Экспорт набора"}
           </Button>
         )}
       </div>
+      {exportError && <Notice kind="error">{exportError}</Notice>}
       {!compact && (
         <>
           <div className="table-toolbar">
@@ -301,13 +315,7 @@ export function ConversationTable({
                   )}
                 </td>
                 <td>
-                  <Score
-                    value={
-                      item.evaluation
-                        ? scoreEvaluation(item.evaluation, data.appeals).total
-                        : null
-                    }
-                  />
+                  <Score value={item.scores?.final.total ?? null} />
                 </td>
                 <td>{rowStatus(item)}</td>
                 <td>

@@ -9,7 +9,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useStore } from "../store";
-import { scoreEvaluation } from "../domain/scoring";
 import { Button, PageHeading, TextLink } from "../components/ui";
 import { ConversationTable } from "./Conversations";
 
@@ -27,7 +26,7 @@ export function Dashboard({
   const scores = evaluated
     .map((item) => ({
       id: item.id,
-      score: scoreEvaluation(item.evaluation!, data.appeals).total,
+      score: item.scores?.final.total ?? null,
     }))
     .filter((item) => item.score !== null);
   const average = scores.length

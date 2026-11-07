@@ -51,7 +51,21 @@ export type Conversation = {
   duration: string;
   transcript: Message[];
   audioUrl: string | null;
+  audioPageUrl?: string | null;
   evaluation: Evaluation | null;
+  scores?: {
+    original: EvaluationScore;
+    final: EvaluationScore;
+    sections: Record<string, EvaluationScore>;
+  };
+};
+export type EvaluationScore = {
+  total: number | null;
+  earned: number;
+  possible: number;
+  applicable: number;
+  critical: boolean;
+  results: CriterionResult[];
 };
 export type Appeal = {
   id: string;

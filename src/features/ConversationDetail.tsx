@@ -14,8 +14,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import type { Appeal, Conversation, Criterion } from "../domain/types";
-import { scoreEvaluation } from "../domain/scoring";
+import type { Conversation, Criterion } from "../domain/types";
 import { useStore } from "../store";
 import {
   Avatar,
@@ -26,7 +25,7 @@ import {
   Notice,
   Score,
 } from "../components/ui";
-import { exportData } from "./Conversations";
+import { downloadExport } from "../services/api";
 
 export function ConversationDetail({
   id,
@@ -44,6 +43,8 @@ export function ConversationDetail({
     null,
   );
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [tab, setTab] = useState("results");
   if (!conversation)
     return (
@@ -55,20 +56,35 @@ export function ConversationDetail({
       </EmptyState>
     );
   const evaluation = conversation.evaluation;
-  const original = evaluation ? scoreEvaluation(evaluation) : null;
-  const final = evaluation ? scoreEvaluation(evaluation, data.appeals) : null;
+  const original = conversation.scores?.original;
+  const final = conversation.scores?.final;
   const appeals = data.appeals.filter(
     (item) =>
       item.conversationId === id && item.evaluationId === evaluation?.id,
   );
   const hasAccepted = appeals.some((a) => a.status === "accepted");
-  function runEvaluation() {
-    if (!evaluationAvailable || appeals.length > 0) return;
+  async function runEvaluation() {
+    if (!evaluationAvailable || appeals.length > 0 || busy) return;
+    setBusy(true);
     setError("");
     try {
-      evaluate(id);
+      await evaluate(id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось выполнить оценку");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function exportConversation() {
+    if (exporting) return;
+    setExporting(true);
+    setError("");
+    try {
+      await downloadExport(id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось выгрузить диалог.");
+    } finally {
+      setExporting(false);
     }
   }
   function showEvidence(ids: string[]) {
@@ -113,16 +129,9 @@ export function ConversationDetail({
             </Badge>
           </div>
         </div>
-        <Button
-          onClick={() =>
-            exportData(
-              { conversation, appeals, finalScore: final?.total },
-              `freedom-${id}`,
-            )
-          }
-        >
+        <Button disabled={exporting} onClick={() => void exportConversation()}>
           <FileDown size={16} />
-          Экспорт
+          {exporting ? "Выгружаем…" : "Экспорт"}
         </Button>
       </div>
       <div className="detail-grid">
@@ -155,7 +164,10 @@ export function ConversationDetail({
                     Ваш браузер не поддерживает аудио.
                   </audio>
                   <a
-                    href={conversation.audioUrl}
+                    href={
+                      conversation.audioPageUrl ??
+                      `/api/conversations/${encodeURIComponent(conversation.id)}/audio-page`
+                    }
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -262,16 +274,18 @@ export function ConversationDetail({
             <Button
               variant="primary"
               onClick={runEvaluation}
-              disabled={!evaluationAvailable || appeals.length > 0}
+              disabled={busy || !evaluationAvailable || appeals.length > 0}
             >
               <Sparkles size={16} />{" "}
-              {!evaluationAvailable
-                ? "Оценка пока недоступна"
-                : appeals.length > 0
-                  ? "Оценка зафиксирована"
-                  : evaluation
-                    ? "Обновить оценку"
-                    : "Оценить диалог"}
+              {busy
+                ? "Оцениваем…"
+                : !evaluationAvailable
+                  ? "Оценка пока недоступна"
+                  : appeals.length > 0
+                    ? "Оценка зафиксирована"
+                    : evaluation
+                      ? "Обновить оценку"
+                      : "Оценить диалог"}
             </Button>
             <span>
               {appeals.length
@@ -325,19 +339,8 @@ export function ConversationDetail({
                       const criteria = evaluation.checklist.criteria.filter(
                         (c) => c.section === section,
                       );
-                      const score = scoreEvaluation(
-                        {
-                          ...evaluation,
-                          checklist: { ...evaluation.checklist, criteria },
-                          results: evaluation.results.filter((result) =>
-                            criteria.some(
-                              (criterion) =>
-                                criterion.id === result.criterionId,
-                            ),
-                          ),
-                        },
-                        data.appeals,
-                      );
+                      const score = conversation.scores?.sections[section];
+                      if (!score) return null;
                       return (
                         <div className="section-score-row" key={section}>
                           <span>{section}</span>
@@ -426,9 +429,9 @@ export function ConversationDetail({
                             ) : (
                               <>
                                 Вес {criterion.weight}
-                                {result.value !== null
-                                  ? ` · ${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format((((result.value / criterion.max) * criterion.weight) / (final.possible || 1)) * 100)} в итог`
-                                  : " · исключён из расчёта"}
+                                {result.value === null
+                                  ? " · исключён из расчёта"
+                                  : ""}
                               </>
                             )}
                           </span>
@@ -533,26 +536,38 @@ function AppealDialog({
 }) {
   const { createAppeal } = useStore();
   const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const result = conversation.evaluation!.results.find(
     (r) => r.criterionId === criterion.id,
   )!;
-  function submit() {
-    if (comment.trim().length < 10) return;
-    const appeal: Appeal = {
-      id: crypto.randomUUID(),
-      conversationId: conversation.id,
-      evaluationId: conversation.evaluation!.id,
-      criterionId: criterion.id,
-      comment: comment.trim(),
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      originalValue: result.value,
-    };
-    createAppeal(appeal);
-    onClose();
+  async function submit() {
+    if (comment.trim().length < 10 || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await createAppeal({
+        conversationId: conversation.id,
+        evaluationId: conversation.evaluation!.id,
+        criterionId: criterion.id,
+        comment: comment.trim(),
+      });
+      onClose();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Не удалось отправить апелляцию.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
   return (
-    <Modal title="Оспорить оценку" onClose={onClose}>
+    <Modal
+      title="Оспорить оценку"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+    >
       <div className="appeal-criterion">
         <Flag size={19} />
         <div>
@@ -567,6 +582,7 @@ function AppealDialog({
       </label>
       <textarea
         id="appeal-comment"
+        disabled={busy}
         rows={5}
         value={comment}
         maxLength={2000}
@@ -580,16 +596,19 @@ function AppealDialog({
         Проверяющий увидит критерий, ваше обращение и исходный диалог.
       </Notice>
       <div className="modal-actions">
-        <Button onClick={onClose}>Отмена</Button>
+        <Button disabled={busy} onClick={onClose}>
+          Отмена
+        </Button>
         <Button
           variant="primary"
-          disabled={comment.trim().length < 10}
+          disabled={busy || comment.trim().length < 10}
           onClick={submit}
         >
-          Отправить апелляцию
+          {busy ? "Отправляем…" : "Отправить апелляцию"}
           <ArrowUpRight size={16} />
         </Button>
       </div>
+      {error && <Notice kind="error">{error}</Notice>}
     </Modal>
   );
 }

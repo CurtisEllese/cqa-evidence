@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { FileJson, Upload, ArrowRight } from "lucide-react";
 import { Button, Modal, Notice } from "../components/ui";
-import { parseImport } from "../domain/import";
 import { useStore } from "../store";
 
 export function ImportDialog({
@@ -11,7 +10,7 @@ export function ImportDialog({
   onClose: () => void;
   onImported: () => void;
 }) {
-  const { data, importConversations } = useStore();
+  const { importConversations } = useStore();
   const [text, setText] = useState("");
   const [filename, setFilename] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +18,7 @@ export function ImportDialog({
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   async function readFile(file?: File) {
-    if (!file) return;
+    if (!file || busy) return;
     setError("");
     if (file.size > 5 * 1024 * 1024) {
       setError("Файл должен быть меньше 5 МБ");
@@ -35,25 +34,31 @@ export function ImportDialog({
       setBusy(false);
     }
   }
-  function submit() {
+  async function submit() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
     try {
-      const imported = parseImport(
-        text,
-        data.conversations.map((item) => item.id),
-      );
-      if (!imported.length) {
+      const imported = await importConversations(text);
+      if (!imported) {
         setError("Все диалоги уже загружены. Выберите другой набор.");
         return;
       }
-      importConversations(imported);
       onImported();
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Проверьте формат файла");
+    } finally {
+      setBusy(false);
     }
   }
   return (
-    <Modal title="Загрузить диалоги" onClose={onClose}>
+    <Modal
+      title="Загрузить диалоги"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+    >
       <p className="modal-intro">
         Добавьте транскрипты из набора организаторов. Исходные реплики и метки
         времени сохранятся.
@@ -74,7 +79,7 @@ export function ImportDialog({
         <FileJson size={32} />
         <h3>{filename || "Перетащите JSON-файл сюда"}</h3>
         <p>Ответ API организаторов или массив записей · до 5 МБ</p>
-        <Button onClick={() => fileInput.current?.click()}>
+        <Button disabled={busy} onClick={() => fileInput.current?.click()}>
           <Upload size={16} />
           Выбрать файл
         </Button>
@@ -92,6 +97,7 @@ export function ImportDialog({
       </label>
       <textarea
         id="json-input"
+        disabled={busy}
         className="code-input"
         placeholder={'{ "isSuccess": true, "data": { "records": [...] } }'}
         value={text}
@@ -108,17 +114,19 @@ export function ImportDialog({
         </p>
       )}
       <Notice>
-        Загрузка работает локально. Для автоматической оценки новых диалогов
-        команда подключит сервис ИИ.
+        Сервер проверит файл и сохранит диалоги. Для автоматической оценки
+        требуется подключённый сервис ИИ.
       </Notice>
       <div className="modal-actions">
-        <Button onClick={onClose}>Отмена</Button>
+        <Button disabled={busy} onClick={onClose}>
+          Отмена
+        </Button>
         <Button
           variant="primary"
           disabled={!text.trim() || busy}
           onClick={submit}
         >
-          Загрузить
+          {busy ? "Загружаем…" : "Загрузить"}
           <ArrowRight size={16} />
         </Button>
       </div>

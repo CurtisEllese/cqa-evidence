@@ -53,9 +53,10 @@ function Workspace() {
   const {
     data,
     toast,
-    storageError,
+    ready,
     loading,
     loadError,
+    reloadState,
     refreshDataset,
     checklistDirty,
     setChecklistDirty,
@@ -272,18 +273,12 @@ function Workspace() {
           {loadError && (
             <Notice kind="warning">
               {loadError}{" "}
-              <Button disabled={loading} onClick={() => void refreshDataset()}>
+              <Button disabled={loading} onClick={() => void reloadState()}>
                 Повторить загрузку
               </Button>
             </Notice>
           )}
-          {storageError && (
-            <Notice kind="warning">
-              Браузер не разрешил сохранить данные. Изменения доступны до
-              закрытия страницы.
-            </Notice>
-          )}
-          {route.startsWith("dialog/") ? (
+          {!ready ? null : route.startsWith("dialog/") ? (
             <ConversationDetail
               key={route}
               id={route.slice(7)}
@@ -413,7 +408,8 @@ function Workspace() {
           <Notice>
             Подключён набор DEV заказчика: 65 реальных диалогов. Чек-лист
             соответствует документации проекта. Сервис ИИ-оценки ещё не
-            подключён. Изменения чек-листа сохраняются в этом браузере.
+            подключён. Диалоги, версии чек-листа и решения по апелляциям
+            сохраняются на сервере.
           </Notice>
           <div className="help-links">
             <a href="https://fbroker.kz/" target="_blank" rel="noreferrer">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
   Check,
@@ -17,8 +17,9 @@ import {
   PageHeading,
   Score,
 } from "../components/ui";
-import { scoreEvaluation } from "../domain/scoring";
-import type { Appeal } from "../domain/types";
+import { previewAppeal } from "../services/api";
+import type { AppealDecision } from "../services/api";
+import type { Appeal, EvaluationScore } from "../domain/types";
 
 export function Appeals({ onOpen }: { onOpen: (id: string) => void }) {
   const { data } = useStore();
@@ -191,6 +192,8 @@ function ReviewDialog({
 }) {
   const { data, decideAppeal } = useStore();
   const [decision, setDecision] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [outcome, setOutcome] = useState<"accepted" | "rejected">("accepted");
   const [value, setValue] = useState(
     appeal.originalValue === null ? "na" : String(appeal.originalValue),
@@ -237,186 +240,277 @@ function ReviewDialog({
           criterion.allowedValues.includes(newValue!));
   const valid =
     decision.trim().length >= 10 && (outcome === "rejected" || valueValid);
-  const preview = scoreEvaluation(
-    evaluation,
-    outcome === "rejected" || valueValid
-      ? [
-          ...data.appeals.filter((a) => a.id !== appeal.id),
-          {
-            ...appeal,
-            status: outcome,
-            newValue: outcome === "rejected" ? appeal.originalValue : newValue,
-          },
-        ]
-      : data.appeals,
-  );
+  async function save() {
+    if (!valid || busy) return;
+    setBusy(true);
+    setSaveError("");
+    try {
+      await decideAppeal(
+        appeal.id,
+        outcome,
+        decision.trim(),
+        outcome === "rejected" ? appeal.originalValue : newValue,
+      );
+      onClose();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось сохранить решение.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
-    <Modal title="Рассмотрение апелляции" onClose={onClose} wide>
-      <div className="review-grid">
-        <div>
-          <div className="appeal-criterion">
-            <Flag size={19} />
-            <div>
-              <strong>{criterion.title}</strong>
-              <span>
-                Исходное значение: {appeal.originalValue ?? "N/A"} · вес{" "}
-                {criterion.weight}
-              </span>
+    <Modal
+      title="Рассмотрение апелляции"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+      wide
+    >
+      <fieldset
+        disabled={busy}
+        style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+        aria-busy={busy}
+      >
+        <div className="review-grid">
+          <div>
+            <div className="appeal-criterion">
+              <Flag size={19} />
+              <div>
+                <strong>{criterion.title}</strong>
+                <span>
+                  Исходное значение: {appeal.originalValue ?? "N/A"} · вес{" "}
+                  {criterion.weight}
+                </span>
+              </div>
             </div>
+            <h3 className="field-label">Комментарий оператора</h3>
+            <blockquote className="review-quote">{appeal.comment}</blockquote>
+            <h3 className="field-label">Фрагмент диалога</h3>
+            {conversation.transcript
+              .filter((m) => result?.evidenceIds.includes(m.id))
+              .map((m) => (
+                <blockquote key={m.id} className="review-evidence">
+                  <small>
+                    {m.speaker === "operator" ? "Оператор" : "Клиент"} ·{" "}
+                    {m.timestamp}
+                  </small>
+                  {m.text}
+                </blockquote>
+              ))}
+            <Button
+              variant="ghost"
+              onClick={() => {
+                onClose();
+                onOpen(conversation.id);
+              }}
+            >
+              Открыть полный диалог
+              <ArrowUpRight size={15} />
+            </Button>
           </div>
-          <h3 className="field-label">Комментарий оператора</h3>
-          <blockquote className="review-quote">{appeal.comment}</blockquote>
-          <h3 className="field-label">Фрагмент диалога</h3>
-          {conversation.transcript
-            .filter((m) => result?.evidenceIds.includes(m.id))
-            .map((m) => (
-              <blockquote key={m.id} className="review-evidence">
-                <small>
-                  {m.speaker === "operator" ? "Оператор" : "Клиент"} ·{" "}
-                  {m.timestamp}
-                </small>
-                {m.text}
-              </blockquote>
-            ))}
+          <div>
+            <label className="field-label" htmlFor="review-outcome">
+              Решение
+            </label>
+            <select
+              id="review-outcome"
+              value={outcome}
+              onChange={(e) =>
+                setOutcome(e.target.value as "accepted" | "rejected")
+              }
+            >
+              <option value="accepted">Изменить оценку</option>
+              <option value="rejected">Подтвердить исходную оценку</option>
+            </select>
+            {outcome === "accepted" && (
+              <>
+                <label className="field-label" htmlFor="review-value">
+                  Новое значение
+                </label>
+                {criterion.type === "binary" ||
+                criterion.type === "flag" ||
+                criterion.allowedValues !== undefined ? (
+                  <select
+                    id="review-value"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  >
+                    {(criterion.allowedValues ?? [0, 1]).map((option) => (
+                      <option key={option} value={option}>
+                        {criterion.type === "flag"
+                          ? option === 1
+                            ? "Да, есть нарушение · 1"
+                            : "Нет нарушения · 0"
+                          : criterion.type === "binary"
+                            ? option === 1
+                              ? "Да · 1"
+                              : "Нет · 0"
+                            : `${option} баллов`}
+                      </option>
+                    ))}
+                    {criterion.allowNA && criterion.type !== "flag" && (
+                      <option value="na">Не применимо · N/A</option>
+                    )}
+                  </select>
+                ) : (
+                  <>
+                    <input
+                      id="review-value"
+                      type="number"
+                      min="0"
+                      max={criterion.max}
+                      step="1"
+                      disabled={value === "na"}
+                      value={value === "na" ? "" : value}
+                      onChange={(e) => setValue(e.target.value)}
+                    />
+                    <span className="field-hint">От 0 до {criterion.max}</span>
+                    {criterion.allowNA && (
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={value === "na"}
+                          onChange={(e) =>
+                            setValue(e.target.checked ? "na" : "0")
+                          }
+                        />
+                        Не применимо (N/A)
+                      </label>
+                    )}
+                  </>
+                )}
+                {criterion.type === "flag" && (
+                  <Notice kind="warning">
+                    Флаг грубой ошибки отображается отдельно и не меняет
+                    числовой итог.
+                  </Notice>
+                )}
+                {criterion.allowNA && criterion.naCondition && (
+                  <span className="field-hint">
+                    «Не применимо»: {criterion.naCondition}
+                  </span>
+                )}
+                {!valueValid && (
+                  <Notice kind="error">
+                    Выберите допустимое значение по сохранённой версии
+                    чек-листа.
+                  </Notice>
+                )}
+              </>
+            )}
+            <label className="field-label" htmlFor="review-reason">
+              Обоснование решения
+            </label>
+            <textarea
+              id="review-reason"
+              value={decision}
+              onChange={(e) => setDecision(e.target.value)}
+              rows={4}
+              maxLength={2000}
+              placeholder="Объясните, почему оценка изменена или подтверждена…"
+            />
+            <span className="field-hint">Минимум 10 символов</span>
+            <DecisionPreview
+              appealId={appeal.id}
+              valid={valid}
+              body={{
+                status: outcome,
+                decision: decision.trim(),
+                newValue:
+                  outcome === "rejected" ? appeal.originalValue : newValue,
+              }}
+            />
+          </div>
+        </div>
+        <div className="modal-actions">
+          <Button onClick={onClose}>Отмена</Button>
           <Button
-            variant="ghost"
-            onClick={() => {
-              onClose();
-              onOpen(conversation.id);
-            }}
+            variant="primary"
+            disabled={!valid || busy}
+            onClick={() => void save()}
           >
-            Открыть полный диалог
-            <ArrowUpRight size={15} />
+            {busy ? "Сохраняем…" : "Сохранить решение"}
+            <Check size={16} />
           </Button>
         </div>
-        <div>
-          <label className="field-label" htmlFor="review-outcome">
-            Решение
-          </label>
-          <select
-            id="review-outcome"
-            value={outcome}
-            onChange={(e) =>
-              setOutcome(e.target.value as "accepted" | "rejected")
-            }
-          >
-            <option value="accepted">Изменить оценку</option>
-            <option value="rejected">Подтвердить исходную оценку</option>
-          </select>
-          {outcome === "accepted" && (
-            <>
-              <label className="field-label" htmlFor="review-value">
-                Новое значение
-              </label>
-              {criterion.type === "binary" ||
-              criterion.type === "flag" ||
-              criterion.allowedValues !== undefined ? (
-                <select
-                  id="review-value"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                >
-                  {(criterion.allowedValues ?? [0, 1]).map((option) => (
-                    <option key={option} value={option}>
-                      {criterion.type === "flag"
-                        ? option === 1
-                          ? "Да, есть нарушение · 1"
-                          : "Нет нарушения · 0"
-                        : criterion.type === "binary"
-                          ? option === 1
-                            ? "Да · 1"
-                            : "Нет · 0"
-                          : `${option} баллов`}
-                    </option>
-                  ))}
-                  {criterion.allowNA && criterion.type !== "flag" && (
-                    <option value="na">Не применимо · N/A</option>
-                  )}
-                </select>
-              ) : (
-                <>
-                  <input
-                    id="review-value"
-                    type="number"
-                    min="0"
-                    max={criterion.max}
-                    step="1"
-                    disabled={value === "na"}
-                    value={value === "na" ? "" : value}
-                    onChange={(e) => setValue(e.target.value)}
-                  />
-                  <span className="field-hint">От 0 до {criterion.max}</span>
-                  {criterion.allowNA && (
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={value === "na"}
-                        onChange={(e) =>
-                          setValue(e.target.checked ? "na" : "0")
-                        }
-                      />
-                      Не применимо (N/A)
-                    </label>
-                  )}
-                </>
-              )}
-              {criterion.type === "flag" && (
-                <Notice kind="warning">
-                  Флаг грубой ошибки отображается отдельно и не меняет числовой
-                  итог.
-                </Notice>
-              )}
-              {criterion.allowNA && criterion.naCondition && (
-                <span className="field-hint">
-                  «Не применимо»: {criterion.naCondition}
-                </span>
-              )}
-              {!valueValid && (
-                <Notice kind="error">
-                  Выберите допустимое значение по сохранённой версии чек-листа.
-                </Notice>
-              )}
-            </>
-          )}
-          <label className="field-label" htmlFor="review-reason">
-            Обоснование решения
-          </label>
-          <textarea
-            id="review-reason"
-            value={decision}
-            onChange={(e) => setDecision(e.target.value)}
-            rows={4}
-            maxLength={2000}
-            placeholder="Объясните, почему оценка изменена или подтверждена…"
-          />
-          <span className="field-hint">Минимум 10 символов</span>
-          <div className="review-total">
-            <span>Итог после решения</span>
-            <Score value={preview.total} />
-          </div>
-          {preview.critical && <Badge tone="red">Есть грубая ошибка</Badge>}
-        </div>
-      </div>
-      <div className="modal-actions">
-        <Button onClick={onClose}>Отмена</Button>
-        <Button
-          variant="primary"
-          disabled={!valid}
-          onClick={() => {
-            if (!valid) return;
-            decideAppeal(
-              appeal.id,
-              outcome,
-              decision.trim(),
-              outcome === "rejected" ? appeal.originalValue : newValue,
-            );
-            onClose();
-          }}
-        >
-          Сохранить решение
-          <Check size={16} />
-        </Button>
-      </div>
+      </fieldset>
+      {saveError && <Notice kind="error">{saveError}</Notice>}
     </Modal>
+  );
+}
+
+function DecisionPreview({
+  appealId,
+  valid,
+  body,
+}: {
+  appealId: string;
+  valid: boolean;
+  body: AppealDecision;
+}) {
+  const requestKey = JSON.stringify(body);
+  const [result, setResult] = useState<{
+    key: string;
+    score?: EvaluationScore;
+    error?: string;
+  } | null>(null);
+  useEffect(() => {
+    if (!valid) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      void previewAppeal(
+        appealId,
+        JSON.parse(requestKey) as AppealDecision,
+        controller.signal,
+      )
+        .then((score) => {
+          if (!controller.signal.aborted) setResult({ key: requestKey, score });
+        })
+        .catch((error) => {
+          if (!controller.signal.aborted)
+            setResult({
+              key: requestKey,
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Не удалось рассчитать предварительный итог.",
+            });
+        });
+    }, 350);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [appealId, requestKey, valid]);
+  if (!valid)
+    return (
+      <p className="field-hint">
+        Заполните решение, чтобы получить предварительный итог с сервера.
+      </p>
+    );
+  if (result?.key !== requestKey)
+    return (
+      <p className="field-hint" role="status">
+        Сервер рассчитывает итог…
+      </p>
+    );
+  if (result.error)
+    return (
+      <Notice kind="warning">
+        {result.error} Итог будет рассчитан при сохранении.
+      </Notice>
+    );
+  return (
+    <>
+      <div className="review-total">
+        <span>Итог после решения</span>
+        <Score value={result.score?.total ?? null} />
+      </div>
+      {result.score?.critical && <Badge tone="red">Есть грубая ошибка</Badge>}
+    </>
   );
 }
