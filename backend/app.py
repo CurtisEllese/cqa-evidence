@@ -16,13 +16,20 @@ from .contracts.v2 import (ImportRequest, VersionRequest, MigrationRequest, Crea
 from .evaluator import EvaluationService, load_adapter, error_payload
 from .repository import Repository, Conflict
 from .media import audio_response, AudioProxyError
+from .domain import MAX_IMPORT_BYTES
+from .knowledge import load_knowledge_facts
 
 ROOT=Path(__file__).resolve().parent.parent
 load_dotenv(ROOT/'.env.local')
 load_dotenv(ROOT/'.env')
 MAX_BODY=5*1024*1024
+# A UTF-8 source byte can occupy up to six bytes as a JSON \uXXXX escape.
+# Keep transport bounded while leaving room for the versioned import envelope.
+MAX_IMPORT_BODY=6*MAX_IMPORT_BYTES+1024
 
 def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator=None,evaluation_timeout=60):
+    facts_path = os.getenv('KNOWLEDGE_FACTS_PATH', '').strip()
+    facts = load_knowledge_facts(ROOT / facts_path if facts_path else None)
     db_path=database_path or os.getenv('DATABASE_PATH',str(ROOT/'local-data/cqa.sqlite'))
     repo=Repository(db_path)
     source_url=organizer_url if organizer_url is not None else os.getenv('ORGANIZER_DEV_URL','')
@@ -33,7 +40,7 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             repo.replace_dev(snapshot['payload'],snapshot['fetchedAt'],'cache')
         except (ValueError,KeyError,TypeError):
             pass # Corrupt old cache is refetched; never fabricate records.
-    service=EvaluationService(repo,evaluator or load_adapter(os.getenv('EVALUATOR_ADAPTER','')),timeout=evaluation_timeout)
+    service=EvaluationService(repo,evaluator or load_adapter(os.getenv('EVALUATOR_ADAPTER','')),timeout=evaluation_timeout,knowledge_facts=facts)
     @asynccontextmanager
     async def lifespan(app):
         service.recover()
@@ -56,13 +63,16 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
             host=request.url.hostname
             if host not in ('127.0.0.1','localhost','testserver','::1'): return failure('HOST_FORBIDDEN','Сервер доступен только локально.',403)
             if request.method in ('POST','PUT','PATCH'):
+                is_import=request.method=='POST' and request.url.path=='/api/import'
+                body_limit=MAX_IMPORT_BODY if is_import else MAX_BODY
+                size_message='Слишком большой запрос импорта.' if is_import else 'Максимальный размер запроса — 5 МБ.'
                 try:
-                    if int(request.headers.get('content-length','0'))>MAX_BODY: return failure('REQUEST_TOO_LARGE','Максимальный размер запроса — 5 МБ.',413)
+                    if int(request.headers.get('content-length','0'))>body_limit: return failure('REQUEST_TOO_LARGE',size_message,413)
                 except ValueError: return failure('INVALID_REQUEST','Некорректный размер запроса.',400)
                 chunks=[];length=0
                 async for chunk in request.stream():
                     length+=len(chunk)
-                    if length>MAX_BODY: return failure('REQUEST_TOO_LARGE','Максимальный размер запроса — 5 МБ.',413)
+                    if length>body_limit: return failure('REQUEST_TOO_LARGE',size_message,413)
                     chunks.append(chunk)
                 request._body=b''.join(chunks)
         response=await call_next(request)
@@ -84,10 +94,10 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
     @app.exception_handler(Exception)
     async def unexpected_error(request,exc): return failure('INTERNAL_ERROR','Не удалось обработать запрос.',500)
 
-    async def refresh():
+    async def refresh(group_id: str = 'DEV'):
         if not source_url or urlparse(source_url).scheme!='https': raise HTTPException(503,'Укажите ORGANIZER_DEV_URL в .env.local и перезапустите бэкенд.')
         try:
-            endpoint=httpx.URL(source_url).copy_merge_params({'group_id':'DEV'})
+            endpoint=httpx.URL(source_url).copy_merge_params({'group_id':group_id})
             async with httpx.AsyncClient(timeout=30,follow_redirects=False) as client:
                 async with client.stream('GET',endpoint,headers={'Accept':'application/json'}) as response:
                     response.raise_for_status();chunks=[];length=0
@@ -96,9 +106,11 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
                         if length>MAX_BODY: raise ValueError('oversized')
                         chunks.append(chunk)
             payload=json.loads(b''.join(chunks))
-            repo.replace_dev(payload)
+            repo.save_dataset(payload,group_id)
+        except Conflict:
+            raise
         except (httpx.HTTPError,ValueError,TypeError,KeyError):
-            raise HTTPException(502,'Не удалось получить проверенный набор DEV. Сохранённые данные не изменены.') from None
+            raise HTTPException(502,'Не удалось получить проверенный набор указанной группы. Сохранённые данные не изменены.') from None
 
     async def ensure_dataset():
         # Manual imports must remain usable without the organizer service, including after restart.
@@ -115,11 +127,13 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
 
     @app.post('/api/organizer/refresh',response_model=WorkspaceState,response_model_exclude_unset=True)
     async def organizer_refresh(body:RefreshRequest):
-        async with refresh_lock: await refresh()
+        async with refresh_lock: await refresh(body.groupId)
         return workspace()
 
     @app.post('/api/import',response_model=WorkspaceState,response_model_exclude_unset=True)
     def import_data(body:ImportRequest):
+        if len(body.text.encode('utf-8'))>MAX_IMPORT_BYTES:
+            return failure('REQUEST_TOO_LARGE','Размер JSON не должен превышать 5 МБ.',413)
         imported=repo.import_data(body.text)
         return {**workspace(),'imported':imported}
 
@@ -155,7 +169,7 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
     def evaluate(body:StartEvaluationRequest,background:BackgroundTasks):
         find_conversation(body.conversationId)
         if service.adapter is None: raise HTTPException(503,'Сервис ИИ-оценки ещё не подключён. Команде нужны ключ API и выбранная модель.')
-        result=service.create(body.conversationId)
+        result=service.create(body.conversationId,body.checklistVersion)
         background.add_task(service.run,result['id'])
         return to_wire_evaluation(result)
 

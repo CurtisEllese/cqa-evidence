@@ -223,6 +223,36 @@ test("outgoing mutation JSON uses generated v2 decimal and yes_no fields", async
   }
 });
 
+test("organizer refresh sends the selected group and keeps dataset totals separate", async () => {
+  const prior = globalThis.fetch;
+  const calls = [];
+  const dataset = {
+    group: "CONTROL / Каз",
+    total: 0,
+    conversationIds: [],
+    source: "live",
+    fetchedAt: "2026-11-07T10:00:00Z",
+  };
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, method: init.method, body: JSON.parse(init.body) });
+    return Response.json({ ...state, dataset });
+  };
+  try {
+    const result = await api.refreshWorkspace(dataset.group);
+    assert.deepEqual(calls[0], {
+      url: "/api/organizer/refresh",
+      method: "POST",
+      body: { schema_version: "2.0", groupId: dataset.group },
+    });
+    assert.deepEqual(result.dataset, dataset);
+    assert.equal(result.data.conversations.length, 1);
+    await api.refreshWorkspace();
+    assert.equal(calls[1].body.groupId, "DEV");
+  } finally {
+    globalThis.fetch = prior;
+  }
+});
+
 test("structured API errors preserve retry and request metadata", async () => {
   const prior = globalThis.fetch;
   globalThis.fetch = async () =>

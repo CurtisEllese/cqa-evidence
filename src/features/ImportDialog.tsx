@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { FileJson, Upload, ArrowRight } from "lucide-react";
 import { Button, Modal, Notice } from "../components/ui";
 import { useStore } from "../store";
+import { DatasetSummary } from "./DatasetSummary";
 
 export function ImportDialog({
   onClose,
@@ -10,20 +11,27 @@ export function ImportDialog({
   onClose: () => void;
   onImported: () => void;
 }) {
-  const { importConversations } = useStore();
+  const { importConversations, refreshDataset, loading, loadError } =
+    useStore();
+  const [groupId, setGroupId] = useState("DEV");
   const [text, setText] = useState("");
   const [filename, setFilename] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [importBusy, setBusy] = useState(false);
+  const [groupAttempted, setGroupAttempted] = useState(false);
+  const [groupLoaded, setGroupLoaded] = useState(false);
+  const busy = importBusy || loading;
+  const operationPending = useRef(false);
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   async function readFile(file?: File) {
-    if (!file || busy) return;
+    if (!file || busy || operationPending.current) return;
     setError("");
     if (file.size > 5 * 1024 * 1024) {
-      setError("Файл должен быть меньше 5 МБ");
+      setError("Размер файла не должен превышать 5 МБ");
       return;
     }
+    operationPending.current = true;
     setBusy(true);
     try {
       setText(await file.text());
@@ -31,11 +39,13 @@ export function ImportDialog({
     } catch {
       setError("Не удалось прочитать файл");
     } finally {
+      operationPending.current = false;
       setBusy(false);
     }
   }
   async function submit() {
-    if (busy) return;
+    if (busy || operationPending.current) return;
+    operationPending.current = true;
     setBusy(true);
     setError("");
     try {
@@ -49,7 +59,22 @@ export function ImportDialog({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Проверьте формат файла");
     } finally {
+      operationPending.current = false;
       setBusy(false);
+    }
+  }
+  async function loadGroup() {
+    if (busy || operationPending.current || !groupId.trim()) return;
+    operationPending.current = true;
+    setGroupAttempted(true);
+    setGroupLoaded(false);
+    try {
+      if (await refreshDataset(groupId)) {
+        setGroupLoaded(true);
+        onImported();
+      }
+    } finally {
+      operationPending.current = false;
     }
   }
   return (
@@ -63,6 +88,57 @@ export function ImportDialog({
         Добавьте транскрипты из набора организаторов. Исходные реплики и метки
         времени сохранятся.
       </p>
+      <section className="dataset-import" aria-label="Загрузка по группе">
+        <DatasetSummary />
+        <label className="field-label" htmlFor="dataset-group">
+          Группа набора
+        </label>
+        <form
+          className="dataset-import-controls"
+          aria-busy={loading}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void loadGroup();
+          }}
+        >
+          <input
+            id="dataset-group"
+            value={groupId}
+            onChange={(e) => {
+              setGroupId(e.target.value);
+              setGroupAttempted(false);
+              setGroupLoaded(false);
+            }}
+            disabled={busy}
+            maxLength={512}
+            required
+            autoComplete="off"
+            spellCheck={false}
+            aria-describedby="dataset-group-hint"
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={busy || !groupId.trim()}
+          >
+            <Upload size={16} aria-hidden="true" />
+            {loading ? "Загружаем набор…" : "Загрузить набор"}
+          </Button>
+        </form>
+        <p id="dataset-group-hint" className="dataset-import-hint">
+          Введите только идентификатор группы, без ссылки организатора.
+        </p>
+        {groupAttempted && loading && (
+          <p role="status">Загружаем группу «{groupId.trim()}»…</p>
+        )}
+        {groupAttempted && loadError && (
+          <p className="form-error" role="alert">
+            {loadError} Текущие диалоги и оценки сохранены.
+          </p>
+        )}
+        {groupLoaded && <p role="status">Набор загружен.</p>}
+      </section>
+      <h3 className="manual-import-title">Ручной импорт JSON</h3>
       <div
         className={`dropzone ${dragging ? "dragging" : ""}`}
         onDragOver={(e) => {
@@ -86,6 +162,7 @@ export function ImportDialog({
         <input
           ref={fileInput}
           type="file"
+          disabled={busy}
           accept=".json,application/json"
           className="sr-only"
           aria-label="JSON-файл диалогов"
@@ -126,7 +203,7 @@ export function ImportDialog({
           disabled={!text.trim() || busy}
           onClick={submit}
         >
-          {busy ? "Загружаем…" : "Загрузить"}
+          {importBusy ? "Загружаем…" : "Загрузить JSON"}
           <ArrowRight size={16} />
         </Button>
       </div>

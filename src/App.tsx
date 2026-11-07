@@ -16,7 +16,6 @@ import {
 import { StoreProvider, useStore } from "./store";
 import {
   Avatar,
-  Badge,
   Button,
   Modal,
   Notice,
@@ -28,6 +27,7 @@ import { ConversationDetail } from "./features/ConversationDetail";
 import { ChecklistEditor } from "./features/ChecklistEditor";
 import { Appeals } from "./features/Appeals";
 import { ImportDialog } from "./features/ImportDialog";
+import { DatasetSummary } from "./features/DatasetSummary";
 
 const navigation = [
   { id: "overview", label: "Обзор", icon: LayoutDashboard },
@@ -57,7 +57,6 @@ function Workspace() {
     loading,
     loadError,
     reloadState,
-    refreshDataset,
     checklistDirty,
     setChecklistDirty,
   } = useStore();
@@ -204,7 +203,7 @@ function Workspace() {
           <Avatar name="КК" />
           <div>
             <strong>Команда качества</strong>
-            <span>Набор заказчика · DEV</span>
+            <span>Рабочее пространство</span>
           </div>
         </div>
       </aside>
@@ -257,10 +256,6 @@ function Workspace() {
               )}
             </form>
             <span className="topbar-divider" />
-            <Badge tone="green">
-              <span className="status-dot" />
-              DEV
-            </Badge>
             <Avatar name="КК" small />
           </div>
         </header>
@@ -304,6 +299,9 @@ function Workspace() {
                   </Button>
                 }
               />
+              <div className="dataset-banner">
+                <DatasetSummary />
+              </div>
               <ConversationTable
                 onOpen={openDialog}
                 query={search}
@@ -405,11 +403,12 @@ function Workspace() {
               </div>
             ))}
           </div>
+          <DatasetSummary />
           <Notice>
-            Подключён набор DEV заказчика: 65 реальных диалогов. Чек-лист
-            соответствует документации проекта. Сервис ИИ-оценки ещё не
-            подключён. Диалоги, версии чек-листа и решения по апелляциям
-            сохраняются на сервере.
+            Рабочее пространство может содержать несколько наборов и диалоги
+            из ручного импорта JSON. Последний загруженный набор не определяет
+            группу остальных диалогов. Диалоги, версии чек-листа и решения
+            по апелляциям сохраняются на сервере.
           </Notice>
           <div className="help-links">
             <a href="https://fbroker.kz/" target="_blank" rel="noreferrer">
@@ -418,8 +417,13 @@ function Workspace() {
             </a>
           </div>
           <div className="modal-actions">
-            <Button disabled={loading} onClick={() => void refreshDataset()}>
-              Обновить DEV
+            <Button
+              onClick={() => {
+                setHelpOpen(false);
+                setImportOpen(true);
+              }}
+            >
+              Загрузить диалоги
             </Button>
             <Button variant="primary" onClick={() => setHelpOpen(false)}>
               Всё понятно <Check size={16} />

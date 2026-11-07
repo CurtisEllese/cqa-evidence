@@ -7,6 +7,13 @@
       "const": "2.0",
       "title": "Schema Version",
       "type": "string"
+    },
+    "groupId": {
+      "default": "DEV",
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Groupid",
+      "type": "string"
     }
   },
   "required": [

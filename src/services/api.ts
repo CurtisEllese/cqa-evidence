@@ -83,8 +83,8 @@ async function request<T extends { schema_version: "2.0" }>(
 }
 export const fetchWorkspace = async () =>
   stateFromWire(await request<Wire.WorkspaceState>("/api/state"));
-export const refreshWorkspace = async () => {
-  const body: Wire.RefreshRequest = { schema_version: "2.0" };
+export const refreshWorkspace = async (groupId = "DEV") => {
+  const body: Wire.RefreshRequest = { schema_version: "2.0", groupId };
   return stateFromWire(
     await request<Wire.WorkspaceState>("/api/organizer/refresh", body),
   );

@@ -68,7 +68,7 @@ type Store = {
   loading: boolean;
   loadError: string;
   reloadState: () => Promise<void>;
-  refreshDataset: () => Promise<void>;
+  refreshDataset: (groupId?: string) => Promise<boolean>;
   evaluationAvailable: boolean;
   evaluatingIds: string[];
   evaluationErrors: Record<string, string>;
@@ -102,6 +102,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [checklistDirty, setChecklistDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const datasetRequestPending = useRef(false);
+  const failedDatasetGroup = useRef<string | null>(null);
   const [evaluatingIds, setEvaluatingIds] = useState<string[]>([]);
   const [evaluationErrors, setEvaluationErrors] = useState<
     Record<string, string>
@@ -115,6 +117,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
   const load = useCallback(
     async (retry = false) => {
+      failedDatasetGroup.current = null;
       setLoading(true);
       setLoadError("");
       if (retry || !initialization) initialization = initialize();
@@ -218,17 +221,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
-  async function refreshDataset() {
+  async function refreshDataset(groupId = "DEV") {
+    if (datasetRequestPending.current) return false;
+    datasetRequestPending.current = true;
     setLoading(true);
     setLoadError("");
     try {
-      acceptState(await refreshWorkspace());
-      setToast("Набор заказчика обновлён");
+      const next = await refreshWorkspace(groupId.trim());
+      acceptState(next);
+      failedDatasetGroup.current = null;
+      setToast("Набор загружен");
+      return true;
     } catch (error) {
+      failedDatasetGroup.current = groupId.trim();
       setLoadError(
         error instanceof Error ? error.message : "Не удалось обновить набор.",
       );
+      return false;
     } finally {
+      datasetRequestPending.current = false;
       setLoading(false);
     }
   }
@@ -240,7 +251,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ready: session !== null,
         loading,
         loadError,
-        reloadState: () => load(true),
+        reloadState: () => {
+          const group = failedDatasetGroup.current;
+          return group === null
+            ? load(true)
+            : refreshDataset(group).then(() => {});
+        },
         refreshDataset,
         evaluationAvailable: session?.evaluationAvailable ?? false,
         evaluatingIds,

@@ -199,6 +199,7 @@ export type ModelResponse = {
 
 export type RefreshRequest = {
   "schema_version": "2.0";
+  "groupId"?: string;
 };
 
 export type Score = {
@@ -214,6 +215,7 @@ export type Score = {
 export type StartEvaluationRequest = {
   "schema_version": "2.0";
   "conversationId": string;
+  "checklistVersion"?: number | null;
 };
 
 export type ValidationIssue = {
