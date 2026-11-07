@@ -86,7 +86,7 @@ async def evaluate(request: EvaluationRequest) -> ModelResponse:
     ...
 ```
 
-Для текущего OpenAI укажите `EVALUATOR_ADAPTER=evaluator.provider:evaluate`, `LLM_PROVIDER=openai`, `LLM_MODEL=gpt-5.4-mini-2026-03-17` и серверный `OPENAI_API_KEY`; [инструкция подключения](docs/openai-evaluator.md). Без адаптера POST `/api/evaluations` возвращает 503. Настроенный контур возвращает 202 с ID задачи; её состояние читается через GET `/api/evaluations/{id}`.
+Для текущего OpenAI укажите `EVALUATOR_ADAPTER=evaluator.provider:evaluate`, `LLM_PROVIDER=openai`, `LLM_MODEL=gpt-6-luna` и серверный `OPENAI_API_KEY`; [инструкция подключения](docs/openai-evaluator.md). Без адаптера POST `/api/evaluations` возвращает 503. Настроенный контур возвращает 202 с ID задачи; её состояние читается через GET `/api/evaluations/{id}`.
 
 Модель возвращает решения критериев и доказательства. Backend проверяет ссылки/цитаты, шкалы и N/A, рассчитывает итог и сохраняет результат. Непроверенные доказательства дают `needs_review` без итогового балла. OpenAI и резервный Gemini используют активный v2; ключ и модель задаются только на сервере. Проверки подключения не заменяют экспертную проверку точности.
 

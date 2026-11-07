@@ -66,4 +66,4 @@ class OpenAISettings(EvaluatorSettings):
         if os.getenv("LLM_PROVIDER", "openai") != "openai":
             raise ValueError("This adapter requires LLM_PROVIDER=openai")
         return cls(api_key=os.getenv("OPENAI_API_KEY", ""),
-                   model=os.getenv("LLM_MODEL", "gpt-5.4-mini-2026-03-17"), timeout_seconds=45)
+                   model=os.getenv("LLM_MODEL", "gpt-6-luna"), timeout_seconds=45)

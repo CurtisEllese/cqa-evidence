@@ -1,0 +1,70 @@
+{
+  "notice": "Synthetic integration checks, not independent accuracy or Ground Truth.",
+  "cases": [
+    {
+      "language": "RU",
+      "channel": "agent chat",
+      "status": "valid",
+      "matched": 8,
+      "criteria": 8,
+      "errors": [],
+      "evidence_issues": [],
+      "differences": []
+    },
+    {
+      "language": "KZ",
+      "channel": "voice call",
+      "status": "valid",
+      "matched": 8,
+      "criteria": 8,
+      "errors": [],
+      "evidence_issues": [],
+      "differences": []
+    },
+    {
+      "language": "EN",
+      "channel": "agent chat",
+      "status": "valid",
+      "matched": 8,
+      "criteria": 8,
+      "errors": [],
+      "evidence_issues": [],
+      "differences": []
+    }
+  ],
+  "attempts": [
+    {
+      "fingerprint": "57eb642e76e8550b616596fcbb6a8664966154ad6a28b06b640f11aa6973f84f",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-6-luna",
+      "outcome": "parsed",
+      "seconds": 7.36,
+      "input_tokens": 2267,
+      "output_tokens": 892,
+      "provider": "openai",
+      "cost_usd": null
+    },
+    {
+      "fingerprint": "7cc5d091a40d8f04a6232bc929715b8e21eaa5cddd9db5670489296f99cfb338",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-6-luna",
+      "outcome": "parsed",
+      "seconds": 8.728,
+      "input_tokens": 2345,
+      "output_tokens": 1021,
+      "provider": "openai",
+      "cost_usd": null
+    },
+    {
+      "fingerprint": "1488b6daf4b1a9df74e868264bde53e3d97448744f803a7f89af33cc3eada899",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-6-luna",
+      "outcome": "parsed",
+      "seconds": 8.098,
+      "input_tokens": 2253,
+      "output_tokens": 932,
+      "provider": "openai",
+      "cost_usd": null
+    }
+  ]
+}
