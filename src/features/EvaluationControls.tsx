@@ -95,7 +95,7 @@ export function EvaluationControls({
               : !available
                 ? "Оценка пока недоступна"
                 : hasEvaluation
-                  ? "Обновить оценку"
+                  ? "Оценить заново"
                   : "Оценить диалог"}
         </Button>
         <span>

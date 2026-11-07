@@ -3111,14 +3111,307 @@ td,
   line-height: 1.6;
   margin: 0;
 }
-.evaluation-history { padding: 16px; margin: 12px 0; min-width: 0; }
-.evaluation-history p { color: var(--text-secondary, #637066); font-size: 13px; line-height: 1.6; }
-.history-entry { border-top: 1px solid #e4e9e4; padding: 12px 0; overflow-wrap: anywhere; }
-.history-entry summary { cursor: pointer; font-size: 13px; font-weight: 600; line-height: 1.6; }
-.history-entry article { padding: 8px 0; }
-.history-entry h3 { font-size: 13px; }
-.evaluation-provenance { overflow-wrap: anywhere; max-width: 250px; font-size: 11px !important; }
-.audio-offset { display: flex; align-items: center; gap: 8px; margin: 12px 0 8px; font-size: 12px; }
-.audio-offset input { width: 80px; padding: 6px; border: 1px solid #ccd8cf; border-radius: 6px; }
-.audio-panel small { display: block; line-height: 1.5; }
-.audio-seek { border: 0; background: transparent; color: #257647; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; font-size: 11px; }
+.evaluation-history {
+  padding: 16px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.evaluation-history p {
+  color: var(--text-secondary, #637066);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.history-entry {
+  border-top: 1px solid #e4e9e4;
+  padding: 12px 0;
+  overflow-wrap: anywhere;
+}
+.history-entry summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.history-entry article {
+  padding: 8px 0;
+}
+.history-entry h3 {
+  font-size: 13px;
+}
+.evaluation-provenance {
+  overflow-wrap: anywhere;
+  max-width: 250px;
+  font-size: 11px !important;
+}
+.audio-offset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+  font-size: 12px;
+}
+.audio-offset input {
+  width: 80px;
+  padding: 6px;
+  border: 1px solid #ccd8cf;
+  border-radius: 6px;
+}
+.audio-panel small {
+  display: block;
+  line-height: 1.5;
+}
+.audio-seek {
+  border: 0;
+  background: transparent;
+  color: #257647;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13px;
+  min-height: 44px;
+}
+
+/* Freedom workspace: clear task hierarchy, quiet surfaces, strong primary action. */
+.batch-panel {
+  padding: 24px;
+  margin-bottom: 24px;
+  border-color: #d8e7dc;
+  background: linear-gradient(135deg, #f5fbf6, #fff 55%);
+}
+.batch-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  color: var(--forest);
+}
+.batch-heading h2 {
+  font-size: 23px;
+  margin: 7px 0;
+  letter-spacing: -0.4px;
+}
+.batch-heading p,
+.batch-note {
+  font-size: 13px;
+  color: #59675f;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+.batch-eyebrow {
+  font-size: 11px;
+  letter-spacing: 1.1px;
+  font-weight: 700;
+  color: #367246;
+}
+.workflow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 22px 0;
+  color: #46594d;
+  font-size: 13px;
+}
+.workflow-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workflow-steps span {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  background: #e2f3e7;
+  color: #16652a;
+  font-weight: 700;
+}
+.batch-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+.batch-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #425347;
+}
+.batch-fields select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cddbd1;
+  border-radius: 9px;
+  background: white;
+  color: var(--text);
+  text-overflow: ellipsis;
+}
+.batch-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 20px 0;
+  color: #637066;
+  font-size: 13px;
+}
+.batch-metrics strong {
+  font-size: 22px;
+  color: var(--forest);
+  margin-right: 5px;
+}
+.batch-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.batch-actions .button,
+.batch-global .button,
+.batch-progress .button {
+  min-height: 44px;
+}
+.batch-composition {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.batch-composition summary {
+  cursor: pointer;
+  color: #28623a;
+  min-height: 44px;
+  padding: 12px 0;
+}
+.batch-composition summary svg {
+  vertical-align: middle;
+}
+.batch-composition ul {
+  max-height: 240px;
+  overflow: auto;
+  padding: 0 0 0 20px;
+  margin: 0;
+}
+.batch-composition li {
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.batch-composition li > span {
+  margin-left: 12px;
+  color: #57695c;
+}
+.batch-composition li p {
+  margin: 5px 0;
+  color: #9d3434;
+}
+.batch-progress {
+  border-top: 1px solid #dce6df;
+  margin-top: 18px;
+  padding-top: 20px;
+}
+.batch-progress-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.batch-progress-heading p {
+  font-size: 13px;
+  color: #59675f;
+  margin: 6px 0 12px;
+}
+.batch-progress progress {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--green);
+  display: block;
+}
+.batch-progress-label {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 8px;
+  color: #405c48;
+}
+.batch-global {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  border: 1px solid #cce5d3;
+  background: #f0f9f2;
+  border-radius: 12px;
+}
+.batch-global > span {
+  flex: 1;
+  min-width: 180px;
+  font-size: 14px;
+  color: var(--forest);
+}
+.table-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.submission-note {
+  color: #59675f;
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 0 24px;
+  margin: 0 0 16px;
+}
+.page-footnote,
+.result-card-bottom,
+.evaluation-provenance {
+  font-size: 12px !important;
+}
+.icon-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+@media (max-width: 1020px) {
+  .batch-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .batch-fields label:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 760px) {
+  .batch-panel {
+    padding: 18px;
+  }
+  .batch-fields {
+    grid-template-columns: 1fr;
+  }
+  .batch-fields label:last-child {
+    grid-column: auto;
+  }
+  .batch-heading h2 {
+    font-size: 21px;
+  }
+  .batch-heading > svg {
+    display: none;
+  }
+  .workflow-steps {
+    gap: 12px 18px;
+  }
+  .batch-metrics {
+    gap: 12px 22px;
+  }
+  .batch-progress-heading {
+    flex-wrap: wrap;
+  }
+  .batch-actions > .button {
+    flex: 1 1 auto;
+  }
+}

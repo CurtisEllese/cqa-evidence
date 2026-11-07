@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from backend.contracts.v2 import EvaluationRequest, ModelResponse
 from backend.evaluator import AdapterFailure
+from .budget import BudgetLedger
 from .prompt import SYSTEM
 from .settings import OpenAISettings, retry_delay
 
@@ -68,7 +69,9 @@ class UsageEvent:
     input_tokens: int | None
     output_tokens: int | None
     provider: str = "openai"
-    cost_usd: None = None
+    cost_usd: str | None = None
+    attempt_id: str | None = None
+    cost_basis: str = "standard_upper_estimate"
 
 
 def write_usage_event(event):
@@ -84,10 +87,13 @@ def write_usage_event(event):
 
 
 class OpenAIV2Evaluator:
-    def __init__(self, settings: OpenAISettings, *, transport=None, on_attempt=None):
+    def __init__(self, settings: OpenAISettings, *, transport=None, on_attempt=None, budget=None):
         self.settings = settings
         self.transport = transport
         self.on_attempt = on_attempt
+        # MockTransport is an offline test. Every real HTTP client gets a
+        # durable ledger, irrespective of its optional reporting callback.
+        self.budget = budget if budget is not None else (None if isinstance(transport, httpx.MockTransport) else BudgetLedger.from_env())
         self.lock = asyncio.Lock()
         self.last_start = float("-inf")
 
@@ -102,6 +108,7 @@ class OpenAIV2Evaluator:
                                 "strict": True, "schema": schema}},
             "max_output_tokens": self.settings.max_output_tokens,
             "store": False,
+            "service_tier": "default",
         }
         async with self.lock:
             delay = self.settings.min_interval_seconds - (time.monotonic() - self.last_start)
@@ -113,6 +120,7 @@ class OpenAIV2Evaluator:
                 + self.settings.model + PROMPT_VERSION + json.dumps(schema, sort_keys=True)
                 + str(self.settings.max_output_tokens)).encode()).hexdigest()
             outcome, incoming, outgoing, model = "cancelled_or_failed", None, None, self.settings.model
+            attempt_id = self.budget.reserve(payload, fingerprint) if self.budget is not None else None
             try:
                 # No hidden retries or redirects; credentials only go to the official endpoint.
                 async with asyncio.timeout(self.settings.timeout_seconds):
@@ -167,8 +175,10 @@ class OpenAIV2Evaluator:
                 outcome = "MODEL_OUTPUT_INVALID"
                 raise json.JSONDecodeError("Invalid structured model response", "", 0) from None
             finally:
+                cost = self.budget.settle(attempt_id, incoming, outgoing, outcome) if attempt_id else None
                 event = UsageEvent(fingerprint, PROMPT_VERSION, model, outcome,
-                                   round(time.monotonic() - started, 3), incoming, outgoing)
+                                   round(time.monotonic() - started, 3), incoming, outgoing,
+                                   cost_usd=cost, attempt_id=attempt_id)
                 logging.getLogger(__name__).info("openai_attempt %s", json.dumps(asdict(event)))
                 if self.on_attempt is not None:
                     self.on_attempt(event)

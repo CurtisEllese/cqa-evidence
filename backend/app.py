@@ -18,6 +18,7 @@ from .repository import Repository, Conflict
 from .media import audio_response, AudioProxyError
 from .domain import MAX_IMPORT_BYTES
 from .knowledge import load_knowledge_facts
+from .submission import build_submission
 
 ROOT=Path(__file__).resolve().parent.parent
 load_dotenv(ROOT/'.env.local')
@@ -213,6 +214,10 @@ def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator
 
     @app.get('/api/export',response_model=WorkspaceState)
     def export(): return download(workspace(),'cqa-workspace')
+
+    @app.get('/api/submission')
+    def export_submission(groupId: str = 'DEV'):
+        return download(build_submission(workspace(), groupId), 'results')
 
     @app.get('/api/conversations/{conversation_id}/export',response_model=ConversationExport)
     def export_conversation(conversation_id:str):

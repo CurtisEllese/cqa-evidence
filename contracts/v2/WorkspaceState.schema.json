@@ -1090,6 +1090,13 @@
         }
       ]
     },
+    "datasets": {
+      "items": {
+        "$ref": "#/$defs/DatasetInfo"
+      },
+      "title": "Datasets",
+      "type": "array"
+    },
     "evaluationAvailable": {
       "title": "Evaluationavailable",
       "type": "boolean"

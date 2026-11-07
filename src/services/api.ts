@@ -185,6 +185,20 @@ export async function startEvaluation(
     await request<Wire.EvaluationResult>("/api/evaluations", body),
   );
 }
+export async function downloadSubmission(groupId: string) {
+  const response = await fetch(
+    `/api/submission?groupId=${encodeURIComponent(groupId)}`,
+    { headers: { Accept: "application/json" } },
+  );
+  if (!response.ok)
+    throw responseError(await response.json().catch(() => null));
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "results.json";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 export async function fetchEvaluation(
   id: string,
   signal?: AbortSignal,

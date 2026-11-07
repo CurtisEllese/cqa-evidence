@@ -8,25 +8,22 @@ from pathlib import Path
 from dotenv import load_dotenv
 from backend.contracts.v2 import EvaluationRequest
 from backend.evaluator import AdapterFailure, inspect_output
-from .settings import EvaluatorSettings, OpenAISettings
+from .settings import OpenAISettings
 from .openai_v2 import OpenAIV2Evaluator
-from .v2 import GeminiV2Evaluator
 
 
 async def run(args):
     root = Path(__file__).resolve().parents[1]
     load_dotenv(root / '.env.local', override=False)
     load_dotenv(root / '.env', override=False)
-    cases = json.loads(args.cases.read_text())
+    cases = json.loads(args.cases.read_text(encoding="utf-8"))
     prepared = [(EvaluationRequest.model_validate(c['request']), c['expected']) for c in cases]
     events = []
     provider = os.getenv("LLM_PROVIDER", "openai")
     if provider == "openai":
         judge = OpenAIV2Evaluator(OpenAISettings.from_env(), on_attempt=events.append)
-    elif provider == "gemini":
-        judge = GeminiV2Evaluator(EvaluatorSettings.from_env(), on_attempt=events.append)
     else:
-        raise ValueError("Unsupported LLM_PROVIDER")
+        raise AdapterFailure("MODEL_NOT_ALLOWED", retryable=False)
     rows = []
     for request, expected in prepared:
         if set(expected) != {c.id for c in request.checklist.criteria}:
@@ -49,7 +46,7 @@ async def run(args):
     text=json.dumps(summary,ensure_ascii=False,indent=2)
     if args.report:
         args.report.parent.mkdir(parents=True,exist_ok=True)
-        args.report.write_text(text+'\n')
+        args.report.write_text(text+'\n', encoding="utf-8")
     print(text)
     return 0 if all(r['status']=='valid' and r['matched']==r['criteria'] for r in rows) else 1
 

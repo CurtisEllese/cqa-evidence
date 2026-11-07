@@ -22,6 +22,7 @@ import { toDecimal } from "./decimal";
 export type WorkspaceViewModel = {
   data: AppData;
   dataset: Wire.WorkspaceState["dataset"];
+  datasets: Wire.DatasetInfo[];
   evaluationAvailable: boolean;
   revision: number;
   imported?: number;
@@ -128,6 +129,8 @@ export function evaluationFromWire(
     source: evaluation.source,
     status: evaluation.status,
     error: evaluation.error?.message ?? null,
+    errorCode: evaluation.error?.code ?? null,
+    errorRetryable: evaluation.error?.retryable ?? null,
     total:
       evaluation.status === "completed" && evaluation.score?.total != null
         ? decimal(evaluation.score.total)
@@ -183,6 +186,11 @@ function appealFromWire(appeal: Wire.AppealDTO): Appeal {
 export function stateFromWire(state: Wire.WorkspaceState): WorkspaceViewModel {
   return {
     dataset: state.dataset,
+    datasets: state.datasets?.length
+      ? state.datasets
+      : state.dataset
+        ? [state.dataset]
+        : [],
     evaluationAvailable: state.evaluationAvailable,
     revision: state.revision,
     imported: state.imported ?? undefined,

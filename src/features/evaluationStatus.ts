@@ -1,6 +1,6 @@
 import type { Evaluation } from "../domain/types";
 export function evaluationLabel(evaluation: Evaluation | null): string {
-  if (!evaluation) return "Ожидает оценки";
+  if (!evaluation) return "Не оценён";
   return {
     queued: "В очереди",
     running: "Оценивается",

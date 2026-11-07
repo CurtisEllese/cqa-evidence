@@ -91,7 +91,7 @@ export function Dashboard({
           value={String(evaluated.length)}
           suffix={`из ${data.conversations.length}`}
           icon={<CheckCheck size={19} />}
-          footer={`${data.conversations.length - evaluated.length} ожидают оценки`}
+          footer={`${data.conversations.filter((c) => !c.evaluation).length} ещё не оценены`}
           accent="blue"
         />
         <Stat

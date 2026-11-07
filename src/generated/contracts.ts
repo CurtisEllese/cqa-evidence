@@ -265,6 +265,7 @@ export type WorkspaceState = {
   "schema_version": "2.0";
   "data": WorkspaceData;
   "dataset": DatasetInfo | null;
+  "datasets"?: Array<DatasetInfo>;
   "evaluationAvailable": boolean;
   "revision": number;
   "imported"?: number | null;

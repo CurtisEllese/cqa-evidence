@@ -205,6 +205,7 @@ def test_evaluation_appeal_manual_import_and_groups_survive_refresh_and_restart(
     state = client.get("/api/export").json()
     assert len(state["data"]["conversations"]) == 76
     assert state["dataset"]["group"] == "CONTROL" and state["dataset"]["total"] == 10
+    assert {group['group']: group['total'] for group in state['datasets']} == {'DEV': 65, 'CONTROL': 10}
     assert client.get("/api/conversations/manual-kept").status_code == 200
     assert client.get("/api/conversations/DEV-0").json() == saved
     assert client.get("/api/evaluations/" + job["id"]).json() == original

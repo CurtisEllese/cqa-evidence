@@ -32,8 +32,59 @@ const criticalStatus = await import(
 );
 const timing = await import(await moduleUrl("../features/audioTiming.ts"));
 
+test("submission export encodes the selected group and downloads results.json", async () => {
+  const priorFetch = globalThis.fetch;
+  const priorDocument = globalThis.document;
+  let requested = "";
+  let clicked = false;
+  const link = {
+    href: "",
+    download: "",
+    click() {
+      clicked = true;
+    },
+  };
+  globalThis.fetch = async (url) => {
+    requested = url;
+    return Response.json({ schema_version: "1.0", results: [] });
+  };
+  globalThis.document = { createElement: () => link };
+  try {
+    await api.downloadSubmission("CONTROL / KZ?x=1");
+    assert.equal(
+      requested,
+      "/api/submission?groupId=CONTROL%20%2F%20KZ%3Fx%3D1",
+    );
+    assert.equal(link.download, "results.json");
+    assert.equal(clicked, true);
+    globalThis.fetch = async () =>
+      Response.json(
+        {
+          schema_version: "2.0",
+          code: "missing_group",
+          message: "Набор не найден",
+          request_id: "test",
+          retryable: false,
+        },
+        { status: 404 },
+      );
+    await assert.rejects(api.downloadSubmission("missing"), /Набор не найден/);
+  } finally {
+    globalThis.fetch = priorFetch;
+    if (priorDocument === undefined) delete globalThis.document;
+    else globalThis.document = priorDocument;
+  }
+});
+
 test("audio positions handle ISO zones, offsets and invalid timestamps", () => {
-  assert.equal(timing.audioPosition("2026-11-07T10:00:05+05:00", "2026-11-07T05:02:22Z", 3), 140);
+  assert.equal(
+    timing.audioPosition(
+      "2026-11-07T10:00:05+05:00",
+      "2026-11-07T05:02:22Z",
+      3,
+    ),
+    140,
+  );
   assert.equal(timing.audioPosition("00:05", "00:20", -2), 13);
   assert.equal(timing.audioPosition("00:05", "00:20", -30), 0);
   assert.equal(timing.audioPosition("00:20", "00:05", 0), null);
@@ -398,4 +449,23 @@ test("saved versions use the list contract and evaluation sends the explicit sel
   } finally {
     globalThis.fetch = prior;
   }
+});
+
+test("evaluation view model retains structured failures for queue decisions", () => {
+  const view = models.evaluationFromWire({
+    ...evaluation,
+    status: "failed",
+    results: [],
+    score: null,
+    error: {
+      schema_version: "2.0",
+      code: "BUDGET_EXCEEDED",
+      message: "Лимит исчерпан",
+      retryable: false,
+      request_id: "budget-test",
+    },
+  });
+  assert.equal(view.errorCode, "BUDGET_EXCEEDED");
+  assert.equal(view.errorRetryable, false);
+  assert.equal(view.error, "Лимит исчерпан");
 });

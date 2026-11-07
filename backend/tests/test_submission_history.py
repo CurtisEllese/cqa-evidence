@@ -66,9 +66,8 @@ def test_contributions_use_applicable_weights_and_recompute_after_appeal():
 def test_builtin_provider_metadata_uses_selected_prompt(monkeypatch):
     from evaluator.provider import describe
     from evaluator.openai_v2 import PROMPT_VERSION as openai_prompt
-    from evaluator.v2 import PROMPT_VERSION as gemini_prompt
     monkeypatch.setenv('LLM_MODEL', 'test-model')
     monkeypatch.setenv('LLM_PROVIDER', 'openai')
     assert describe() == dict(provider='openai', model='test-model', promptVersion=openai_prompt)
     monkeypatch.setenv('LLM_PROVIDER', 'gemini')
-    assert describe()['promptVersion'] == gemini_prompt
+    assert describe()['promptVersion'] == 'unknown'  # No fallback provider is enabled.

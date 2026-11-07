@@ -14,13 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { StoreProvider, useStore } from "./store";
-import {
-  Avatar,
-  Button,
-  Modal,
-  Notice,
-  PageHeading,
-} from "./components/ui";
+import { Avatar, Button, Modal, Notice, PageHeading } from "./components/ui";
 import { Dashboard } from "./features/Dashboard";
 import { ConversationTable } from "./features/Conversations";
 import { ConversationDetail } from "./features/ConversationDetail";
@@ -28,6 +22,7 @@ import { ChecklistEditor } from "./features/ChecklistEditor";
 import { Appeals } from "./features/Appeals";
 import { ImportDialog } from "./features/ImportDialog";
 import { DatasetSummary } from "./features/DatasetSummary";
+import { BatchEvaluation } from "./features/BatchEvaluation";
 
 const navigation = [
   { id: "overview", label: "Обзор", icon: LayoutDashboard },
@@ -59,6 +54,8 @@ function Workspace() {
     reloadState,
     checklistDirty,
     setChecklistDirty,
+    batch,
+    stopBatch,
   } = useStore();
   const [route, setRoute] = useState(getRoute);
   const [importOpen, setImportOpen] = useState(false);
@@ -273,6 +270,25 @@ function Workspace() {
               </Button>
             </Notice>
           )}
+          {batch?.running && route !== "conversations" && (
+            <div className="batch-global" role="status">
+              <span>
+                Оцениваем {batch.group} ·{" "}
+                {
+                  batch.items.filter(
+                    (item) => !["queued", "running"].includes(item.status),
+                  ).length
+                }{" "}
+                из {batch.items.length}
+              </span>
+              <Button onClick={() => navigate("conversations")}>
+                К очереди
+              </Button>
+              <Button disabled={batch.stopping} onClick={stopBatch}>
+                {batch.stopping ? "Останавливаем…" : "Остановить очередь"}
+              </Button>
+            </div>
+          )}
           {!ready ? null : route.startsWith("dialog/") ? (
             <ConversationDetail
               key={route}
@@ -290,8 +306,8 @@ function Workspace() {
             <>
               <PageHeading
                 eyebrow="РАБОТА С ДИАЛОГАМИ"
-                title="За каждым диалогом — клиент"
-                description="Находите важное, изучайте оценки и делайте сервис лучше."
+                title="Качество начинается с деталей"
+                description="Оцените набор, проверьте основания и помогите команде стать лучше."
                 actions={
                   <Button variant="primary" onClick={() => setImportOpen(true)}>
                     <Plus size={18} />
@@ -299,9 +315,7 @@ function Workspace() {
                   </Button>
                 }
               />
-              <div className="dataset-banner">
-                <DatasetSummary />
-              </div>
+              <BatchEvaluation onOpen={openDialog} />
               <ConversationTable
                 onOpen={openDialog}
                 query={search}
@@ -405,10 +419,10 @@ function Workspace() {
           </div>
           <DatasetSummary />
           <Notice>
-            Рабочее пространство может содержать несколько наборов и диалоги
-            из ручного импорта JSON. Последний загруженный набор не определяет
-            группу остальных диалогов. Диалоги, версии чек-листа и решения
-            по апелляциям сохраняются на сервере.
+            Рабочее пространство может содержать несколько наборов и диалоги из
+            ручного импорта JSON. Последний загруженный набор не определяет
+            группу остальных диалогов. Диалоги, версии чек-листа и решения по
+            апелляциям сохраняются на сервере.
           </Notice>
           <div className="help-links">
             <a href="https://fbroker.kz/" target="_blank" rel="noreferrer">

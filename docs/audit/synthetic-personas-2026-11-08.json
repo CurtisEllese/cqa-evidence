@@ -1,0 +1,2576 @@
+{
+  "checkedAt": "2026-11-07T19:36:41.939481+00:00",
+  "syntheticOnly": true,
+  "notice": "Пять вымышленных сценариев. Не интервью, не независимый Ground Truth и не измерение accuracy.",
+  "modelInput": "Only normalized data.records and the saved rubric; personas and expectedObservations are excluded.",
+  "database": "local-data/synthetic-acceptance.sqlite",
+  "budgetLimitUsd": "0.50",
+  "costBasis": "Shared accounted upper estimate; not the provider invoice",
+  "budgetBefore": {
+    "accounted_usd": "0.039662",
+    "attempts": 27,
+    "unresolved_attempts": 1
+  },
+  "cases": [
+    {
+      "conversationId": "SYN-CHAT-DISSATISFACTION",
+      "status": "completed",
+      "evaluationId": "0cd142ca-7729-454e-935f-db0b02989d79",
+      "reused": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "score": {
+        "schema_version": "2.0",
+        "total": "100",
+        "earned": "80",
+        "possible": "80",
+        "applicable": 6,
+        "critical": false,
+        "results": [
+          {
+            "criterionId": "greeting",
+            "value": "1",
+            "explanation": "В первом ответе оператор поздоровался и представился.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "discovery",
+            "value": "1",
+            "explanation": "Оператор уточнил, в приложении или на сайте возникла проблема, и запросил текст ошибки до того, как предложить следующий шаг.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Приложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "identification",
+            "value": null,
+            "explanation": "Для передачи описания технической проблемы на проверку идентификация клиента не требуется.",
+            "applicability_reason": "Запрос касался недоступного раздела приложения и передачи описания ошибки технической поддержке; раскрытия клиентских данных или защищённого действия не было.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "consultation",
+            "value": "20",
+            "explanation": "Оператор предложил понятный следующий шаг: зафиксировать описание ошибки и передать его технической поддержке. Также сообщил, что срок восстановления подтвердить не может.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "empathy",
+            "value": "1",
+            "explanation": "Оператор вежливо отреагировал на недовольство клиента и признал, что повторное обращение из-за недоступных документов раздражает.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "dialogue",
+            "value": "10",
+            "explanation": "Диалог понятный и последовательный; оператор предупредил, что ему нужна минута, а затем изложил результат подготовки обращения.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "closing",
+            "value": "1",
+            "explanation": "Оператор подвёл итог, предложил написать при появлении дополнительных сведений и попрощался.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-DISSATISFACTION-m8",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Итак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "gross-errors",
+            "value": "0",
+            "explanation": "В разговоре нет оскорблений, предложений частных платных услуг в обход компании или раскрытия конфиденциальной информации.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "absence",
+                "message_id": null,
+                "quote": null,
+                "start_message_id": "SYN-CHAT-DISSATISFACTION-m1",
+                "end_message_id": "SYN-CHAT-DISSATISFACTION-m8",
+                "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены.\n[СИНТЕТИЧЕСКИЙ] Опять не открывается раздел документов! Я уже третий раз пишу и очень недоволен.\nЗдравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?\nПриложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.\nЗафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.\nПодготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.\nХорошо, хотя бы проблема описана верно.\nИтак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          }
+        ],
+        "breakdown": {
+          "greeting": {
+            "weightedPoints": "10.00",
+            "normalizedWeight": "12.50",
+            "contribution": "12.50"
+          },
+          "discovery": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "18.75",
+            "contribution": "18.75"
+          },
+          "consultation": {
+            "weightedPoints": "20.00",
+            "normalizedWeight": "25.00",
+            "contribution": "25.00"
+          },
+          "empathy": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "18.75",
+            "contribution": "18.75"
+          },
+          "dialogue": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "18.75",
+            "contribution": "18.75"
+          },
+          "closing": {
+            "weightedPoints": "5.00",
+            "normalizedWeight": "6.25",
+            "contribution": "6.25"
+          }
+        }
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "В первом ответе оператор поздоровался и представился.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "discovery",
+          "value": "1",
+          "explanation": "Оператор уточнил, в приложении или на сайте возникла проблема, и запросил текст ошибки до того, как предложить следующий шаг.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Приложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Для передачи описания технической проблемы на проверку идентификация клиента не требуется.",
+          "applicability_reason": "Запрос касался недоступного раздела приложения и передачи описания ошибки технической поддержке; раскрытия клиентских данных или защищённого действия не было.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор предложил понятный следующий шаг: зафиксировать описание ошибки и передать его технической поддержке. Также сообщил, что срок восстановления подтвердить не может.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор вежливо отреагировал на недовольство клиента и признал, что повторное обращение из-за недоступных документов раздражает.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Диалог понятный и последовательный; оператор предупредил, что ему нужна минута, а затем изложил результат подготовки обращения.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор подвёл итог, предложил написать при появлении дополнительных сведений и попрощался.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m8",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Итак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "В разговоре нет оскорблений, предложений частных платных услуг в обход компании или раскрытия конфиденциальной информации.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "absence",
+              "message_id": null,
+              "quote": null,
+              "start_message_id": "SYN-CHAT-DISSATISFACTION-m1",
+              "end_message_id": "SYN-CHAT-DISSATISFACTION-m8",
+              "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены.\n[СИНТЕТИЧЕСКИЙ] Опять не открывается раздел документов! Я уже третий раз пишу и очень недоволен.\nЗдравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?\nПриложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.\nЗафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.\nПодготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.\nХорошо, хотя бы проблема описана верно.\nИтак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        }
+      ],
+      "error": null,
+      "invariants": [
+        {
+          "criterionId": "greeting",
+          "expectedValue": 1,
+          "messageNumbers": [
+            3
+          ],
+          "invariant": "Первый ответ оператора содержит приветствие и представление.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Первый ответ оператора m3 содержит приветствие и имя; значение 1."
+        },
+        {
+          "criterionId": "discovery",
+          "expectedValue": 1,
+          "messageNumbers": [
+            2,
+            3,
+            4
+          ],
+          "invariant": "Недостающие платформа и ошибка уточнены до следующего шага.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Уточнены платформа и текст ошибки до передачи проблемы; значение 1."
+        },
+        {
+          "criterionId": "empathy",
+          "expectedValue": 1,
+          "messageNumbers": [
+            2,
+            3
+          ],
+          "invariant": "Есть реакция именно на повторное обращение и недоступные документы.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Объяснение связывает сочувствие с повторным обращением и недоступными документами; значение 1."
+        },
+        {
+          "criterionId": "dialogue",
+          "messageNumbers": [
+            5,
+            6
+          ],
+          "invariant": "Ожидание предварительно обозначено; не добавлять штраф за выдуманный порог первой реакции.",
+          "actualValue": "10",
+          "valueStatus": "NOT_SPECIFIED",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Ожидание на минуту признано заранее обозначенным; выдуманного порога первой реакции и штрафа нет; значение 10."
+        },
+        {
+          "criterionId": "closing",
+          "expectedValue": 1,
+          "messageNumbers": [
+            8
+          ],
+          "invariant": "Есть итог, дальнейшая помощь и прощание.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "В m8 есть итог, возможность дальнейшего сообщения и прощание; значение 1."
+        }
+      ]
+    },
+    {
+      "conversationId": "SYN-CHAT-INCOMPLETE",
+      "status": "completed",
+      "evaluationId": "d86c02a8-d551-4a3d-9d93-f50e5722f734",
+      "reused": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "score": {
+        "schema_version": "2.0",
+        "total": "73.33",
+        "earned": "55",
+        "possible": "75",
+        "applicable": 5,
+        "critical": false,
+        "results": [
+          {
+            "criterionId": "greeting",
+            "value": "1",
+            "explanation": "В первом ответе оператор поздоровался на русском языке и представился.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-INCOMPLETE-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "discovery",
+            "value": "1",
+            "explanation": "Оператор учёл, что проблема возникает в приложении при открытии справки, и уточнил недостающие сведения: версию приложения и повторяемость проблемы.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-INCOMPLETE-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "В приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-INCOMPLETE-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Уточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "identification",
+            "value": null,
+            "explanation": "Для открытия справки по интерфейсу идентификация не требуется; клиент сообщил, что не заходил в личный кабинет.",
+            "applicability_reason": "Запрос касается справки по интерфейсу, а не данных клиента или защищённого действия.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-INCOMPLETE-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "В приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "consultation",
+            "value": "0",
+            "explanation": "Запрос был сформулирован, но оператор не успел дать решение или корректный следующий шаг до автоматического завершения чата.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "absence",
+                "message_id": null,
+                "quote": null,
+                "start_message_id": "SYN-CHAT-INCOMPLETE-m4",
+                "end_message_id": "SYN-CHAT-INCOMPLETE-m6",
+                "source_text": "В приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.\nУточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?\nСоединение клиента прервано. Чат завершён автоматически до следующей реплики оператора.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "empathy",
+            "value": "1",
+            "explanation": "Оператор вежливо отреагировал на неудобство клиента.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-INCOMPLETE-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "dialogue",
+            "value": "10",
+            "explanation": "Сообщения оператора ясны и связны; уточняющие вопросы соответствуют описанной проблеме. Явного ожидания в чате не было.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-INCOMPLETE-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-INCOMPLETE-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Уточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "closing",
+            "value": null,
+            "explanation": "Чат автоматически завершился из-за прерывания соединения до следующей реплики оператора, поэтому возможности корректно завершить диалог не было.",
+            "applicability_reason": "Диалог оборвался до возможности корректного завершения.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-INCOMPLETE-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Соединение клиента прервано. Чат завершён автоматически до следующей реплики оператора.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "gross-errors",
+            "value": "0",
+            "explanation": "В разговоре не обнаружено оскорблений, предложения платной услуги в обход компании или раскрытия конфиденциальной информации.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "absence",
+                "message_id": null,
+                "quote": null,
+                "start_message_id": "SYN-CHAT-INCOMPLETE-m1",
+                "end_message_id": "SYN-CHAT-INCOMPLETE-m6",
+                "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены.\n[СИНТЕТИЧЕСКИЙ] У меня ничего не работает, помогите.\nЗдравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?\nВ приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.\nУточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?\nСоединение клиента прервано. Чат завершён автоматически до следующей реплики оператора.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          }
+        ],
+        "breakdown": {
+          "greeting": {
+            "weightedPoints": "10.00",
+            "normalizedWeight": "13.33",
+            "contribution": "13.33"
+          },
+          "discovery": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "20.00",
+            "contribution": "20.00"
+          },
+          "consultation": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "26.67",
+            "contribution": "0.00"
+          },
+          "empathy": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "20.00",
+            "contribution": "20.00"
+          },
+          "dialogue": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "20.00",
+            "contribution": "20.00"
+          }
+        }
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "В первом ответе оператор поздоровался на русском языке и представился.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-INCOMPLETE-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "discovery",
+          "value": "1",
+          "explanation": "Оператор учёл, что проблема возникает в приложении при открытии справки, и уточнил недостающие сведения: версию приложения и повторяемость проблемы.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-INCOMPLETE-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "В приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-INCOMPLETE-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Уточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Для открытия справки по интерфейсу идентификация не требуется; клиент сообщил, что не заходил в личный кабинет.",
+          "applicability_reason": "Запрос касается справки по интерфейсу, а не данных клиента или защищённого действия.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-INCOMPLETE-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "В приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "consultation",
+          "value": "0",
+          "explanation": "Запрос был сформулирован, но оператор не успел дать решение или корректный следующий шаг до автоматического завершения чата.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "absence",
+              "message_id": null,
+              "quote": null,
+              "start_message_id": "SYN-CHAT-INCOMPLETE-m4",
+              "end_message_id": "SYN-CHAT-INCOMPLETE-m6",
+              "source_text": "В приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.\nУточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?\nСоединение клиента прервано. Чат завершён автоматически до следующей реплики оператора.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор вежливо отреагировал на неудобство клиента.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-INCOMPLETE-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Сообщения оператора ясны и связны; уточняющие вопросы соответствуют описанной проблеме. Явного ожидания в чате не было.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-INCOMPLETE-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-INCOMPLETE-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Уточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "closing",
+          "value": null,
+          "explanation": "Чат автоматически завершился из-за прерывания соединения до следующей реплики оператора, поэтому возможности корректно завершить диалог не было.",
+          "applicability_reason": "Диалог оборвался до возможности корректного завершения.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-INCOMPLETE-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Соединение клиента прервано. Чат завершён автоматически до следующей реплики оператора.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "В разговоре не обнаружено оскорблений, предложения платной услуги в обход компании или раскрытия конфиденциальной информации.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "absence",
+              "message_id": null,
+              "quote": null,
+              "start_message_id": "SYN-CHAT-INCOMPLETE-m1",
+              "end_message_id": "SYN-CHAT-INCOMPLETE-m6",
+              "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены.\n[СИНТЕТИЧЕСКИЙ] У меня ничего не работает, помогите.\nЗдравствуйте! Я учебный оператор Бета. Понимаю, что это неудобно. Что именно вы пытаетесь сделать, в приложении или на сайте, и какое сообщение появляется?\nВ приложении хочу открыть справку по интерфейсу, но вижу белый экран. В личный кабинет я не заходил.\nУточните, пожалуйста, версию приложения и повторяется ли белый экран при следующем открытии раздела справки?\nСоединение клиента прервано. Чат завершён автоматически до следующей реплики оператора.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        }
+      ],
+      "error": null,
+      "invariants": [
+        {
+          "criterionId": "discovery",
+          "expectedValue": 1,
+          "messageNumbers": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "invariant": "Исходных данных недостаточно, оператор уточняет до консультации; N/A здесь не подходит.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Запрос требует уточнений; модель оценила уточняющие вопросы как 1, не N/A."
+        },
+        {
+          "criterionId": "consultation",
+          "messageNumbers": [
+            2,
+            4,
+            5,
+            6
+          ],
+          "invariant": "N/A нельзя обосновывать отсутствием запроса: запрос уже сформулирован. Точная шкала требует проверки контекста обрыва.",
+          "actualValue": "0",
+          "valueStatus": "NOT_SPECIFIED",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Модель прямо пишет, что запрос сформулирован, но ответ не успели дать до обрыва; значение 0, а не N/A. Точная оценка шкалы не объявляется экспертным эталоном."
+        },
+        {
+          "criterionId": "closing",
+          "expectedValue": null,
+          "messageNumbers": [
+            5,
+            6
+          ],
+          "invariant": "Системный обрыв сразу после уточнения подтверждает условие N/A; это не закрытие оператором.",
+          "actualValue": null,
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "N/A основано на системном обрыве до следующего ответа, а не на самостоятельном закрытии оператором."
+        }
+      ]
+    },
+    {
+      "conversationId": "SYN-CHAT-LANGUAGE",
+      "status": "completed",
+      "evaluationId": "65dd44fc-ae57-41bb-b38e-6e4825f5cf69",
+      "reused": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "score": {
+        "schema_version": "2.0",
+        "total": "100",
+        "earned": "65",
+        "possible": "65",
+        "applicable": 5,
+        "critical": false,
+        "results": [
+          {
+            "criterionId": "greeting",
+            "value": "1",
+            "explanation": "В первом ответе оператор поздоровался на исходном языке клиента и представился.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "discovery",
+            "value": null,
+            "explanation": "Запрос был достаточно конкретным для ответа; дополнительные уточнения не требовались.",
+            "applicability_reason": "Данных изначально достаточно для ответа на запрос.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-LANGUAGE-m2",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "[СИНТЕТИЧЕСКИЙ] Здравствуйте. Объясните простыми словами, что такое лимитная заявка. Сведения о моём счёте не нужны.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "identification",
+            "value": null,
+            "explanation": "Клиент запросил только общее объяснение и отдельно указал, что сведения о счёте не нужны; идентификация для такого запроса не требуется.",
+            "applicability_reason": "Запрос не требует идентификации клиента.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-LANGUAGE-m2",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "[СИНТЕТИЧЕСКИЙ] Здравствуйте. Объясните простыми словами, что такое лимитная заявка. Сведения о моём счёте не нужны.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "consultation",
+            "value": "20",
+            "explanation": "Оператор дал определение лимитной заявки, ответил на вопрос о гарантии исполнения и повторил основные условия на казахском. Существенные вопросы закрыты. Подтверждённых knowledgeFacts нет, поэтому фактическую точность продуктовых сведений проверить нельзя.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Әрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "empathy",
+            "value": "1",
+            "explanation": "Оператор общался вежливо и корректно; недовольства или неудобства клиента не было.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Әрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "dialogue",
+            "value": "10",
+            "explanation": "Диалог понятный и связный; оператор продолжил на языке, который попросил клиент, и ясно ответил на его вопрос.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Әрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "closing",
+            "value": "1",
+            "explanation": "Оператор подвёл итог, предложил задать дополнительные вопросы и попрощался.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-LANGUAGE-m7",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Қысқаша: баға шектеледі, бірақ өтінімнің орындалуына кепілдік берілмейді. Қосымша сұрақтарыңыз болса, жазыңыз. Сау болыңыз!",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "gross-errors",
+            "value": "0",
+            "explanation": "В переписке нет оскорблений, предложения платной услуги в обход компании или раскрытия конфиденциальной информации.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "absence",
+                "message_id": null,
+                "quote": null,
+                "start_message_id": "SYN-CHAT-LANGUAGE-m1",
+                "end_message_id": "SYN-CHAT-LANGUAGE-m7",
+                "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены. Начальный язык клиента RU; далее клиент просит KZ.\n[СИНТЕТИЧЕСКИЙ] Здравствуйте. Объясните простыми словами, что такое лимитная заявка. Сведения о моём счёте не нужны.\nЗдравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.\nҚазақша жалғастырайықшы. Лимиттік өтінім міндетті түрде орындала ма?\nӘрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.\nРақмет, түсінікті.\nҚысқаша: баға шектеледі, бірақ өтінімнің орындалуына кепілдік берілмейді. Қосымша сұрақтарыңыз болса, жазыңыз. Сау болыңыз!",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          }
+        ],
+        "breakdown": {
+          "greeting": {
+            "weightedPoints": "10.00",
+            "normalizedWeight": "15.38",
+            "contribution": "15.38"
+          },
+          "consultation": {
+            "weightedPoints": "20.00",
+            "normalizedWeight": "30.77",
+            "contribution": "30.77"
+          },
+          "empathy": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "23.08",
+            "contribution": "23.08"
+          },
+          "dialogue": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "23.08",
+            "contribution": "23.08"
+          },
+          "closing": {
+            "weightedPoints": "5.00",
+            "normalizedWeight": "7.69",
+            "contribution": "7.69"
+          }
+        }
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "В первом ответе оператор поздоровался на исходном языке клиента и представился.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "Запрос был достаточно конкретным для ответа; дополнительные уточнения не требовались.",
+          "applicability_reason": "Данных изначально достаточно для ответа на запрос.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-LANGUAGE-m2",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "[СИНТЕТИЧЕСКИЙ] Здравствуйте. Объясните простыми словами, что такое лимитная заявка. Сведения о моём счёте не нужны.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Клиент запросил только общее объяснение и отдельно указал, что сведения о счёте не нужны; идентификация для такого запроса не требуется.",
+          "applicability_reason": "Запрос не требует идентификации клиента.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-LANGUAGE-m2",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "[СИНТЕТИЧЕСКИЙ] Здравствуйте. Объясните простыми словами, что такое лимитная заявка. Сведения о моём счёте не нужны.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор дал определение лимитной заявки, ответил на вопрос о гарантии исполнения и повторил основные условия на казахском. Существенные вопросы закрыты. Подтверждённых knowledgeFacts нет, поэтому фактическую точность продуктовых сведений проверить нельзя.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Әрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор общался вежливо и корректно; недовольства или неудобства клиента не было.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Әрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Диалог понятный и связный; оператор продолжил на языке, который попросил клиент, и ясно ответил на его вопрос.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Әрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор подвёл итог, предложил задать дополнительные вопросы и попрощался.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-LANGUAGE-m7",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Қысқаша: баға шектеледі, бірақ өтінімнің орындалуына кепілдік берілмейді. Қосымша сұрақтарыңыз болса, жазыңыз. Сау болыңыз!",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "В переписке нет оскорблений, предложения платной услуги в обход компании или раскрытия конфиденциальной информации.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "absence",
+              "message_id": null,
+              "quote": null,
+              "start_message_id": "SYN-CHAT-LANGUAGE-m1",
+              "end_message_id": "SYN-CHAT-LANGUAGE-m7",
+              "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены. Начальный язык клиента RU; далее клиент просит KZ.\n[СИНТЕТИЧЕСКИЙ] Здравствуйте. Объясните простыми словами, что такое лимитная заявка. Сведения о моём счёте не нужны.\nЗдравствуйте! Я учебный оператор Гамма. Лимитная заявка задаёт цену: купить не дороже указанной цены или продать не дешевле неё. Исполнение не гарантировано.\nҚазақша жалғастырайықшы. Лимиттік өтінім міндетті түрде орындала ма?\nӘрине, қазақша жалғастырайық. Лимиттік өтінімнің орындалуына кепілдік жоқ. Сатып алу бағасы сіз көрсеткен бағадан жоғары, ал сату бағасы төмен болмайды.\nРақмет, түсінікті.\nҚысқаша: баға шектеледі, бірақ өтінімнің орындалуына кепілдік берілмейді. Қосымша сұрақтарыңыз болса, жазыңыз. Сау болыңыз!",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        }
+      ],
+      "error": null,
+      "invariants": [
+        {
+          "criterionId": "greeting",
+          "expectedValue": 1,
+          "messageNumbers": [
+            2,
+            3
+          ],
+          "invariant": "Первое приветствие проверяется по исходному RU-запросу, а не по языку последней реплики.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Оценено первое приветствие на исходном RU, значение 1."
+        },
+        {
+          "criterionId": "discovery",
+          "expectedValue": null,
+          "messageNumbers": [
+            2
+          ],
+          "invariant": "Для общего определения исходных данных достаточно; не требовать лишних вопросов.",
+          "actualValue": null,
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Общее определение достаточно конкретно; N/A без требования лишних вопросов."
+        },
+        {
+          "criterionId": "identification",
+          "expectedValue": null,
+          "messageNumbers": [
+            2,
+            4
+          ],
+          "invariant": "Общее объяснение без данных счёта не требует идентификации.",
+          "actualValue": null,
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Общая информация без доступа к счёту; N/A."
+        },
+        {
+          "criterionId": "dialogue",
+          "messageNumbers": [
+            4,
+            5,
+            7
+          ],
+          "invariant": "Просьба перейти на KZ исполнена; кириллица KZ и текст цитат сохраняются без искажения.",
+          "actualValue": "10",
+          "valueStatus": "NOT_SPECIFIED",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Ответ после просьбы перейти на KZ оценён как понятный и связный; source_text m5 дословно совпадает с KZ-репликой."
+        },
+        {
+          "criterionId": "closing",
+          "expectedValue": 1,
+          "messageNumbers": [
+            7
+          ],
+          "invariant": "Итог, дальнейшая помощь и прощание на KZ присутствуют.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "В KZ m7 присутствуют итог, дальнейшая помощь и прощание; значение 1."
+        }
+      ]
+    },
+    {
+      "conversationId": "SYN-CHAT-IDENTITY",
+      "status": "completed",
+      "evaluationId": "43b42e45-33c2-4587-a41d-60d337152846",
+      "reused": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "score": {
+        "schema_version": "2.0",
+        "total": "52.94",
+        "earned": "45",
+        "possible": "85",
+        "applicable": 6,
+        "critical": false,
+        "results": [
+          {
+            "criterionId": "greeting",
+            "value": "1",
+            "explanation": "В первом ответе оператор поздоровался на языке клиента и представился.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Дельта. Перед заменой контакта требуется подтверждение личности. Вы согласны на обработку данных?",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "discovery",
+            "value": null,
+            "explanation": "Клиент сразу указал, какой контакт заменить, и предоставил точное новое значение; дополнительное уточнение не требовалось.",
+            "applicability_reason": "Данных в первоначальном запросе достаточно для выполнения запрошенной замены контакта.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-IDENTITY-m2",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "[СИНТЕТИЧЕСКИЙ] Замените контакт в моей учебной учётной записи на CLIENT-NEW-CONTACT. Это условная метка, не адрес и не телефон.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "identification",
+            "value": "0",
+            "explanation": "Сценарий указывает, что замена контакта — защищённое действие. Результат проверки личности отсутствовал, но оператор выполнил замену.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Согласие зарегистрировано. Результат проверки личности в чате отсутствует: статус проверки не получен.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Контакт учётной записи заменён на CLIENT-NEW-CONTACT.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "consultation",
+            "value": "0",
+            "explanation": "Оператор сообщил о выполненной замене контакта, хотя подтверждение личности для этого защищённого действия не было получено.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Согласие зарегистрировано. Результат проверки личности в чате отсутствует: статус проверки не получен.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Контакт учётной записи заменён на CLIENT-NEW-CONTACT.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "empathy",
+            "value": "1",
+            "explanation": "Оператор ответил на вопрос клиента о проверке личности спокойно и без невежливости.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m8",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Отдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "dialogue",
+            "value": "10",
+            "explanation": "Сообщения оператора ясные и связные; заметных проблем с формулировками или управлением диалогом нет.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Здравствуйте! Я учебный оператор Дельта. Перед заменой контакта требуется подтверждение личности. Вы согласны на обработку данных?",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m8",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Отдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "closing",
+            "value": "1",
+            "explanation": "Оператор подвёл итог обращения и попрощался.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-IDENTITY-m8",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Отдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "gross-errors",
+            "value": "0",
+            "explanation": "В сообщениях оператора нет оскорбления, предложения платной услуги в обход компании или раскрытия конфиденциальной информации; нарушение порядка идентификации отдельно в этом флаге не перечислено.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "absence",
+                "message_id": null,
+                "quote": null,
+                "start_message_id": "SYN-CHAT-IDENTITY-m1",
+                "end_message_id": "SYN-CHAT-IDENTITY-m8",
+                "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор. Смена контакта учётной записи является защищённым действием в этом сценарии; реальная операция не выполняется.\n[СИНТЕТИЧЕСКИЙ] Замените контакт в моей учебной учётной записи на CLIENT-NEW-CONTACT. Это условная метка, не адрес и не телефон.\nЗдравствуйте! Я учебный оператор Дельта. Перед заменой контакта требуется подтверждение личности. Вы согласны на обработку данных?\nДа, согласен.\nСогласие зарегистрировано. Результат проверки личности в чате отсутствует: статус проверки не получен.\nКонтакт учётной записи заменён на CLIENT-NEW-CONTACT.\nА личность уже проверена? Я только согласился на обработку.\nОтдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          }
+        ],
+        "breakdown": {
+          "greeting": {
+            "weightedPoints": "10.00",
+            "normalizedWeight": "11.76",
+            "contribution": "11.76"
+          },
+          "identification": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "23.53",
+            "contribution": "0.00"
+          },
+          "consultation": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "23.53",
+            "contribution": "0.00"
+          },
+          "empathy": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "17.65",
+            "contribution": "17.65"
+          },
+          "dialogue": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "17.65",
+            "contribution": "17.65"
+          },
+          "closing": {
+            "weightedPoints": "5.00",
+            "normalizedWeight": "5.88",
+            "contribution": "5.88"
+          }
+        }
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "1",
+          "explanation": "В первом ответе оператор поздоровался на языке клиента и представился.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Дельта. Перед заменой контакта требуется подтверждение личности. Вы согласны на обработку данных?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "Клиент сразу указал, какой контакт заменить, и предоставил точное новое значение; дополнительное уточнение не требовалось.",
+          "applicability_reason": "Данных в первоначальном запросе достаточно для выполнения запрошенной замены контакта.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-IDENTITY-m2",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "[СИНТЕТИЧЕСКИЙ] Замените контакт в моей учебной учётной записи на CLIENT-NEW-CONTACT. Это условная метка, не адрес и не телефон.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "identification",
+          "value": "0",
+          "explanation": "Сценарий указывает, что замена контакта — защищённое действие. Результат проверки личности отсутствовал, но оператор выполнил замену.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Согласие зарегистрировано. Результат проверки личности в чате отсутствует: статус проверки не получен.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Контакт учётной записи заменён на CLIENT-NEW-CONTACT.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "consultation",
+          "value": "0",
+          "explanation": "Оператор сообщил о выполненной замене контакта, хотя подтверждение личности для этого защищённого действия не было получено.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Согласие зарегистрировано. Результат проверки личности в чате отсутствует: статус проверки не получен.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Контакт учётной записи заменён на CLIENT-NEW-CONTACT.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор ответил на вопрос клиента о проверке личности спокойно и без невежливости.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m8",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Отдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Сообщения оператора ясные и связные; заметных проблем с формулировками или управлением диалогом нет.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Дельта. Перед заменой контакта требуется подтверждение личности. Вы согласны на обработку данных?",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m8",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Отдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор подвёл итог обращения и попрощался.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-IDENTITY-m8",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Отдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "В сообщениях оператора нет оскорбления, предложения платной услуги в обход компании или раскрытия конфиденциальной информации; нарушение порядка идентификации отдельно в этом флаге не перечислено.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "absence",
+              "message_id": null,
+              "quote": null,
+              "start_message_id": "SYN-CHAT-IDENTITY-m1",
+              "end_message_id": "SYN-CHAT-IDENTITY-m8",
+              "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор. Смена контакта учётной записи является защищённым действием в этом сценарии; реальная операция не выполняется.\n[СИНТЕТИЧЕСКИЙ] Замените контакт в моей учебной учётной записи на CLIENT-NEW-CONTACT. Это условная метка, не адрес и не телефон.\nЗдравствуйте! Я учебный оператор Дельта. Перед заменой контакта требуется подтверждение личности. Вы согласны на обработку данных?\nДа, согласен.\nСогласие зарегистрировано. Результат проверки личности в чате отсутствует: статус проверки не получен.\nКонтакт учётной записи заменён на CLIENT-NEW-CONTACT.\nА личность уже проверена? Я только согласился на обработку.\nОтдельного подтверждения проверки я не вижу. Итог обращения: контакт заменён. До свидания.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        }
+      ],
+      "error": null,
+      "invariants": [
+        {
+          "criterionId": "identification",
+          "expectedValue": 0,
+          "messageNumbers": [
+            3,
+            5,
+            6,
+            8
+          ],
+          "invariant": "Защищённое действие выполнено без подтверждённой проверки. Основание — отсутствие результата проверки, а не придуманное универсальное правило о согласии.",
+          "actualValue": "0",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Значение 0 связано с отсутствием результата проверки перед защищённым действием, подтверждено m5/m6; универсальное правило о согласии не придумано."
+        },
+        {
+          "criterionId": "gross-errors",
+          "expectedValue": 0,
+          "messageNumbers": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "invariant": "Нарушение идентификации само по себе не расширяет закрытый список грубых ошибок; оскорбления, частной платной услуги или раскрытия конфиденциальных сведений здесь нет.",
+          "actualValue": "0",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Значение 0; объяснение явно не расширяет закрытый список грубых ошибок нарушением идентификации."
+        }
+      ]
+    },
+    {
+      "conversationId": "SYN-CHAT-GROSS-ERROR",
+      "status": "completed",
+      "evaluationId": "c8d3d8a7-2d0c-4495-bec5-095afbb6476a",
+      "reused": true,
+      "provenance": {
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "promptVersion": "openai-cqa-v2-wire2-na3"
+      },
+      "score": {
+        "schema_version": "2.0",
+        "total": "23.08",
+        "earned": "15",
+        "possible": "65",
+        "applicable": 5,
+        "critical": true,
+        "results": [
+          {
+            "criterionId": "greeting",
+            "value": "0",
+            "explanation": "В первом ответе оператора нет ни приветствия, ни представления.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "discovery",
+            "value": null,
+            "explanation": "Запрос касается публичных условий и не требует дополнительных сведений о клиенте для ответа.",
+            "applicability_reason": "Данных изначально достаточно для ответа на запрос о том, где прочитать публичные условия обслуживания.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "[СИНТЕТИЧЕСКИЙ] Подскажите, где прочитать публичные условия обслуживания без доступа к моему счёту.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "identification",
+            "value": null,
+            "explanation": "Запрашивается публичная информация без доступа к счёту; идентификация не требуется.",
+            "applicability_reason": "Запрос не требует идентификации клиента, поскольку касается публичных условий обслуживания.",
+            "evidence": [
+              {
+                "kind": "not_applicable",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m3",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "[СИНТЕТИЧЕСКИЙ] Подскажите, где прочитать публичные условия обслуживания без доступа к моему счёту.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "consultation",
+            "value": "0",
+            "explanation": "Оператор не сообщил, где найти официальные условия, и не дал полезного следующего шага по запросу.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "empathy",
+            "value": "0",
+            "explanation": "После того как клиент отказался от частного предложения и подчеркнул, что нужна официальная информация, оператор ответил пренебрежительно и закрыл чат.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m5",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Нет, мне нужна официальная информация. Я ничего вам переводить не буду.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "dialogue",
+            "value": "10",
+            "explanation": "Ответы понятны и связны; по сообщениям нет явного ожидания или непонятного хода диалога.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+                "verification_status": "verified",
+                "reason": null
+              },
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "closing",
+            "value": "0",
+            "explanation": "Оператор самостоятельно завершил чат, не предложив дальнейшую помощь и не попрощавшись.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": false
+          },
+          {
+            "criterionId": "gross-errors",
+            "value": "1",
+            "explanation": "Оператор предложил лично оказать услугу за отдельную оплату вне компании и без оформления через неё.",
+            "applicability_reason": null,
+            "evidence": [
+              {
+                "kind": "message",
+                "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+                "quote": null,
+                "start_message_id": null,
+                "end_message_id": null,
+                "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+                "verification_status": "verified",
+                "reason": null
+              }
+            ],
+            "critical": true
+          }
+        ],
+        "breakdown": {
+          "greeting": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "15.38",
+            "contribution": "0.00"
+          },
+          "consultation": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "30.77",
+            "contribution": "0.00"
+          },
+          "empathy": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "23.08",
+            "contribution": "0.00"
+          },
+          "dialogue": {
+            "weightedPoints": "15.00",
+            "normalizedWeight": "23.08",
+            "contribution": "23.08"
+          },
+          "closing": {
+            "weightedPoints": "0.00",
+            "normalizedWeight": "7.69",
+            "contribution": "0.00"
+          }
+        }
+      },
+      "criteria": [
+        {
+          "criterionId": "greeting",
+          "value": "0",
+          "explanation": "В первом ответе оператора нет ни приветствия, ни представления.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "discovery",
+          "value": null,
+          "explanation": "Запрос касается публичных условий и не требует дополнительных сведений о клиенте для ответа.",
+          "applicability_reason": "Данных изначально достаточно для ответа на запрос о том, где прочитать публичные условия обслуживания.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "[СИНТЕТИЧЕСКИЙ] Подскажите, где прочитать публичные условия обслуживания без доступа к моему счёту.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Запрашивается публичная информация без доступа к счёту; идентификация не требуется.",
+          "applicability_reason": "Запрос не требует идентификации клиента, поскольку касается публичных условий обслуживания.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "[СИНТЕТИЧЕСКИЙ] Подскажите, где прочитать публичные условия обслуживания без доступа к моему счёту.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "consultation",
+          "value": "0",
+          "explanation": "Оператор не сообщил, где найти официальные условия, и не дал полезного следующего шага по запросу.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "empathy",
+          "value": "0",
+          "explanation": "После того как клиент отказался от частного предложения и подчеркнул, что нужна официальная информация, оператор ответил пренебрежительно и закрыл чат.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Нет, мне нужна официальная информация. Я ничего вам переводить не буду.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Ответы понятны и связны; по сообщениям нет явного ожидания или непонятного хода диалога.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "closing",
+          "value": "0",
+          "explanation": "Оператор самостоятельно завершил чат, не предложив дальнейшую помощь и не попрощавшись.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Тогда ищите самостоятельно. Закрываю чат.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "1",
+          "explanation": "Оператор предложил лично оказать услугу за отдельную оплату вне компании и без оформления через неё.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-GROSS-ERROR-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Я могу лично подобрать вам условия за отдельную оплату мне, вне услуг компании и без оформления через компанию.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": true
+        }
+      ],
+      "error": null,
+      "invariants": [
+        {
+          "criterionId": "greeting",
+          "expectedValue": 0,
+          "messageNumbers": [
+            2,
+            4
+          ],
+          "invariant": "Приветствие бота не заменяет приветствие и представление оператора; проверять первый ответ оператора.",
+          "actualValue": "0",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Оценивается первая реплика оператора m4 без приветствия; приветствие бота не засчитано; значение 0."
+        },
+        {
+          "criterionId": "consultation",
+          "expectedValue": 0,
+          "messageNumbers": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "invariant": "Ответа по существу о публичных условиях и понятного официального следующего шага нет.",
+          "actualValue": "0",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Нет официального ответа или понятного следующего шага; значение 0."
+        },
+        {
+          "criterionId": "closing",
+          "expectedValue": 0,
+          "messageNumbers": [
+            6,
+            7
+          ],
+          "invariant": "Оператор самостоятельно закрыл чат без прощания; N/A не подходит.",
+          "actualValue": "0",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Самостоятельное закрытие без прощания оценено как 0, не N/A."
+        },
+        {
+          "criterionId": "gross-errors",
+          "expectedValue": 1,
+          "messageNumbers": [
+            4
+          ],
+          "invariant": "Самого предложения частной платной услуги достаточно, даже без платежа; флаг не обнуляет итог.",
+          "actualValue": "1",
+          "valueStatus": "PASS",
+          "semanticStatus": "PASS",
+          "evidenceVerified": true,
+          "reviewMethod": "Assistant inspection of saved response, rubric and original synthetic transcript; no additional model call",
+          "reviewReason": "Предложение частной платной услуги m4 достаточно для флага 1; critical=true, итог 23.08 сохранён и не обнулён."
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "isolated import and duplicate rejection without new records",
+      "status": "PASS",
+      "alreadyPresent": 5,
+      "firstImportedThisRun": 0,
+      "afterRepeatCount": 5,
+      "repeatHttpStatus": 422,
+      "repeatMessage": "Все диалоги уже загружены. Выберите другой набор."
+    },
+    {
+      "name": "saved model inputs exclude persona and expectation metadata",
+      "status": "PASS",
+      "requestKeys": [
+        "channel",
+        "checklist",
+        "conversationHash",
+        "conversationId",
+        "knowledgeFacts",
+        "language",
+        "messages",
+        "repair_feedback",
+        "schema_version"
+      ]
+    },
+    {
+      "name": "all evidence source text exactly matches fixture, including KZ",
+      "status": "PASS"
+    },
+    {
+      "name": "N/A excluded from applicable weight denominator",
+      "status": "PASS"
+    },
+    {
+      "name": "restart preserves evaluations and appeal",
+      "status": "PASS"
+    }
+  ],
+  "rubric": {
+    "schema_version": "2.0",
+    "id": "cqa-official",
+    "name": "CQA — официальный чек-лист",
+    "version": 1,
+    "criteria": [
+      {
+        "id": "greeting",
+        "title": "Установление контакта",
+        "description": "В первом ответе оператор поздоровался на языке клиента И представился. Приветствие бота не считается.",
+        "section": "Начало и понимание запроса",
+        "type": "yes_no",
+        "weight": "10",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "discovery",
+        "title": "Выявление потребности",
+        "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+        "section": "Начало и понимание запроса",
+        "type": "yes_no",
+        "weight": "15",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Данных изначально достаточно для ответа на запрос."
+      },
+      {
+        "id": "identification",
+        "title": "Идентификация",
+        "description": "Проверка личности подтверждена до раскрытия данных или защищённого действия. Если обязательная проверка не подтверждена в чате, ответ — Нет.",
+        "section": "Безопасность и решение",
+        "type": "yes_no",
+        "weight": "20",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Запрос не требует идентификации клиента."
+      },
+      {
+        "id": "consultation",
+        "title": "Корректная и полная консультация",
+        "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+        "section": "Безопасность и решение",
+        "type": "scale",
+        "weight": "20",
+        "max": "20",
+        "allowedValues": [
+          "0",
+          "5",
+          "10",
+          "15",
+          "20"
+        ],
+        "allowNA": true,
+        "naCondition": "Разговор закончился до формулировки запроса."
+      },
+      {
+        "id": "empathy",
+        "title": "Эмпатия и клиентоориентированность",
+        "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+        "section": "Ведение и завершение диалога",
+        "type": "yes_no",
+        "weight": "15",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "dialogue",
+        "title": "Управление диалогом, скорость и грамотность",
+        "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+        "section": "Ведение и завершение диалога",
+        "type": "scale",
+        "weight": "15",
+        "max": "10",
+        "allowedValues": [
+          "0",
+          "4",
+          "7",
+          "10"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "closing",
+        "title": "Завершение",
+        "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+        "section": "Ведение и завершение диалога",
+        "type": "yes_no",
+        "weight": "5",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Диалог оборвался до возможности корректного завершения."
+      },
+      {
+        "id": "gross-errors",
+        "title": "Грубые ошибки",
+        "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+        "section": "Грубые нарушения",
+        "type": "flag",
+        "weight": "0",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      }
+    ]
+  },
+  "budgetAfter": {
+    "accounted_usd": "0.039662",
+    "attempts": 27,
+    "unresolved_attempts": 1
+  },
+  "modelAttempts": {
+    "0cd142ca-7729-454e-935f-db0b02989d79": 1,
+    "43b42e45-33c2-4587-a41d-60d337152846": 1,
+    "65dd44fc-ae57-41bb-b38e-6e4825f5cf69": 1,
+    "c8d3d8a7-2d0c-4495-bec5-095afbb6476a": 1,
+    "d86c02a8-d551-4a3d-9d93-f50e5722f734": 1
+  },
+  "appeal": {
+    "syntheticMechanicalChangeOnly": true,
+    "appealId": "e936a732-60d3-4761-b045-271fa800432e",
+    "originalValue": "0",
+    "newValue": "1",
+    "pendingOriginalUnchanged": true,
+    "acceptedOriginalUnchanged": true,
+    "originalScore": "52.94",
+    "finalScore": "76.47",
+    "finalScoreChanged": true,
+    "status": "PASS"
+  },
+  "semanticReview": {
+    "status": "PASS",
+    "declaredInvariants": 19,
+    "numericOrNAComparisons": 16,
+    "notice": "Результат относится только к этим пяти синтетическим примерам, не является оценкой accuracy или независимой человеческой разметкой."
+  },
+  "limitations": [
+    "У SYN-CHAT-LANGUAGE консультация получила 20, но модель честно указала отсутствие knowledgeFacts: фактическая точность продуктовых сведений не проверена. Полный балл не следует трактовать как подтверждение продуктовых фактов; нужны проверенная база знаний и выборочная проверка человеком.",
+    "У SYN-CHAT-INCOMPLETE консультация 0 после обрыва соответствует выбранной моделью трактовке; fixture не задаёт точный эталон этой шкалы. Для кадровых выводов нужна проверка контролёра.",
+    "Принятая апелляция 0→1 выполнена только для проверки механики в изолированной БД; исходное модельное значение 0 не признано ошибочным.",
+    "Общий ledger одновременно используется DEV-прогоном: разность budgetBefore/budgetAfter нельзя считать стоимостью только этих пяти случаев."
+  ],
+  "initialImportObservation": {
+    "initialRunCreatedRecords": 5,
+    "initialRunStoppedBeforeModel": true,
+    "reason": "Harness initially expected repeat import200; actual contract returns422 with an explicit duplicate message. Harness corrected, no backend change."
+  }
+}

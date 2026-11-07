@@ -1,0 +1,875 @@
+{
+  "checkedAt": "2026-11-07T19:41:36.909022+00:00",
+  "syntheticOnly": true,
+  "notice": "Техническая проверка пользовательской шкалы. Не accuracy и не экспертная разметка.",
+  "budgetLimitUsd": "0.50",
+  "budgetBefore": {
+    "accounted_usd": "0.061552625",
+    "attempts": 44,
+    "unresolved_attempts": 1
+  },
+  "database": "local-data/custom-rubric-acceptance.sqlite",
+  "checks": [
+    {
+      "name": "new user-defined greeting scale gives 5",
+      "status": "PASS",
+      "actualValue": "5"
+    },
+    {
+      "name": "version 2 snapshot exactly equals saved API rubric",
+      "status": "PASS"
+    },
+    {
+      "name": "custom scale, weight and applicability persisted",
+      "status": "PASS"
+    },
+    {
+      "name": "original version 1 unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "provider provenance retained",
+      "status": "PASS"
+    },
+    {
+      "name": "model request carries saved version 2 rubric",
+      "status": "PASS"
+    },
+    {
+      "name": "restart retains evaluation and both rubric versions",
+      "status": "PASS"
+    }
+  ],
+  "originalRubric": {
+    "schema_version": "2.0",
+    "id": "cqa-official",
+    "name": "CQA — официальный чек-лист",
+    "version": 1,
+    "criteria": [
+      {
+        "id": "greeting",
+        "title": "Установление контакта",
+        "description": "В первом ответе оператор поздоровался на языке клиента И представился. Приветствие бота не считается.",
+        "section": "Начало и понимание запроса",
+        "type": "yes_no",
+        "weight": "10",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "discovery",
+        "title": "Выявление потребности",
+        "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+        "section": "Начало и понимание запроса",
+        "type": "yes_no",
+        "weight": "15",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Данных изначально достаточно для ответа на запрос."
+      },
+      {
+        "id": "identification",
+        "title": "Идентификация",
+        "description": "Проверка личности подтверждена до раскрытия данных или защищённого действия. Если обязательная проверка не подтверждена в чате, ответ — Нет.",
+        "section": "Безопасность и решение",
+        "type": "yes_no",
+        "weight": "20",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Запрос не требует идентификации клиента."
+      },
+      {
+        "id": "consultation",
+        "title": "Корректная и полная консультация",
+        "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+        "section": "Безопасность и решение",
+        "type": "scale",
+        "weight": "20",
+        "max": "20",
+        "allowedValues": [
+          "0",
+          "5",
+          "10",
+          "15",
+          "20"
+        ],
+        "allowNA": true,
+        "naCondition": "Разговор закончился до формулировки запроса."
+      },
+      {
+        "id": "empathy",
+        "title": "Эмпатия и клиентоориентированность",
+        "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+        "section": "Ведение и завершение диалога",
+        "type": "yes_no",
+        "weight": "15",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "dialogue",
+        "title": "Управление диалогом, скорость и грамотность",
+        "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+        "section": "Ведение и завершение диалога",
+        "type": "scale",
+        "weight": "15",
+        "max": "10",
+        "allowedValues": [
+          "0",
+          "4",
+          "7",
+          "10"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "closing",
+        "title": "Завершение",
+        "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+        "section": "Ведение и завершение диалога",
+        "type": "yes_no",
+        "weight": "5",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Диалог оборвался до возможности корректного завершения."
+      },
+      {
+        "id": "gross-errors",
+        "title": "Грубые ошибки",
+        "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+        "section": "Грубые нарушения",
+        "type": "flag",
+        "weight": "0",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      }
+    ]
+  },
+  "updatedRubric": {
+    "schema_version": "2.0",
+    "id": "cqa-official",
+    "name": "CQA — официальный чек-лист",
+    "version": 2,
+    "criteria": [
+      {
+        "id": "greeting",
+        "title": "Установление контакта",
+        "description": "5: оператор в первом ответе поздоровался и представился. 2: поздоровался, но не представился. 0: не поздоровался.",
+        "section": "Начало и понимание запроса",
+        "type": "scale",
+        "weight": "10",
+        "max": "5",
+        "allowedValues": [
+          "0",
+          "2",
+          "5"
+        ],
+        "allowNA": false,
+        "naCondition": ""
+      },
+      {
+        "id": "discovery",
+        "title": "Выявление потребности",
+        "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+        "section": "Начало и понимание запроса",
+        "type": "yes_no",
+        "weight": "15",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Данных изначально достаточно для ответа на запрос."
+      },
+      {
+        "id": "identification",
+        "title": "Идентификация",
+        "description": "Проверка личности подтверждена до раскрытия данных или защищённого действия. Если обязательная проверка не подтверждена в чате, ответ — Нет.",
+        "section": "Безопасность и решение",
+        "type": "yes_no",
+        "weight": "20",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Запрос не требует идентификации клиента."
+      },
+      {
+        "id": "consultation",
+        "title": "Корректная и полная консультация",
+        "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+        "section": "Безопасность и решение",
+        "type": "scale",
+        "weight": "20",
+        "max": "20",
+        "allowedValues": [
+          "0",
+          "5",
+          "10",
+          "15",
+          "20"
+        ],
+        "allowNA": true,
+        "naCondition": "Разговор закончился до формулировки запроса."
+      },
+      {
+        "id": "empathy",
+        "title": "Эмпатия и клиентоориентированность",
+        "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+        "section": "Ведение и завершение диалога",
+        "type": "yes_no",
+        "weight": "15",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "dialogue",
+        "title": "Управление диалогом, скорость и грамотность",
+        "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+        "section": "Ведение и завершение диалога",
+        "type": "scale",
+        "weight": "15",
+        "max": "10",
+        "allowedValues": [
+          "0",
+          "4",
+          "7",
+          "10"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      },
+      {
+        "id": "closing",
+        "title": "Завершение",
+        "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+        "section": "Ведение и завершение диалога",
+        "type": "yes_no",
+        "weight": "5",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": true,
+        "naCondition": "Диалог оборвался до возможности корректного завершения."
+      },
+      {
+        "id": "gross-errors",
+        "title": "Грубые ошибки",
+        "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+        "section": "Грубые нарушения",
+        "type": "flag",
+        "weight": "0",
+        "max": "1",
+        "allowedValues": [
+          "0",
+          "1"
+        ],
+        "allowNA": false,
+        "naCondition": null
+      }
+    ]
+  },
+  "reused": true,
+  "evaluation": {
+    "schema_version": "2.0",
+    "id": "d8d016e5-ed14-4ec3-8996-e7a7b94336bc",
+    "conversationId": "SYN-CHAT-DISSATISFACTION",
+    "conversationHash": "26c8e87043c9aa1cf0ac96b378c8ef8736494e292110a56d6e7a20c24f851ce6",
+    "checklist": {
+      "schema_version": "2.0",
+      "id": "cqa-official",
+      "name": "CQA — официальный чек-лист",
+      "version": 2,
+      "criteria": [
+        {
+          "id": "greeting",
+          "title": "Установление контакта",
+          "description": "5: оператор в первом ответе поздоровался и представился. 2: поздоровался, но не представился. 0: не поздоровался.",
+          "section": "Начало и понимание запроса",
+          "type": "scale",
+          "weight": "10",
+          "max": "5",
+          "allowedValues": [
+            "0",
+            "2",
+            "5"
+          ],
+          "allowNA": false,
+          "naCondition": ""
+        },
+        {
+          "id": "discovery",
+          "title": "Выявление потребности",
+          "description": "Оператор учёл известные детали и уточнил недостающее до ответа. Не требуются лишние вопросы, если информации изначально достаточно.",
+          "section": "Начало и понимание запроса",
+          "type": "yes_no",
+          "weight": "15",
+          "max": "1",
+          "allowedValues": [
+            "0",
+            "1"
+          ],
+          "allowNA": true,
+          "naCondition": "Данных изначально достаточно для ответа на запрос."
+        },
+        {
+          "id": "identification",
+          "title": "Идентификация",
+          "description": "Проверка личности подтверждена до раскрытия данных или защищённого действия. Если обязательная проверка не подтверждена в чате, ответ — Нет.",
+          "section": "Безопасность и решение",
+          "type": "yes_no",
+          "weight": "20",
+          "max": "1",
+          "allowedValues": [
+            "0",
+            "1"
+          ],
+          "allowNA": true,
+          "naCondition": "Запрос не требует идентификации клиента."
+        },
+        {
+          "id": "consultation",
+          "title": "Корректная и полная консультация",
+          "description": "20: существенные вопросы закрыты или дан корректный следующий шаг. 15: пропущена второстепенная деталь. 10: остался существенный вопрос. 5: общая подсказка без понятного действия. 0: нет ответа по существу либо ключевая рекомендация ошибочна. Корректность продуктовых сведений проверяется по подтверждённым источникам.",
+          "section": "Безопасность и решение",
+          "type": "scale",
+          "weight": "20",
+          "max": "20",
+          "allowedValues": [
+            "0",
+            "5",
+            "10",
+            "15",
+            "20"
+          ],
+          "allowNA": true,
+          "naCondition": "Разговор закончился до формулировки запроса."
+        },
+        {
+          "id": "empathy",
+          "title": "Эмпатия и клиентоориентированность",
+          "description": "Оператор вежлив; при недовольстве или неудобстве реагирует на конкретную проблему. При отсутствии недовольства обязательное извинение не требуется.",
+          "section": "Ведение и завершение диалога",
+          "type": "yes_no",
+          "weight": "15",
+          "max": "1",
+          "allowedValues": [
+            "0",
+            "1"
+          ],
+          "allowNA": false,
+          "naCondition": null
+        },
+        {
+          "id": "dialogue",
+          "title": "Управление диалогом, скорость и грамотность",
+          "description": "10: ясно, связно, при явном ожидании предупредил. 7: один заметный сбой, ответ понятен. 4: приходится переспрашивать из-за формулировок или порядка. 0: ход диалога непонятен. Для звонков оцениваются логичность, понятность, уместность выражений и речевые формулировки; паузы — только по доступным данным. Темп, дикция и произношение требуют аудио. Опечатки и пунктуация ASR не считаются автоматически ошибками оператора. Порог первой реакции 3 минуты, теги и вложения исключены из оценки.",
+          "section": "Ведение и завершение диалога",
+          "type": "scale",
+          "weight": "15",
+          "max": "10",
+          "allowedValues": [
+            "0",
+            "4",
+            "7",
+            "10"
+          ],
+          "allowNA": false,
+          "naCondition": null
+        },
+        {
+          "id": "closing",
+          "title": "Завершение",
+          "description": "(Итог ИЛИ предложение дальнейшей помощи) И прощание. Самостоятельное закрытие оператором без прощания — Нет.",
+          "section": "Ведение и завершение диалога",
+          "type": "yes_no",
+          "weight": "5",
+          "max": "1",
+          "allowedValues": [
+            "0",
+            "1"
+          ],
+          "allowNA": true,
+          "naCondition": "Диалог оборвался до возможности корректного завершения."
+        },
+        {
+          "id": "gross-errors",
+          "title": "Грубые ошибки",
+          "description": "Да означает нарушение: оскорбление, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Самого предложения частной платной услуги достаточно. Список не расширяется произвольными нарушениями. Флаг отображается отдельно и не обнуляет числовой итог.",
+          "section": "Грубые нарушения",
+          "type": "flag",
+          "weight": "0",
+          "max": "1",
+          "allowedValues": [
+            "0",
+            "1"
+          ],
+          "allowNA": false,
+          "naCondition": null
+        }
+      ]
+    },
+    "results": [
+      {
+        "criterionId": "greeting",
+        "value": "5",
+        "explanation": "В первом ответе оператор поздоровался и представился.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "discovery",
+        "value": "1",
+        "explanation": "Уточнил, где возникает проблема, и попросил указать текст ошибки — детали, необходимые для дальнейшего ответа.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+            "verification_status": "verified",
+            "reason": null
+          },
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m4",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Приложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "identification",
+        "value": null,
+        "explanation": "Обсуждалась недоступность раздела и передача описания проблемы технической поддержке; запроса на раскрытие данных или защищённое действие не было.",
+        "applicability_reason": "Запрос не требовал идентификации клиента.",
+        "evidence": [
+          {
+            "kind": "not_applicable",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m4",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Приложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "consultation",
+        "value": "20",
+        "explanation": "Оператор сообщил понятный следующий шаг: подготовил описание проблемы и передал его технической поддержке. Также обозначил, что срок восстановления подтвердить не может.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+            "verification_status": "verified",
+            "reason": null
+          },
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "empathy",
+        "value": "1",
+        "explanation": "Оператор вежливо отреагировал на конкретное неудобство и признал раздражение клиента из-за повторных обращений.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "dialogue",
+        "value": "10",
+        "explanation": "Диалог понятный и последовательный. Перед подготовкой описания оператор предупредил, что ему нужна минута; следующий ответ последовал примерно через минуту.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+            "verification_status": "verified",
+            "reason": null
+          },
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "closing",
+        "value": "1",
+        "explanation": "Оператор подвёл итог, предложил написать при появлении дополнительных сведений и попрощался.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "message",
+            "message_id": "SYN-CHAT-DISSATISFACTION-m8",
+            "quote": null,
+            "start_message_id": null,
+            "end_message_id": null,
+            "source_text": "Итак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      },
+      {
+        "criterionId": "gross-errors",
+        "value": "0",
+        "explanation": "В проверенном диалоге нет оскорблений, предложения частной платной услуги в обход компании или раскрытия конфиденциальной информации.",
+        "applicability_reason": null,
+        "evidence": [
+          {
+            "kind": "absence",
+            "message_id": null,
+            "quote": null,
+            "start_message_id": "SYN-CHAT-DISSATISFACTION-m1",
+            "end_message_id": "SYN-CHAT-DISSATISFACTION-m8",
+            "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены.\n[СИНТЕТИЧЕСКИЙ] Опять не открывается раздел документов! Я уже третий раз пишу и очень недоволен.\nЗдравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?\nПриложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.\nЗафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.\nПодготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.\nХорошо, хотя бы проблема описана верно.\nИтак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+            "verification_status": "verified",
+            "reason": null
+          }
+        ],
+        "critical": false
+      }
+    ],
+    "createdAt": "2026-11-07T19:40:23.106597+00:00",
+    "source": "api",
+    "status": "completed",
+    "error": null,
+    "score": {
+      "schema_version": "2.0",
+      "total": "100",
+      "earned": "80",
+      "possible": "80",
+      "applicable": 6,
+      "critical": false,
+      "results": [
+        {
+          "criterionId": "greeting",
+          "value": "5",
+          "explanation": "В первом ответе оператор поздоровался и представился.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "discovery",
+          "value": "1",
+          "explanation": "Уточнил, где возникает проблема, и попросил указать текст ошибки — детали, необходимые для дальнейшего ответа.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Приложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "identification",
+          "value": null,
+          "explanation": "Обсуждалась недоступность раздела и передача описания проблемы технической поддержке; запроса на раскрытие данных или защищённое действие не было.",
+          "applicability_reason": "Запрос не требовал идентификации клиента.",
+          "evidence": [
+            {
+              "kind": "not_applicable",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m4",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Приложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "consultation",
+          "value": "20",
+          "explanation": "Оператор сообщил понятный следующий шаг: подготовил описание проблемы и передал его технической поддержке. Также обозначил, что срок восстановления подтвердить не может.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "empathy",
+          "value": "1",
+          "explanation": "Оператор вежливо отреагировал на конкретное неудобство и признал раздражение клиента из-за повторных обращений.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m3",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Здравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "dialogue",
+          "value": "10",
+          "explanation": "Диалог понятный и последовательный. Перед подготовкой описания оператор предупредил, что ему нужна минута; следующий ответ последовал примерно через минуту.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m5",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Зафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.",
+              "verification_status": "verified",
+              "reason": null
+            },
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m6",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Подготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "closing",
+          "value": "1",
+          "explanation": "Оператор подвёл итог, предложил написать при появлении дополнительных сведений и попрощался.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "message",
+              "message_id": "SYN-CHAT-DISSATISFACTION-m8",
+              "quote": null,
+              "start_message_id": null,
+              "end_message_id": null,
+              "source_text": "Итак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        },
+        {
+          "criterionId": "gross-errors",
+          "value": "0",
+          "explanation": "В проверенном диалоге нет оскорблений, предложения частной платной услуги в обход компании или раскрытия конфиденциальной информации.",
+          "applicability_reason": null,
+          "evidence": [
+            {
+              "kind": "absence",
+              "message_id": null,
+              "quote": null,
+              "start_message_id": "SYN-CHAT-DISSATISFACTION-m1",
+              "end_message_id": "SYN-CHAT-DISSATISFACTION-m8",
+              "source_text": "СИНТЕТИЧЕСКИЙ СЦЕНАРИЙ: учебный разговор; все участники и события вымышлены.\n[СИНТЕТИЧЕСКИЙ] Опять не открывается раздел документов! Я уже третий раз пишу и очень недоволен.\nЗдравствуйте! Я учебный оператор Альфа. Понимаю, как раздражает повторно обращаться из-за недоступных документов. Уточните, пожалуйста, это приложение или сайт и какой текст ошибки вы видите?\nПриложение. Пишет «раздел временно недоступен». Нужен понятный следующий шаг.\nЗафиксирую текст ошибки и передам обращение технической поддержке. Мне нужна минута, чтобы подготовить описание проблемы; оставайтесь, пожалуйста, в чате.\nПодготовил описание: в приложении недоступен раздел документов, ошибка «раздел временно недоступен». Передаю его технической поддержке. Срок восстановления сейчас подтвердить не могу.\nХорошо, хотя бы проблема описана верно.\nИтак, проблема с разделом документов передана на проверку. Если появятся дополнительные сведения об ошибке, напишите сюда. До свидания!",
+              "verification_status": "verified",
+              "reason": null
+            }
+          ],
+          "critical": false
+        }
+      ],
+      "breakdown": {
+        "greeting": {
+          "weightedPoints": "10.00",
+          "normalizedWeight": "12.50",
+          "contribution": "12.50"
+        },
+        "discovery": {
+          "weightedPoints": "15.00",
+          "normalizedWeight": "18.75",
+          "contribution": "18.75"
+        },
+        "consultation": {
+          "weightedPoints": "20.00",
+          "normalizedWeight": "25.00",
+          "contribution": "25.00"
+        },
+        "empathy": {
+          "weightedPoints": "15.00",
+          "normalizedWeight": "18.75",
+          "contribution": "18.75"
+        },
+        "dialogue": {
+          "weightedPoints": "15.00",
+          "normalizedWeight": "18.75",
+          "contribution": "18.75"
+        },
+        "closing": {
+          "weightedPoints": "5.00",
+          "normalizedWeight": "6.25",
+          "contribution": "6.25"
+        }
+      }
+    },
+    "provenance": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "promptVersion": "openai-cqa-v2-wire2-na3"
+    }
+  },
+  "modelAttempts": 1,
+  "evaluationCount": 1,
+  "budgetAfter": {
+    "accounted_usd": "0.061552625",
+    "attempts": 44,
+    "unresolved_attempts": 1
+  }
+}

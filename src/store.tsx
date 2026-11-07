@@ -20,8 +20,37 @@ import {
   fetchEvaluation,
 } from "./services/api";
 import type { ServerState, DatasetInfo } from "./services/api";
+import { isBatchBlockingFailure } from "./features/batchPlan";
 
 const LEGACY_KEY = "freedom-quality-organizer-v2";
+export type ConversationFilters = {
+  language: string;
+  channel: string;
+  status: string;
+  critical: string;
+  page: number;
+  filtersOpen: boolean;
+  ascending: boolean;
+};
+export type BatchItem = {
+  id: string;
+  status:
+    | "queued"
+    | "running"
+    | "completed"
+    | "needs_review"
+    | "failed"
+    | "uncertain";
+  error?: string;
+};
+export type EvaluationBatch = {
+  group: string;
+  version: number;
+  items: BatchItem[];
+  running: boolean;
+  stopping: boolean;
+  blockedReason?: string;
+};
 const EMPTY_DATA: AppData = {
   conversations: [],
   appeals: [],
@@ -62,8 +91,16 @@ async function initialize() {
 }
 
 type Store = {
+  selectedGroup: string;
+  setSelectedGroup: (group: string) => void;
+  filters: ConversationFilters;
+  setFilters: (patch: Partial<ConversationFilters>) => void;
+  batch: EvaluationBatch | null;
+  startBatch: (group: string, ids: string[], version: number) => Promise<void>;
+  stopBatch: () => void;
   data: AppData;
   dataset: DatasetInfo | null;
+  datasets: DatasetInfo[];
   ready: boolean;
   loading: boolean;
   loadError: string;
@@ -97,6 +134,20 @@ type Store = {
 };
 const Context = createContext<Store | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [filters, updateFilters] = useState<ConversationFilters>({
+    language: "all",
+    channel: "all",
+    status: "all",
+    critical: "all",
+    page: 0,
+    filtersOpen: false,
+    ascending: false,
+  });
+  const [batch, setBatch] = useState<EvaluationBatch | null>(null);
+  const batchRunning = useRef(false);
+  const batchStop = useRef(false);
+  const currentSession = useRef<ServerState | null>(null);
   const [session, setSession] = useState<ServerState | null>(null);
   const [toast, setToast] = useState("");
   const [checklistDirty, setChecklistDirty] = useState(false);
@@ -108,9 +159,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [evaluationErrors, setEvaluationErrors] = useState<
     Record<string, string>
   >({});
-  const evaluationRequests = useRef(new Map<string, Promise<void>>());
+  const evaluationRequests = useRef(
+    new Map<string, Promise<Evaluation | undefined>>(),
+  );
   const controllers = useRef(new Set<AbortController>());
   const acceptState = useCallback((incoming: ServerState) => {
+    if (
+      !currentSession.current ||
+      incoming.revision >= currentSession.current.revision
+    )
+      currentSession.current = incoming;
+    if (incoming.dataset)
+      setSelectedGroup(
+        (current) => current || `group:${incoming.dataset!.group}`,
+      );
     setSession((current) =>
       !current || incoming.revision >= current.revision ? incoming : current,
     );
@@ -150,7 +212,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     conversationId: string,
     existing?: Evaluation,
     checklistVersion?: number,
-  ): Promise<void> {
+  ): Promise<Evaluation | undefined> {
     const active = evaluationRequests.current.get(conversationId);
     if (active) return active;
     const controller = new AbortController();
@@ -181,6 +243,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             job.error ??
               "Оценка не завершена. Проверьте сообщение сервера и повторите попытку.",
           );
+        return job;
       } catch (error) {
         if (controller.signal.aborted) return;
         const message =
@@ -219,10 +282,121 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [session]);
   useEffect(
     () => () => {
+      batchStop.current = true;
       for (const controller of controllers.current) controller.abort();
     },
     [],
   );
+  async function startBatch(group: string, ids: string[], version: number) {
+    if (
+      batchRunning.current ||
+      evaluationRequests.current.size ||
+      !currentSession.current?.evaluationAvailable
+    )
+      return;
+    const allowed = [...new Set(ids)].filter(
+      (id) =>
+        currentSession.current?.data.conversations.some((c) => c.id === id) &&
+        !currentSession.current?.data.appeals.some(
+          (a) => a.conversationId === id,
+        ),
+    );
+    if (!allowed.length) return;
+    batchRunning.current = true;
+    batchStop.current = false;
+    setBatch({
+      group,
+      version,
+      items: allowed.map((id) => ({ id, status: "queued" })),
+      running: true,
+      stopping: false,
+    });
+    const updateItem = (id: string, patch: Partial<BatchItem>) =>
+      setBatch((current) =>
+        current
+          ? {
+              ...current,
+              items: current.items.map((item) =>
+                item.id === id ? { ...item, ...patch } : item,
+              ),
+            }
+          : current,
+      );
+    try {
+      for (const id of allowed) {
+        if (batchStop.current) break;
+        updateItem(id, { status: "running" });
+        const previousId = currentSession.current?.data.conversations.find(
+          (c) => c.id === id,
+        )?.evaluation?.id;
+        try {
+          const existing = currentSession.current?.data.conversations.find(
+            (c) => c.id === id,
+          )?.evaluation;
+          const result = await trackEvaluation(
+            id,
+            existing && ["queued", "running"].includes(existing.status)
+              ? existing
+              : undefined,
+            version,
+          );
+          if (!result) {
+            batchStop.current = true;
+            updateItem(id, {
+              status: "uncertain",
+              error:
+                "Проверка прервана. Обновите данные перед повторным запуском.",
+            });
+            break;
+          }
+          updateItem(id, {
+            status:
+              result.status === "needs_review" ? "needs_review" : "completed",
+          });
+        } catch (error) {
+          const evaluation = currentSession.current?.data.conversations.find(
+            (c) => c.id === id,
+          )?.evaluation;
+          const knownFailure =
+            evaluation &&
+            evaluation.id !== previousId &&
+            ["failed", "failed_validation", "retryable"].includes(
+              evaluation.status,
+            );
+          updateItem(id, {
+            status: knownFailure ? "failed" : "uncertain",
+            error:
+              error instanceof Error
+                ? error.message
+                : "Не удалось получить результат",
+          });
+          if (knownFailure && isBatchBlockingFailure(evaluation)) {
+            setBatch((current) =>
+              current
+                ? {
+                    ...current,
+                    blockedReason:
+                      evaluation.error ??
+                      "Проверьте доступность сервиса модели перед продолжением.",
+                  }
+                : current,
+            );
+            batchStop.current = true;
+            break;
+          }
+          if (!knownFailure) {
+            batchStop.current = true;
+            break;
+          }
+        }
+      }
+    } finally {
+      batchRunning.current = false;
+      setBatch((current) =>
+        current ? { ...current, running: false, stopping: false } : current,
+      );
+    }
+  }
   async function refreshDataset(groupId = "DEV") {
     if (datasetRequestPending.current) return false;
     datasetRequestPending.current = true;
@@ -248,8 +422,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   return (
     <Context.Provider
       value={{
+        selectedGroup,
+        setSelectedGroup,
+        filters,
+        setFilters: (patch) =>
+          updateFilters((current) => ({ ...current, ...patch })),
+        batch,
+        startBatch,
+        stopBatch: () => {
+          batchStop.current = true;
+          setBatch((current) =>
+            current ? { ...current, stopping: true } : current,
+          );
+        },
         data: session?.data ?? EMPTY_DATA,
         dataset: session?.dataset ?? null,
+        datasets: session?.datasets ?? [],
         ready: session !== null,
         loading,
         loadError,
@@ -283,6 +471,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const existing = session?.data.conversations.find(
             (conversation) => conversation.id === conversationId,
           )?.evaluation;
+          if (
+            batchRunning.current &&
+            !evaluationRequests.current.has(conversationId)
+          )
+            return Promise.reject(
+              new Error(
+                "Дождитесь окончания очереди набора или остановите её.",
+              ),
+            );
           return trackEvaluation(
             conversationId,
             existing &&
@@ -290,7 +487,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               ? existing
               : undefined,
             checklistVersion,
-          );
+          ).then(() => {});
         },
         createAppeal: async (appeal) => {
           acceptState(await submitAppeal(appeal));

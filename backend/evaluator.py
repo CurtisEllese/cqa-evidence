@@ -21,7 +21,7 @@ class Evaluator(Protocol):
 class AdapterFailure(Exception):
     """Adapters map provider failures here; never include provider text or secrets."""
     def __init__(self, code='PROVIDER_UNAVAILABLE', *, retryable=False, retry_after=0):
-        self.code=code if code in ('PROVIDER_UNAVAILABLE','PROVIDER_RATE_LIMIT','MODEL_REFUSAL') else 'PROVIDER_UNAVAILABLE'
+        self.code=code if code in ('PROVIDER_UNAVAILABLE','PROVIDER_RATE_LIMIT','MODEL_REFUSAL','BUDGET_EXCEEDED','BUDGET_CONFIGURATION','BUDGET_HISTORY_UNKNOWN','BUDGET_STORAGE_ERROR','MODEL_NOT_ALLOWED') else 'PROVIDER_UNAVAILABLE'
         self.retryable=bool(retryable)
         self.retry_after=max(0,float(retry_after))
         super().__init__(self.code)
@@ -206,7 +206,14 @@ class EvaluationService:
                     # Long provider backoff is returned as a retryable failure, never shortened.
                     if attempt==1 and retryable and delay<=30:
                         await asyncio.sleep(delay);continue
-                    self.update(identifier,'failed',results=[],error=error_payload(code,'Сервис модели не выполнил оценку.',retryable=retryable));return
+                    message = {
+                        'BUDGET_EXCEEDED': 'Лимит расходов на оценку исчерпан. Новые запросы остановлены.',
+                        'BUDGET_CONFIGURATION': 'Проверьте настройки бюджета и тарифа модели на сервере.',
+                        'BUDGET_HISTORY_UNKNOWN': 'Расход прошлых запросов не подтверждён. Перед продолжением нужна сверка журнала.',
+                        'BUDGET_STORAGE_ERROR': 'Не удалось сохранить учёт расходов. Запрос к модели остановлен.',
+                        'MODEL_NOT_ALLOWED': 'Для проекта разрешена только модель GPT-6 Luna.',
+                    }.get(code, 'Сервис модели не выполнил оценку.')
+                    self.update(identifier,'failed',results=[],error=error_payload(code,message,retryable=retryable));return
                 except asyncio.CancelledError:
                     raise # recovery marks the persisted job retryable on next startup
                 except Exception:

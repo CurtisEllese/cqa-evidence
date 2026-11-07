@@ -8,10 +8,8 @@ async def evaluate(request: EvaluationRequest) -> ModelResponse:
     provider = os.getenv("LLM_PROVIDER", "openai")
     if provider == "openai":
         from .openai_v2 import evaluate as selected
-    elif provider == "gemini":
-        from .v2 import evaluate as selected
     else:
-        raise AdapterFailure("PROVIDER_UNAVAILABLE", retryable=False)
+        raise AdapterFailure("MODEL_NOT_ALLOWED", retryable=False)
     return await selected(request)
 
 
@@ -20,8 +18,6 @@ def describe():
     provider = os.getenv("LLM_PROVIDER", "openai")
     if provider == "openai":
         from .openai_v2 import PROMPT_VERSION
-    elif provider == "gemini":
-        from .v2 import PROMPT_VERSION
     else:
         PROMPT_VERSION = "unknown"
     return {"provider": provider,

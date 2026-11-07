@@ -297,7 +297,13 @@ function ReviewDialog({
               .map((m) => (
                 <blockquote key={m.id} className="review-evidence">
                   <small>
-                    {m.speaker === "operator" ? "Оператор" : "Клиент"} ·{" "}
+                    {m.speaker === "operator"
+                      ? conversation.operator
+                      : m.speaker === "client"
+                        ? "Клиент"
+                        : m.speaker === "bot"
+                          ? "Бот"
+                          : "Система"} ·{" "}
                     {m.timestamp}
                   </small>
                   {m.text}

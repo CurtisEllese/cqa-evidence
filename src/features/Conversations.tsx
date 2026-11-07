@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import type { Conversation } from "../domain/types";
-import { downloadExport } from "../services/api";
+import { downloadExport, downloadSubmission } from "../services/api";
 import { evaluationLabel, evaluationTone } from "./evaluationStatus";
 import { originalCriticalStatus } from "./criticalStatus";
 import { useStore } from "../store";
@@ -35,8 +35,9 @@ export function ConversationTable({
   query?: string;
   onSearchChange?: (query: string) => void;
 }) {
-  const { data } = useStore();
+  const { data, datasets, selectedGroup, filters, setFilters } = useStore();
   const [exporting, setExporting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [exportError, setExportError] = useState("");
   async function exportWorkspace() {
     if (exporting) return;
@@ -52,16 +53,51 @@ export function ConversationTable({
       setExporting(false);
     }
   }
+  async function exportSubmission() {
+    if (!group || submitting) return;
+    setSubmitting(true);
+    setExportError("");
+    try {
+      await downloadSubmission(group.group);
+    } catch (error) {
+      setExportError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось скачать файл для сдачи.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
   const [localSearch, setLocalSearch] = useState("");
+  const [compactAscending, setCompactAscending] = useState(false);
   const search = onSearchChange ? query : localSearch;
   const setSearch = onSearchChange ?? setLocalSearch;
-  const [language, setLanguage] = useState("all");
-  const [channel, setChannel] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [critical, setCritical] = useState("all");
-  const [page, setPage] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [ascending, setAscending] = useState(false);
+  const { language, channel, status, critical, page, filtersOpen, ascending } =
+    compact
+      ? {
+          language: "all",
+          channel: "all",
+          status: "all",
+          critical: "all",
+          page: 0,
+          filtersOpen: false,
+          ascending: compactAscending,
+        }
+      : filters;
+  const setLanguage = (language: string) => setFilters({ language });
+  const setChannel = (channel: string) => setFilters({ channel });
+  const setStatus = (status: string) => setFilters({ status });
+  const setCritical = (critical: string) => setFilters({ critical });
+  const setPage = (page: number) => setFilters({ page });
+  const setFiltersOpen = (filtersOpen: boolean) => setFilters({ filtersOpen });
+  const setAscending = (ascending: boolean) => {
+    if (compact) setCompactAscending(ascending);
+    else setFilters({ ascending });
+  };
+  const group = datasets.find(
+    (item) => `group:${item.group}` === selectedGroup,
+  );
   const filtered = useMemo(
     () =>
       data.conversations
@@ -77,13 +113,23 @@ export function ConversationTable({
           );
           return (
             matches &&
+            (compact || !group || group.conversationIds.includes(item.id)) &&
             (language === "all" || item.language === language) &&
             (channel === "all" || item.channel === channel) &&
             (critical === "all" || originalCriticalStatus(item) === critical) &&
             (status === "all" ||
               (status === "done" && item.evaluation?.status === "completed") ||
-              (status === "pending" &&
-                item.evaluation?.status !== "completed") ||
+              (status === "pending" && !item.evaluation) ||
+              (status === "active" &&
+                ["queued", "running"].includes(
+                  item.evaluation?.status ?? "",
+                )) ||
+              (status === "review" &&
+                item.evaluation?.status === "needs_review") ||
+              (status === "failed" &&
+                ["failed", "failed_validation", "retryable"].includes(
+                  item.evaluation?.status ?? "",
+                )) ||
               (status === "appeal" && hasAppeal))
           );
         })
@@ -94,7 +140,18 @@ export function ConversationTable({
             ? Date.parse(a.date) - Date.parse(b.date)
             : Date.parse(b.date) - Date.parse(a.date);
         }),
-    [data, search, query, language, channel, status, critical, ascending],
+    [
+      data,
+      search,
+      query,
+      language,
+      channel,
+      status,
+      critical,
+      ascending,
+      group,
+      compact,
+    ],
   );
   const pageSize = compact ? 5 : 8;
   const currentPage = Math.min(
@@ -148,13 +205,38 @@ export function ConversationTable({
         {compact ? (
           <span className="subtle-label">Рабочий набор</span>
         ) : (
-          <Button disabled={exporting} onClick={() => void exportWorkspace()}>
-            <ArrowDownToLine size={16} />
-            {exporting ? "Выгружаем…" : "Экспорт набора"}
-          </Button>
+          <div className="table-export-actions">
+            <Button
+              disabled={submitting || !group}
+              onClick={() => void exportSubmission()}
+            >
+              <ArrowDownToLine size={16} />
+              {submitting ? "Готовим файл…" : "Файл для сдачи"}
+            </Button>
+            <Button
+              disabled={exporting}
+              title="Все диалоги, оценки и апелляции рабочего пространства"
+              onClick={() => void exportWorkspace()}
+            >
+              <ArrowDownToLine size={16} />
+              {exporting ? "Выгружаем…" : "Резервная копия"}
+            </Button>
+          </div>
         )}
       </div>
       {exportError && <Notice kind="error">{exportError}</Notice>}
+      {!compact && (
+        <p className="submission-note">
+          Файл для сдачи:{" "}
+          {group
+            ? `набор ${group.group}`
+            : "сначала выберите загруженный набор"}
+          . Используются исходные оценки ИИ по 8 критериям; апелляции их не
+          меняют. Неоценённые, неподтверждённые результаты и изменённая
+          конфигурация чек-листа выгружаются со статусом error. Резервная копия
+          содержит всё рабочее пространство.
+        </p>
+      )}
       {!compact && (
         <>
           <div className="table-toolbar">
@@ -244,7 +326,10 @@ export function ConversationTable({
                 >
                   <option value="all">Все статусы</option>
                   <option value="done">Оценён</option>
-                  <option value="pending">Ожидает оценки</option>
+                  <option value="pending">Не оценён</option>
+                  <option value="active">В очереди / оценивается</option>
+                  <option value="review">Требует проверки</option>
+                  <option value="failed">Ошибка оценки</option>
                   <option value="appeal">Апелляция</option>
                 </select>
               </label>

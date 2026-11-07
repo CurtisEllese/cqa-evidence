@@ -252,7 +252,11 @@ class Repository:
                             item['evaluation']=candidate
                             item.pop('scores',None)
                 conversations.append(item)
-            return {'data':{'conversations':conversations,'checklist':self.checklist(db),'appeals':appeals},'dataset':self.metadata(db,'dataset'),'evaluationAvailable':False,'revision':self.metadata(db,'revision')}
+            dataset = self.metadata(db, 'dataset')
+            groups = {item['group']: item for item in (json.loads(row[0]) for row in db.execute("SELECT value FROM metadata WHERE key LIKE 'dataset:%' ORDER BY key"))}
+            if dataset:
+                groups[dataset['group']] = dataset
+            return {'data':{'conversations':conversations,'checklist':self.checklist(db),'appeals':appeals},'dataset':dataset,'datasets':list(groups.values()),'evaluationAvailable':False,'revision':self.metadata(db,'revision')}
 
     def migrate(self,data):
         """One-way idempotent migration of old local edits. Never accept browser-made evaluations."""

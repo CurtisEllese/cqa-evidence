@@ -287,6 +287,7 @@ class WorkspaceData(Contract):
 class WorkspaceState(RootContract):
     data: WorkspaceData
     dataset: DatasetInfo | None
+    datasets: list[DatasetInfo] = Field(default_factory=list)
     evaluationAvailable: bool
     revision: NonnegativeInt
     imported: NonnegativeInt | None = None

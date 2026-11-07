@@ -59,6 +59,8 @@ export type Evaluation = {
     | "failed"
     | "retryable";
   error: string | null;
+  errorCode?: string | null;
+  errorRetryable?: boolean | null;
   total?: number | null;
   provenance?: {
     provider: string;

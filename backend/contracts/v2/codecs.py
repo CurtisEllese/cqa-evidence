@@ -193,7 +193,7 @@ def to_wire_state(state: dict) -> dict:
     item = {
         "schema_version": VERSION,
         "data": {"conversations": [to_wire_conversation(conversation) for conversation in data["conversations"]], "checklist": to_wire_checklist(data["checklist"]), "appeals": [to_wire_appeal(appeal) for appeal in data["appeals"]]},
-        "dataset": state.get("dataset"), "evaluationAvailable": state["evaluationAvailable"], "revision": state["revision"],
+        "dataset": state.get("dataset"), "datasets": state.get("datasets", [state["dataset"]] if state.get("dataset") else []), "evaluationAvailable": state["evaluationAvailable"], "revision": state["revision"],
     }
     if "imported" in state:
         item["imported"] = state["imported"]

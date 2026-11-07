@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-11-07T19:52:58.469521+00:00",
+  "teamName": "Spooky spooky",
+  "model": "gpt-6-luna",
+  "dev": {
+    "total": 65,
+    "ok": 65,
+    "errors": 0
+  },
+  "modelAttemptsDev": 65,
+  "channels": {
+    "agent chat": 60,
+    "voice call": 5
+  },
+  "languages": {
+    "RU": 35,
+    "KZ": 15,
+    "EN": 15
+  },
+  "restartPreservedWorkspace": true,
+  "freshOrganizerSourceMatched": true,
+  "submissionSha256": "c6545b5848b35216efa75b9be22618b801a3939150c72e26c3e9c3a9c0bbfaf1",
+  "budget": {
+    "accounted_usd": "0.09511375",
+    "attempts": 71,
+    "unresolved_attempts": 0
+  },
+  "workingBudgetUsd": "0.50",
+  "costBasis": "Conservative upper estimate, not provider invoice; includes DEV and six synthetic checks",
+  "usage": {
+    "attempts": 71,
+    "inputTokens": 212282,
+    "outputTokens": 137157,
+    "medianAttemptSeconds": 18.391
+  },
+  "tests": {
+    "python": 462,
+    "javascript": 19,
+    "browserScenarios": 12,
+    "contractArtifacts": 34
+  },
+  "prod": "Waiting for organizer control dataset; no synthetic results substituted",
+  "presentation": "Deferred by user",
+  "publication": "Local files; not submitted to organizer form"
+}
