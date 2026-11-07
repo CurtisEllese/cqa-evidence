@@ -14,6 +14,7 @@
 - [Проверенные готовые решения](docs/open-source.md)
 - [План, владельцы и критерии готовности](docs/team-plan.md)
 - [План проверки точности](docs/evaluation.md)
+- [Подключение API](docs/api-setup.md)
 
 ## Предлагаемый стек
 
@@ -32,3 +33,7 @@ DEV проверен через API: 65 диалогов, 60 чатов, 5 зв�
 Три инженерных потока: AI/evaluation, backend/data/scoring, frontend/appeals. Пользователь — продуктовый эксперт и владелец демонстрации. Тимлид — архитектура, контракты, ревью, интеграция и контроль качества. Предварительные владельцы: Adalbala — AI, naki707 — backend, Krutoi312 — frontend. Подтверждено около 5 часов до сдачи; навыки участников пока неизвестны.
 
 Работа через небольшие ветки и PR в `main`. До стоп-кода: воспроизводимый запуск, все обязательные сценарии, зафиксированный коммит и ссылка организаторам. Отправку ссылки выполняет команда.
+
+Задачи: [Adalbala / AI](https://github.com/CurtisEllese/cqa-evidence/issues/1), [naki707 / backend](https://github.com/CurtisEllese/cqa-evidence/issues/2), [Krutoi312 / frontend](https://github.com/CurtisEllese/cqa-evidence/issues/3), [продукт и интеграция](https://github.com/CurtisEllese/cqa-evidence/issues/4).
+
+Приглашения всем трём инженерам отправлены с правом записи. На момент создания задач приглашения ещё не приняты; владельцы указаны в заголовках и описаниях, поле Assignees пока пустое.
