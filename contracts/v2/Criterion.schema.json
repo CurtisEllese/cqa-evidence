@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:Criterion",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 500,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Title",
+      "type": "string"
+    },
+    "description": {
+      "maxLength": 20000,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Description",
+      "type": "string"
+    },
+    "section": {
+      "maxLength": 500,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Section",
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "yes_no",
+        "scale",
+        "flag"
+      ],
+      "title": "Type",
+      "type": "string"
+    },
+    "weight": {
+      "maxLength": 32,
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+      "title": "Weight",
+      "type": "string"
+    },
+    "max": {
+      "maxLength": 32,
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+      "title": "Max",
+      "type": "string"
+    },
+    "allowedValues": {
+      "items": {
+        "maxLength": 32,
+        "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+        "type": "string"
+      },
+      "maxItems": 1000,
+      "minItems": 2,
+      "title": "Allowedvalues",
+      "type": "array"
+    },
+    "allowNA": {
+      "title": "Allowna",
+      "type": "boolean"
+    },
+    "naCondition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Nacondition"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "section",
+    "type",
+    "weight",
+    "max",
+    "allowedValues",
+    "allowNA"
+  ],
+  "title": "Criterion",
+  "type": "object"
+}

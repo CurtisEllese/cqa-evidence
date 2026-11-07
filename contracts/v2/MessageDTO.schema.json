@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:MessageDTO",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Id",
+      "type": "string"
+    },
+    "message_index": {
+      "minimum": 0,
+      "title": "Message Index",
+      "type": "integer"
+    },
+    "timestamp": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "speaker": {
+      "enum": [
+        "operator",
+        "client",
+        "bot",
+        "system"
+      ],
+      "title": "Speaker",
+      "type": "string"
+    },
+    "text": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "message_index",
+    "timestamp",
+    "speaker",
+    "text"
+  ],
+  "title": "MessageDTO",
+  "type": "object"
+}

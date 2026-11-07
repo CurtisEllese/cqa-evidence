@@ -1,0 +1,1047 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:WorkspaceState",
+  "$defs": {
+    "ApiError": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "code": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        },
+        "details": {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "title": "Details",
+          "type": "array"
+        },
+        "request_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "code",
+        "message",
+        "request_id",
+        "retryable"
+      ],
+      "title": "ApiError",
+      "type": "object"
+    },
+    "AppealDTO": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "conversationId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Conversationid",
+          "type": "string"
+        },
+        "criterionId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Criterionid",
+          "type": "string"
+        },
+        "evaluationId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Evaluationid",
+          "type": "string"
+        },
+        "comment": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Comment",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "accepted",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "createdAt": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Createdat",
+          "type": "string"
+        },
+        "originalValue": {
+          "anyOf": [
+            {
+              "maxLength": 32,
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Originalvalue"
+        },
+        "decision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision"
+        },
+        "newValue": {
+          "anyOf": [
+            {
+              "maxLength": 32,
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Newvalue"
+        },
+        "decidedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decidedat"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "conversationId",
+        "criterionId",
+        "evaluationId",
+        "comment",
+        "status",
+        "createdAt",
+        "originalValue"
+      ],
+      "title": "AppealDTO",
+      "type": "object"
+    },
+    "Checklist": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "name",
+        "version",
+        "criteria"
+      ],
+      "title": "Checklist",
+      "type": "object"
+    },
+    "ConversationDTO": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        },
+        "operator": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Operator",
+          "type": "string"
+        },
+        "initials": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Initials",
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "RU",
+            "KZ",
+            "EN"
+          ],
+          "title": "Language",
+          "type": "string"
+        },
+        "channel": {
+          "enum": [
+            "agent chat",
+            "voice call"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Date"
+        },
+        "dateSource": {
+          "anyOf": [
+            {
+              "enum": [
+                "conversation",
+                "import"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Datesource"
+        },
+        "duration": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Duration",
+          "type": "string"
+        },
+        "transcript": {
+          "items": {
+            "$ref": "#/$defs/MessageDTO"
+          },
+          "minItems": 1,
+          "title": "Transcript",
+          "type": "array"
+        },
+        "audioUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Audiourl"
+        },
+        "audioPageUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audiopageurl"
+        },
+        "contentHash": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Contenthash",
+          "type": "string"
+        },
+        "evaluation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluationResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scores": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConversationScores"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "title",
+        "operator",
+        "initials",
+        "language",
+        "channel",
+        "date",
+        "duration",
+        "transcript",
+        "audioUrl",
+        "contentHash",
+        "evaluation"
+      ],
+      "title": "ConversationDTO",
+      "type": "object"
+    },
+    "ConversationScores": {
+      "additionalProperties": false,
+      "properties": {
+        "original": {
+          "$ref": "#/$defs/Score"
+        },
+        "final": {
+          "$ref": "#/$defs/Score"
+        },
+        "sections": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Score"
+          },
+          "title": "Sections",
+          "type": "object"
+        }
+      },
+      "required": [
+        "original",
+        "final",
+        "sections"
+      ],
+      "title": "ConversationScores",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Description",
+          "type": "string"
+        },
+        "section": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Section",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "yes_no",
+            "scale",
+            "flag"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "max": {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Max",
+          "type": "string"
+        },
+        "allowedValues": {
+          "items": {
+            "maxLength": 32,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "minItems": 2,
+          "title": "Allowedvalues",
+          "type": "array"
+        },
+        "allowNA": {
+          "title": "Allowna",
+          "type": "boolean"
+        },
+        "naCondition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nacondition"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "section",
+        "type",
+        "weight",
+        "max",
+        "allowedValues",
+        "allowNA"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
+    "CriterionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "criterionId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Criterionid",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "maxLength": 32,
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "explanation": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "applicability_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Applicability Reason"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/VerifiedEvidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "critical": {
+          "title": "Critical",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "criterionId",
+        "value",
+        "explanation",
+        "applicability_reason",
+        "evidence",
+        "critical"
+      ],
+      "title": "CriterionResult",
+      "type": "object"
+    },
+    "DatasetInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "group": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Group",
+          "type": "string"
+        },
+        "fetchedAt": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Fetchedat",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "live",
+            "cache"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "total": {
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        },
+        "conversationIds": {
+          "items": {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Conversationids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "group",
+        "fetchedAt",
+        "source",
+        "total",
+        "conversationIds"
+      ],
+      "title": "DatasetInfo",
+      "type": "object"
+    },
+    "EvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "conversationId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Conversationid",
+          "type": "string"
+        },
+        "conversationHash": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Conversationhash",
+          "type": "string"
+        },
+        "checklist": {
+          "$ref": "#/$defs/Checklist"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CriterionResult"
+          },
+          "title": "Results",
+          "type": "array"
+        },
+        "createdAt": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Createdat",
+          "type": "string"
+        },
+        "source": {
+          "const": "api",
+          "title": "Source",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "completed",
+            "needs_review",
+            "failed_validation",
+            "failed",
+            "retryable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Score"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "conversationId",
+        "conversationHash",
+        "checklist",
+        "results",
+        "createdAt",
+        "source",
+        "status",
+        "error",
+        "score"
+      ],
+      "title": "EvaluationResult",
+      "type": "object"
+    },
+    "MessageDTO": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "message_index": {
+          "minimum": 0,
+          "title": "Message Index",
+          "type": "integer"
+        },
+        "timestamp": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "speaker": {
+          "enum": [
+            "operator",
+            "client",
+            "bot",
+            "system"
+          ],
+          "title": "Speaker",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "message_index",
+        "timestamp",
+        "speaker",
+        "text"
+      ],
+      "title": "MessageDTO",
+      "type": "object"
+    },
+    "Score": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total"
+        },
+        "earned": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Earned",
+          "type": "string"
+        },
+        "possible": {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "title": "Possible",
+          "type": "string"
+        },
+        "applicable": {
+          "minimum": 0,
+          "title": "Applicable",
+          "type": "integer"
+        },
+        "critical": {
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CriterionResult"
+          },
+          "title": "Results",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "total",
+        "earned",
+        "possible",
+        "applicable",
+        "critical",
+        "results"
+      ],
+      "title": "Score",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Code",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    },
+    "VerifiedEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "default": "message",
+          "enum": [
+            "message",
+            "absence",
+            "not_applicable"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote"
+        },
+        "start_message_id": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Message Id"
+        },
+        "end_message_id": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Message Id"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Text"
+        },
+        "verification_status": {
+          "enum": [
+            "verified",
+            "unverified"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "source_text",
+        "verification_status",
+        "reason"
+      ],
+      "title": "VerifiedEvidence",
+      "type": "object"
+    },
+    "WorkspaceData": {
+      "additionalProperties": false,
+      "properties": {
+        "conversations": {
+          "items": {
+            "$ref": "#/$defs/ConversationDTO"
+          },
+          "title": "Conversations",
+          "type": "array"
+        },
+        "checklist": {
+          "$ref": "#/$defs/Checklist"
+        },
+        "appeals": {
+          "items": {
+            "$ref": "#/$defs/AppealDTO"
+          },
+          "title": "Appeals",
+          "type": "array"
+        }
+      },
+      "required": [
+        "conversations",
+        "checklist",
+        "appeals"
+      ],
+      "title": "WorkspaceData",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "data": {
+      "$ref": "#/$defs/WorkspaceData"
+    },
+    "dataset": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DatasetInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evaluationAvailable": {
+      "title": "Evaluationavailable",
+      "type": "boolean"
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "imported": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Imported"
+    }
+  },
+  "required": [
+    "schema_version",
+    "data",
+    "dataset",
+    "evaluationAvailable",
+    "revision"
+  ],
+  "title": "WorkspaceState",
+  "type": "object"
+}

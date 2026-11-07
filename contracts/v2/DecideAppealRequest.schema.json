@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:DecideAppealRequest",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "decision": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Decision",
+      "type": "string"
+    },
+    "newValue": {
+      "anyOf": [
+        {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Newvalue"
+    }
+  },
+  "required": [
+    "schema_version",
+    "status"
+  ],
+  "title": "DecideAppealRequest",
+  "type": "object"
+}

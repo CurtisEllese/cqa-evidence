@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:KnowledgeFact",
+  "additionalProperties": false,
+  "properties": {
+    "text": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Text",
+      "type": "string"
+    },
+    "source": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Source",
+      "type": "string"
+    },
+    "effective_date": {
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "title": "Effective Date",
+      "type": "string"
+    },
+    "product": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Product",
+      "type": "string"
+    },
+    "jurisdiction": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Jurisdiction",
+      "type": "string"
+    },
+    "verified_by": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Verified By",
+      "type": "string"
+    }
+  },
+  "required": [
+    "text",
+    "source",
+    "effective_date",
+    "product",
+    "jurisdiction",
+    "verified_by"
+  ],
+  "title": "KnowledgeFact",
+  "type": "object"
+}

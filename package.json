@@ -1,0 +1,31 @@
+{
+  "name": "freedom-quality",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node scripts/python.mjs -m pytest -q && node --test src/services/contracts.test.mjs",
+    "contracts:generate": "node scripts/python.mjs scripts/generate_contracts.py",
+    "contracts:check": "node scripts/python.mjs scripts/generate_contracts.py --check",
+    "format": "prettier --write src docs *.json *.ts index.html README.md",
+    "dev:ui": "vite --host 127.0.0.1",
+    "backend": "node scripts/python.mjs -m uvicorn backend.main:app --host 127.0.0.1 --port 8000",
+    "start": "npm run backend"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "prettier": "^3.9.10",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.2"
+  }
+}
