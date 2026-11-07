@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { Conversation } from "../domain/types";
 import { downloadExport } from "../services/api";
+import { evaluationLabel, evaluationTone } from "./evaluationStatus";
 import { useStore } from "../store";
 import {
   Avatar,
@@ -77,8 +78,9 @@ export function ConversationTable({
             (language === "all" || item.language === language) &&
             (channel === "all" || item.channel === channel) &&
             (status === "all" ||
-              (status === "done" && item.evaluation) ||
-              (status === "pending" && !item.evaluation) ||
+              (status === "done" && item.evaluation?.status === "completed") ||
+              (status === "pending" &&
+                item.evaluation?.status !== "completed") ||
               (status === "appeal" && hasAppeal))
           );
         })
@@ -122,15 +124,10 @@ export function ConversationTable({
           Апелляция
         </Badge>
       );
-    return item.evaluation ? (
-      <Badge tone="green">
+    return (
+      <Badge tone={evaluationTone(item.evaluation)}>
         <span className="status-dot" />
-        Оценён
-      </Badge>
-    ) : (
-      <Badge>
-        <span className="status-dot" />
-        Ожидает оценки
+        {evaluationLabel(item.evaluation)}
       </Badge>
     );
   }

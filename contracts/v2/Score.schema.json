@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:Score",
+  "$defs": {
+    "CriterionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "criterionId": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Criterionid",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "maxLength": 32,
+              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "explanation": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "applicability_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Applicability Reason"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/VerifiedEvidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "critical": {
+          "title": "Critical",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "criterionId",
+        "value",
+        "explanation",
+        "applicability_reason",
+        "evidence",
+        "critical"
+      ],
+      "title": "CriterionResult",
+      "type": "object"
+    },
+    "VerifiedEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "default": "message",
+          "enum": [
+            "message",
+            "absence",
+            "not_applicable"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote"
+        },
+        "start_message_id": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Message Id"
+        },
+        "end_message_id": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Message Id"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Text"
+        },
+        "verification_status": {
+          "enum": [
+            "verified",
+            "unverified"
+          ],
+          "title": "Verification Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "source_text",
+        "verification_status",
+        "reason"
+      ],
+      "title": "VerifiedEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "total": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Total"
+    },
+    "earned": {
+      "maxLength": 128,
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+      "title": "Earned",
+      "type": "string"
+    },
+    "possible": {
+      "maxLength": 128,
+      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+      "title": "Possible",
+      "type": "string"
+    },
+    "applicable": {
+      "minimum": 0,
+      "title": "Applicable",
+      "type": "integer"
+    },
+    "critical": {
+      "title": "Critical",
+      "type": "boolean"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/CriterionResult"
+      },
+      "title": "Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "total",
+    "earned",
+    "possible",
+    "applicable",
+    "critical",
+    "results"
+  ],
+  "title": "Score",
+  "type": "object"
+}

@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:EvaluationRequest",
+  "$defs": {
+    "Checklist": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "name",
+        "version",
+        "criteria"
+      ],
+      "title": "Checklist",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Description",
+          "type": "string"
+        },
+        "section": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Section",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "yes_no",
+            "scale",
+            "flag"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Weight",
+          "type": "string"
+        },
+        "max": {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "title": "Max",
+          "type": "string"
+        },
+        "allowedValues": {
+          "items": {
+            "maxLength": 32,
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+            "type": "string"
+          },
+          "maxItems": 1000,
+          "minItems": 2,
+          "title": "Allowedvalues",
+          "type": "array"
+        },
+        "allowNA": {
+          "title": "Allowna",
+          "type": "boolean"
+        },
+        "naCondition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nacondition"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "section",
+        "type",
+        "weight",
+        "max",
+        "allowedValues",
+        "allowNA"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
+    "KnowledgeFact": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Text",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Source",
+          "type": "string"
+        },
+        "effective_date": {
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "title": "Effective Date",
+          "type": "string"
+        },
+        "product": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Product",
+          "type": "string"
+        },
+        "jurisdiction": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Jurisdiction",
+          "type": "string"
+        },
+        "verified_by": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Verified By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source",
+        "effective_date",
+        "product",
+        "jurisdiction",
+        "verified_by"
+      ],
+      "title": "KnowledgeFact",
+      "type": "object"
+    },
+    "MessageDTO": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "message_index": {
+          "minimum": 0,
+          "title": "Message Index",
+          "type": "integer"
+        },
+        "timestamp": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "speaker": {
+          "enum": [
+            "operator",
+            "client",
+            "bot",
+            "system"
+          ],
+          "title": "Speaker",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "message_index",
+        "timestamp",
+        "speaker",
+        "text"
+      ],
+      "title": "MessageDTO",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Code",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "conversationId": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Conversationid",
+      "type": "string"
+    },
+    "conversationHash": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Conversationhash",
+      "type": "string"
+    },
+    "language": {
+      "enum": [
+        "RU",
+        "KZ",
+        "EN"
+      ],
+      "title": "Language",
+      "type": "string"
+    },
+    "channel": {
+      "enum": [
+        "agent chat",
+        "voice call"
+      ],
+      "title": "Channel",
+      "type": "string"
+    },
+    "checklist": {
+      "$ref": "#/$defs/Checklist"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/MessageDTO"
+      },
+      "minItems": 1,
+      "title": "Messages",
+      "type": "array"
+    },
+    "knowledgeFacts": {
+      "items": {
+        "$ref": "#/$defs/KnowledgeFact"
+      },
+      "title": "Knowledgefacts",
+      "type": "array"
+    },
+    "repair_feedback": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Repair Feedback"
+    }
+  },
+  "required": [
+    "schema_version",
+    "conversationId",
+    "conversationHash",
+    "language",
+    "channel",
+    "checklist",
+    "messages"
+  ],
+  "title": "EvaluationRequest",
+  "type": "object"
+}

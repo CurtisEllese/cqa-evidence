@@ -26,6 +26,7 @@ import {
   Score,
 } from "../components/ui";
 import { downloadExport } from "../services/api";
+import { evaluationLabel, evaluationTone } from "./evaluationStatus";
 
 export function ConversationDetail({
   id,
@@ -36,7 +37,13 @@ export function ConversationDetail({
   onBack: () => void;
   onAppeals: () => void;
 }) {
-  const { data, evaluate, evaluationAvailable } = useStore();
+  const {
+    data,
+    evaluate,
+    evaluationAvailable,
+    evaluatingIds,
+    evaluationErrors,
+  } = useStore();
   const conversation = data.conversations.find((item) => item.id === id);
   const [highlight, setHighlight] = useState<string[]>([]);
   const [appealCriterion, setAppealCriterion] = useState<Criterion | null>(
@@ -56,6 +63,8 @@ export function ConversationDetail({
       </EmptyState>
     );
   const evaluation = conversation.evaluation;
+  const evaluating = busy || evaluatingIds.includes(id);
+  const completed = evaluation?.status === "completed";
   const original = conversation.scores?.original;
   const final = conversation.scores?.final;
   const appeals = data.appeals.filter(
@@ -64,7 +73,7 @@ export function ConversationDetail({
   );
   const hasAccepted = appeals.some((a) => a.status === "accepted");
   async function runEvaluation() {
-    if (!evaluationAvailable || appeals.length > 0 || busy) return;
+    if (!evaluationAvailable || appeals.length > 0 || evaluating) return;
     setBusy(true);
     setError("");
     try {
@@ -124,8 +133,8 @@ export function ConversationDetail({
               <Clock3 size={15} />
               {conversation.duration}
             </span>
-            <Badge tone={evaluation ? "green" : "neutral"}>
-              {evaluation ? "Оценён" : "Ожидает оценки"}
+            <Badge tone={evaluationTone(evaluation)}>
+              {evaluationLabel(evaluation)}
             </Badge>
           </div>
         </div>
@@ -248,9 +257,9 @@ export function ConversationDetail({
               )}
             </div>
             <div className="score-summary-meta">
-              <Badge tone={evaluation ? "green" : "neutral"}>
+              <Badge tone={evaluationTone(evaluation)}>
                 <Sparkles size={12} />
-                {evaluation ? "Оценка ИИ" : "Нет оценки"}
+                {evaluationLabel(evaluation)}
               </Badge>
               <span>
                 {evaluation
@@ -274,18 +283,24 @@ export function ConversationDetail({
             <Button
               variant="primary"
               onClick={runEvaluation}
-              disabled={busy || !evaluationAvailable || appeals.length > 0}
+              disabled={
+                evaluating || !evaluationAvailable || appeals.length > 0
+              }
             >
               <Sparkles size={16} />{" "}
-              {busy
+              {evaluating
                 ? "Оцениваем…"
                 : !evaluationAvailable
                   ? "Оценка пока недоступна"
                   : appeals.length > 0
                     ? "Оценка зафиксирована"
-                    : evaluation
-                      ? "Обновить оценку"
-                      : "Оценить диалог"}
+                    : evaluation &&
+                        (evaluation.status === "queued" ||
+                          evaluation.status === "running")
+                      ? "Проверить результат"
+                      : evaluation
+                        ? "Обновить оценку"
+                        : "Оценить диалог"}
             </Button>
             <span>
               {appeals.length
@@ -295,12 +310,37 @@ export function ConversationDetail({
                   : "На текущей версии чек-листа"}
             </span>
           </div>
-          {error && <Notice kind="error">{error}</Notice>}
+          {(error || evaluationErrors[id]) && (
+            <Notice kind="error">{error || evaluationErrors[id]}</Notice>
+          )}
+          {evaluation && !completed && (
+            <Notice
+              kind={
+                evaluation.status === "needs_review" ||
+                evaluation.status === "queued" ||
+                evaluation.status === "running"
+                  ? "warning"
+                  : "error"
+              }
+            >
+              {evaluation.status === "needs_review"
+                ? "Доказательства требуют проверки. Итоговый балл не опубликован; неподтверждённые ссылки не подсвечиваются."
+                : evaluation.status === "queued" ||
+                    evaluation.status === "running"
+                  ? "Сервер обрабатывает диалог. Результат появится после проверки ответа модели."
+                  : "Оценка не завершена. Итоговый балл не опубликован."}
+              {evaluation.error && <p>{evaluation.error}</p>}
+            </Notice>
+          )}
           {!evaluation ? (
             <div className="panel">
               <EmptyState
                 title="Всё начинается с оценки"
-                description="Диалог доступен для просмотра. Оценки и доказательства появятся после подключения сервиса автоматической оценки."
+                description={
+                  evaluationAvailable
+                    ? "Запустите оценку, чтобы получить проверяемые ответы по критериям и ссылки на реплики."
+                    : "Диалог доступен для просмотра. Оценки и доказательства появятся после подключения сервиса автоматической оценки."
+                }
               />
             </div>
           ) : (
@@ -327,142 +367,180 @@ export function ConversationDetail({
               </div>
               {tab === "results" ? (
                 <div className="criterion-results">
-                  <section className="panel section-scores">
-                    <h3>Результаты по разделам</h3>
-                    {[
-                      ...new Set(
-                        evaluation.checklist.criteria
-                          .map((c) => c.section)
-                          .filter(Boolean),
-                      ),
-                    ].map((section) => {
-                      const criteria = evaluation.checklist.criteria.filter(
-                        (c) => c.section === section,
+                  {completed && (
+                    <section className="panel section-scores">
+                      <h3>Результаты по разделам</h3>
+                      {[
+                        ...new Set(
+                          evaluation.checklist.criteria
+                            .map((c) => c.section)
+                            .filter(Boolean),
+                        ),
+                      ].map((section) => {
+                        const criteria = evaluation.checklist.criteria.filter(
+                          (c) => c.section === section,
+                        );
+                        const score = conversation.scores?.sections[section];
+                        if (!score) return null;
+                        return (
+                          <div className="section-score-row" key={section}>
+                            <span>{section}</span>
+                            <strong>
+                              {criteria.every(
+                                (criterion) => criterion.type === "flag",
+                              )
+                                ? score.critical
+                                  ? "Есть нарушение"
+                                  : "Нет нарушений"
+                                : score.total === null
+                                  ? "N/A"
+                                  : `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(score.total)} / 100`}
+                            </strong>
+                          </div>
+                        );
+                      })}
+                    </section>
+                  )}
+                  {(final?.results ?? evaluation.results).map(
+                    (result, index) => {
+                      const criterion = evaluation.checklist.criteria.find(
+                        (c) => c.id === result.criterionId,
                       );
-                      const score = conversation.scores?.sections[section];
-                      if (!score) return null;
+                      if (!criterion) return null;
+                      const existing = appeals.find(
+                        (a) => a.criterionId === criterion.id,
+                      );
+                      const passed =
+                        criterion.type === "flag"
+                          ? result.value === 0
+                          : result.value === criterion.max;
                       return (
-                        <div className="section-score-row" key={section}>
-                          <span>{section}</span>
-                          <strong>
-                            {criteria.every(
-                              (criterion) => criterion.type === "flag",
-                            )
-                              ? score.critical
-                                ? "Есть нарушение"
-                                : "Нет нарушений"
-                              : score.total === null
+                        <article
+                          className="panel result-card"
+                          key={result.criterionId}
+                        >
+                          <div className="result-card-top">
+                            <span
+                              className={`result-indicator ${result.value === null ? "na" : passed ? "pass" : "partial"}`}
+                            >
+                              {result.value === null ? (
+                                "—"
+                              ) : passed ? (
+                                <Check size={14} />
+                              ) : (
+                                <Flag size={13} />
+                              )}
+                            </span>
+                            <h3>
+                              <span>{String(index + 1).padStart(2, "0")}</span>
+                              {criterion.title}
+                            </h3>
+                            <strong>
+                              {result.value === null
                                 ? "N/A"
-                                : `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(score.total)} / 100`}
-                          </strong>
-                        </div>
-                      );
-                    })}
-                  </section>
-                  {final?.results.map((result, index) => {
-                    const criterion = evaluation.checklist.criteria.find(
-                      (c) => c.id === result.criterionId,
-                    );
-                    if (!criterion) return null;
-                    const existing = appeals.find(
-                      (a) => a.criterionId === criterion.id,
-                    );
-                    const passed =
-                      criterion.type === "flag"
-                        ? result.value === 0
-                        : result.value === criterion.max;
-                    return (
-                      <article
-                        className="panel result-card"
-                        key={result.criterionId}
-                      >
-                        <div className="result-card-top">
-                          <span
-                            className={`result-indicator ${result.value === null ? "na" : passed ? "pass" : "partial"}`}
-                          >
-                            {result.value === null ? (
-                              "—"
-                            ) : passed ? (
-                              <Check size={14} />
-                            ) : (
-                              <Flag size={13} />
-                            )}
-                          </span>
-                          <h3>
-                            <span>{String(index + 1).padStart(2, "0")}</span>
-                            {criterion.title}
-                          </h3>
-                          <strong>
-                            {result.value === null
-                              ? "N/A"
-                              : criterion.type === "flag"
-                                ? result.value === 1
-                                  ? "Да · нарушение"
-                                  : "Нет · без нарушения"
-                                : criterion.type === "binary"
+                                : criterion.type === "flag"
                                   ? result.value === 1
-                                    ? "Да"
-                                    : "Нет"
-                                  : `${result.value} / ${criterion.max}`}
-                          </strong>
-                        </div>
-                        <p>{result.explanation}</p>
-                        <div className="result-evidence">
-                          {result.evidenceIds.length > 0 ? (
-                            <button
-                              onClick={() => showEvidence(result.evidenceIds)}
-                            >
-                              <Link2 size={14} />
-                              {result.value === 0
-                                ? "Проверенный участок"
-                                : "Показать доказательство"}
-                              <ChevronRight size={14} />
-                            </button>
-                          ) : (
-                            <span>Нет привязанных реплик</span>
-                          )}
-                        </div>
-                        <div className="result-card-bottom">
-                          <span>
-                            {criterion.type === "flag" ? (
-                              "Флаг нарушения · вес 0 · не влияет на балл"
-                            ) : (
-                              <>
-                                Вес {criterion.weight}
-                                {result.value === null
-                                  ? " · исключён из расчёта"
-                                  : ""}
-                              </>
+                                    ? "Да · нарушение"
+                                    : "Нет · без нарушения"
+                                  : criterion.type === "binary"
+                                    ? result.value === 1
+                                      ? "Да"
+                                      : "Нет"
+                                    : `${result.value} / ${criterion.max}`}
+                            </strong>
+                          </div>
+                          <p>{result.explanation}</p>
+                          {result.value === null &&
+                            result.applicabilityReason && (
+                              <p>Не применимо: {result.applicabilityReason}</p>
                             )}
-                          </span>
-                          {existing ? (
-                            <button
-                              className="appeal-status-link"
-                              onClick={onAppeals}
+                          {result.evidence.map((evidence, evidenceIndex) => (
+                            <blockquote
+                              className="review-evidence"
+                              key={evidenceIndex}
                             >
-                              {existing.status === "pending"
-                                ? "На рассмотрении"
-                                : existing.status === "accepted"
-                                  ? "Пересмотрено"
-                                  : "Подтверждено"}
-                              <ArrowUpRight size={13} />
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => setAppealCriterion(criterion)}
-                            >
-                              Оспорить
-                              <Flag size={12} />
-                            </button>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
-                  <Notice>
-                    Оценка рассчитана по сохранённой версии чек-листа. Принятые
-                    апелляции учитываются в итоговом балле.
-                  </Notice>
+                              <small>
+                                {evidence.verified
+                                  ? "Проверенное доказательство"
+                                  : "Доказательство не подтверждено"}
+                                {evidence.kind === "absence"
+                                  ? " · отсутствие в проверенном участке"
+                                  : evidence.kind === "not_applicable"
+                                    ? " · неприменимость"
+                                    : ""}
+                              </small>
+                              {evidence.quote && <p>{evidence.quote}</p>}
+                              {evidence.sourceText &&
+                                evidence.sourceText !== evidence.quote && (
+                                  <details>
+                                    <summary>Исходный текст</summary>
+                                    <p>{evidence.sourceText}</p>
+                                  </details>
+                                )}
+                              {evidence.reason && <p>{evidence.reason}</p>}
+                            </blockquote>
+                          ))}
+                          <div className="result-evidence">
+                            {result.evidenceIds.length > 0 ? (
+                              <button
+                                onClick={() => showEvidence(result.evidenceIds)}
+                              >
+                                <Link2 size={14} />
+                                {result.value === 0
+                                  ? "Проверенный участок"
+                                  : "Показать доказательство"}
+                                <ChevronRight size={14} />
+                              </button>
+                            ) : (
+                              <span>Нет привязанных реплик</span>
+                            )}
+                          </div>
+                          <div className="result-card-bottom">
+                            <span>
+                              {criterion.type === "flag" ? (
+                                "Флаг нарушения · вес 0 · не влияет на балл"
+                              ) : (
+                                <>
+                                  Вес {criterion.weight}
+                                  {result.value === null
+                                    ? " · исключён из расчёта"
+                                    : ""}
+                                </>
+                              )}
+                            </span>
+                            {existing ? (
+                              <button
+                                className="appeal-status-link"
+                                onClick={onAppeals}
+                              >
+                                {existing.status === "pending"
+                                  ? "На рассмотрении"
+                                  : existing.status === "accepted"
+                                    ? "Пересмотрено"
+                                    : "Подтверждено"}
+                                <ArrowUpRight size={13} />
+                              </button>
+                            ) : completed ? (
+                              <button
+                                onClick={() => setAppealCriterion(criterion)}
+                              >
+                                Оспорить
+                                <Flag size={12} />
+                              </button>
+                            ) : (
+                              <span>Сначала требуется проверенная оценка</span>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    },
+                  )}
+                  {completed && (
+                    <Notice>
+                      Оценка рассчитана по сохранённой версии чек-листа.
+                      Принятые апелляции учитываются в итоговом балле.
+                    </Notice>
+                  )}
                 </div>
               ) : (
                 <div className="panel history-panel">

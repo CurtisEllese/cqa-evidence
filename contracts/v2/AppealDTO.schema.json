@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:AppealDTO",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Id",
+      "type": "string"
+    },
+    "conversationId": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Conversationid",
+      "type": "string"
+    },
+    "criterionId": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Criterionid",
+      "type": "string"
+    },
+    "evaluationId": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Evaluationid",
+      "type": "string"
+    },
+    "comment": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Comment",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "createdAt": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "originalValue": {
+      "anyOf": [
+        {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Originalvalue"
+    },
+    "decision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decision"
+    },
+    "newValue": {
+      "anyOf": [
+        {
+          "maxLength": 32,
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Newvalue"
+    },
+    "decidedAt": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decidedat"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "conversationId",
+    "criterionId",
+    "evaluationId",
+    "comment",
+    "status",
+    "createdAt",
+    "originalValue"
+  ],
+  "title": "AppealDTO",
+  "type": "object"
+}

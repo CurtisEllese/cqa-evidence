@@ -295,7 +295,7 @@ def validate_evaluation(evaluation: dict, conversation: dict) -> dict:
     return validated
 
 
-def score_evaluation(evaluation: dict, appeals=()) -> dict:
+def score_evaluation(evaluation: dict, appeals=(), *, wire_decimals=False) -> dict:
     """Score a saved rubric with accepted version-matching decisions, never mutating inputs."""
     checklist, results = _validated_results(evaluation)
     criteria = {criterion["id"]: criterion for criterion in checklist["criteria"]}
@@ -316,6 +316,13 @@ def score_evaluation(evaluation: dict, appeals=()) -> dict:
         if decision is not None and not isinstance(decision, str):
             raise ValueError("Решение по апелляции должно быть текстом.")
         result["explanation"] = decision or "Оценка изменена по принятой апелляции."
+        result["applicability_reason"] = result["explanation"] if result["value"] is None else None
+        # The accepted decision changes applicability, while the original snapshot remains immutable.
+        for evidence in result.get("evidence", []):
+            if result["value"] is None:
+                evidence["kind"] = "not_applicable"
+            elif evidence.get("kind") == "not_applicable":
+                evidence["kind"] = "absence" if evidence.get("start_message_id") else "message"
     earned, possible = Decimal(0), Decimal(0)
     applicable, critical = 0, False
     with localcontext() as context:
@@ -329,5 +336,6 @@ def score_evaluation(evaluation: dict, appeals=()) -> dict:
                 earned += Decimal(str(value)) / Decimal(str(criterion["max"])) * weight
                 possible += weight
                 applicable += 1
-        total = None if not possible else float((earned / possible * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-    return {"total": total, "earned": float(earned), "possible": float(possible), "applicable": applicable, "critical": critical, "results": results}
+        total = None if not possible else (earned / possible * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    convert = (lambda value: format(value, "f")) if wire_decimals else float
+    return {"total": None if total is None else convert(total), "earned": convert(earned), "possible": convert(possible), "applicable": applicable, "critical": critical, "results": results}

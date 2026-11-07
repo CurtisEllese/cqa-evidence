@@ -12,6 +12,7 @@ import {
 import { Badge, Button, Modal, Notice, PageHeading } from "../components/ui";
 import type { Checklist, Criterion } from "../domain/types";
 import { useStore } from "../store";
+import { isSupportedDecimal, decimalInput } from "../services/decimal";
 import "./checklist.css";
 
 function criterionErrors(item: Criterion) {
@@ -23,28 +24,28 @@ function criterionErrors(item: Criterion) {
     weight:
       item.type === "flag" && item.weight !== 0
         ? "Критический флаг не участвует в баллах: вес должен быть 0."
-        : !Number.isFinite(item.weight) || item.weight < 0
-          ? "Вес должен быть числом не меньше нуля."
+        : !isSupportedDecimal(item.weight)
+          ? "Вес — от 0 до 1 000 000, не более 6 знаков после запятой."
           : "",
     max:
       item.type === "binary" || item.type === "flag"
         ? item.max !== 1
           ? "Для ответа да / нет максимум равен 1."
           : ""
-        : !Number.isInteger(item.max) || item.max < 1 || item.max > 100
-          ? "Введите целое число от 1 до 100."
+        : !isSupportedDecimal(item.max) || item.max <= 0
+          ? "Максимум — больше 0, до 1 000 000, не более 6 знаков после запятой."
           : "",
     allowedValues:
       !item.allowedValues?.length ||
       item.allowedValues.some(
-        (value) => !Number.isInteger(value) || value < 0 || value > item.max,
+        (value) => !isSupportedDecimal(value) || value > item.max,
       ) ||
       new Set(item.allowedValues).size !== item.allowedValues.length ||
       !item.allowedValues.includes(0) ||
       !item.allowedValues.includes(item.max) ||
       ((item.type === "binary" || item.type === "flag") &&
         (item.allowedValues.length !== 2 || !item.allowedValues.includes(1)))
-        ? "Укажите уникальные целые значения от 0 до максимума, включая 0 и максимум."
+        ? "Укажите уникальные значения от 0 до максимума, включая 0 и максимум (не более 6 знаков после точки)."
         : "",
     naCondition:
       item.type === "flag" && item.allowNA
@@ -72,6 +73,9 @@ export function ChecklistEditor() {
   const [saveError, setSaveError] = useState("");
   const [allowedValueInputs, setAllowedValueInputs] = useState<
     Record<string, string>
+  >({});
+  const [numericInputs, setNumericInputs] = useState<
+    Record<string, { max?: string; weight?: string }>
   >({});
   const dirty = JSON.stringify(draft) !== baseline;
   useEffect(() => {
@@ -159,6 +163,7 @@ export function ChecklistEditor() {
       setDraft(saved);
       setBaseline(JSON.stringify(saved));
       setAllowedValueInputs({});
+      setNumericInputs({});
     } catch (error) {
       setSaveError(
         error instanceof Error
@@ -180,6 +185,7 @@ export function ChecklistEditor() {
     setDraft(saved);
     setSelectedId(saved.criteria[0]?.id ?? "");
     setAllowedValueInputs({});
+    setNumericInputs({});
     setConfirmReset(false);
   }
 
@@ -466,6 +472,11 @@ export function ChecklistEditor() {
                     value={selected.type}
                     onChange={(event) => {
                       const type = event.target.value as Criterion["type"];
+                      setNumericInputs((current) => {
+                        const next = { ...current };
+                        delete next[selected.id];
+                        return next;
+                      });
                       setAllowedValueInputs((current) => {
                         const next = { ...current };
                         delete next[selected.id];
@@ -500,20 +511,24 @@ export function ChecklistEditor() {
                 <label className="criterion-editor-field">
                   <span className="field-label">Максимальный балл</span>
                   <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    step="1"
+                    type="text"
+                    inputMode="decimal"
+                    min="0.000001"
+                    max="1000000"
+                    step="any"
                     disabled={selected.type !== "scale"}
-                    value={Number.isFinite(selected.max) ? selected.max : ""}
-                    onChange={(event) =>
-                      updateCriterion({
-                        max:
-                          event.target.value === ""
-                            ? NaN
-                            : Number(event.target.value),
-                      })
+                    value={
+                      numericInputs[selected.id]?.max ??
+                      (Number.isFinite(selected.max) ? selected.max : "")
                     }
+                    onChange={(event) => {
+                      const text = event.target.value;
+                      setNumericInputs((current) => ({
+                        ...current,
+                        [selected.id]: { ...current[selected.id], max: text },
+                      }));
+                      updateCriterion({ max: decimalInput(text) });
+                    }}
                     aria-invalid={Boolean(errors.max)}
                     aria-describedby={
                       errors.max ? "criterion-max-error" : undefined
@@ -549,7 +564,7 @@ export function ChecklistEditor() {
                               .trim()
                               .split(/[,;\s]+/)
                               .filter(Boolean)
-                              .map(Number)
+                              .map(decimalInput)
                           : [],
                       });
                     }}
@@ -562,7 +577,8 @@ export function ChecklistEditor() {
                     className="criterion-editor-field-hint"
                   >
                     Только эти значения будут доступны при оценке и рассмотрении
-                    апелляций. Разделяйте баллы запятой.
+                    апелляций. Разделяйте баллы запятой; дробную часть пишите
+                    через точку.
                   </span>
                   <span id="criterion-values-error" className="checklist-error">
                     {errors.allowedValues}
@@ -582,21 +598,26 @@ export function ChecklistEditor() {
                 <label className="criterion-editor-field">
                   <span className="field-label">Вес критерия</span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     min="0"
                     step="any"
                     disabled={selected.type === "flag"}
                     value={
-                      Number.isFinite(selected.weight) ? selected.weight : ""
+                      numericInputs[selected.id]?.weight ??
+                      (Number.isFinite(selected.weight) ? selected.weight : "")
                     }
-                    onChange={(event) =>
-                      updateCriterion({
-                        weight:
-                          event.target.value === ""
-                            ? NaN
-                            : Number(event.target.value),
-                      })
-                    }
+                    onChange={(event) => {
+                      const text = event.target.value;
+                      setNumericInputs((current) => ({
+                        ...current,
+                        [selected.id]: {
+                          ...current[selected.id],
+                          weight: text,
+                        },
+                      }));
+                      updateCriterion({ weight: decimalInput(text) });
+                    }}
                     aria-invalid={Boolean(errors.weight)}
                     aria-describedby={
                       errors.weight

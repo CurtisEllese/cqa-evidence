@@ -31,6 +31,18 @@ export type CriterionResult = {
   explanation: string;
   evidenceIds: string[];
   critical: boolean;
+  applicabilityReason: string | null;
+  evidence: Evidence[];
+};
+export type Evidence = {
+  kind: "message" | "absence" | "not_applicable";
+  messageId: string | null;
+  quote: string | null;
+  sourceText: string | null;
+  startMessageId: string | null;
+  endMessageId: string | null;
+  verified: boolean;
+  reason: string | null;
 };
 export type Evaluation = {
   id: string;
@@ -38,6 +50,15 @@ export type Evaluation = {
   results: CriterionResult[];
   createdAt: string;
   source: "api";
+  status:
+    | "queued"
+    | "running"
+    | "completed"
+    | "needs_review"
+    | "failed_validation"
+    | "failed"
+    | "retryable";
+  error: string | null;
 };
 export type Conversation = {
   id: string;

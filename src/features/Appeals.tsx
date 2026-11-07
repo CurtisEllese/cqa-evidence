@@ -18,6 +18,7 @@ import {
   Score,
 } from "../components/ui";
 import { previewAppeal } from "../services/api";
+import { isDecimalText } from "../services/decimal";
 import type { AppealDecision } from "../services/api";
 import type { Appeal, EvaluationScore } from "../domain/types";
 
@@ -230,7 +231,8 @@ function ReviewDialog({
     value === "na"
       ? criterion.allowNA && criterion.type !== "flag"
       : value.trim() !== "" &&
-        Number.isInteger(newValue) &&
+        newValue !== null &&
+        isDecimalText(value) &&
         newValue! >= 0 &&
         newValue! <= criterion.max &&
         ((criterion.type !== "binary" && criterion.type !== "flag") ||
@@ -363,7 +365,7 @@ function ReviewDialog({
                       type="number"
                       min="0"
                       max={criterion.max}
-                      step="1"
+                      step="any"
                       disabled={value === "na"}
                       value={value === "na" ? "" : value}
                       onChange={(e) => setValue(e.target.value)}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cqa:contracts:2.0:DatasetInfo",
+  "additionalProperties": false,
+  "properties": {
+    "group": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Group",
+      "type": "string"
+    },
+    "fetchedAt": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Fetchedat",
+      "type": "string"
+    },
+    "source": {
+      "enum": [
+        "live",
+        "cache"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "total": {
+      "minimum": 0,
+      "title": "Total",
+      "type": "integer"
+    },
+    "conversationIds": {
+      "items": {
+        "maxLength": 512,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "title": "Conversationids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "group",
+    "fetchedAt",
+    "source",
+    "total",
+    "conversationIds"
+  ],
+  "title": "DatasetInfo",
+  "type": "object"
+}

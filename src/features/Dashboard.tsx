@@ -22,7 +22,9 @@ export function Dashboard({
   onImport: () => void;
 }) {
   const { data, dataset, loading, refreshDataset } = useStore();
-  const evaluated = data.conversations.filter((item) => item.evaluation);
+  const evaluated = data.conversations.filter(
+    (item) => item.evaluation?.status === "completed",
+  );
   const scores = evaluated
     .map((item) => ({
       id: item.id,

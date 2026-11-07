@@ -2,14 +2,18 @@
 import asyncio
 import json
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlparse
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictFloat
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from .contracts.v2 import Health, ConversationExport, ApiError
+from .contracts.v2 import (ImportRequest, VersionRequest, MigrationRequest, CreateAppealRequest, DecideAppealRequest, StartEvaluationRequest, RefreshRequest, WorkspaceState, ConversationDTO, ConversationPage, EvaluationResult, Score, Checklist, from_wire_checklist, internal_number, to_wire_checklist, to_wire_conversation, to_wire_evaluation, to_wire_score, to_wire_state, to_wire_appeal)
+from .evaluator import EvaluationService, load_adapter, error_payload
 from .repository import Repository, Conflict
 from .media import audio_response, AudioProxyError
 
@@ -18,28 +22,7 @@ load_dotenv(ROOT/'.env.local')
 load_dotenv(ROOT/'.env')
 MAX_BODY=5*1024*1024
 
-class ImportBody(BaseModel):
-    text: str
-class VersionBody(BaseModel):
-    checklist: dict
-    expectedVersion: StrictInt
-class MigrationBody(BaseModel):
-    data: dict
-class AppealBody(BaseModel):
-    conversationId: str
-    evaluationId: str
-    criterionId: str
-    comment: str = Field(min_length=10,max_length=2000)
-class DecisionBody(BaseModel):
-    status: str
-    decision: str = Field(default='',max_length=2000)
-    model_config = ConfigDict(allow_inf_nan=False)
-    newValue: StrictFloat | StrictInt | None = None
-class EvaluateBody(BaseModel):
-    conversationId: str
-
-
-def create_app(database_path=None,cache_path=None,organizer_url=None):
+def create_app(database_path=None,cache_path=None,organizer_url=None,*,evaluator=None,evaluation_timeout=60):
     db_path=database_path or os.getenv('DATABASE_PATH',str(ROOT/'local-data/cqa.sqlite'))
     repo=Repository(db_path)
     source_url=organizer_url if organizer_url is not None else os.getenv('ORGANIZER_DEV_URL','')
@@ -50,8 +33,18 @@ def create_app(database_path=None,cache_path=None,organizer_url=None):
             repo.replace_dev(snapshot['payload'],snapshot['fetchedAt'],'cache')
         except (ValueError,KeyError,TypeError):
             pass # Corrupt old cache is refetched; never fabricate records.
-    app=FastAPI(title='CQA Evidence API',version='0.2.0',docs_url='/api/docs',openapi_url='/api/openapi.json',redoc_url=None)
+    service=EvaluationService(repo,evaluator or load_adapter(os.getenv('EVALUATOR_ADAPTER','')),timeout=evaluation_timeout)
+    @asynccontextmanager
+    async def lifespan(app):
+        service.recover()
+        yield
+    app=FastAPI(title='CQA Evidence API',version='2.0',lifespan=lifespan,docs_url='/api/docs',openapi_url='/api/openapi.json',redoc_url=None,responses={code:{'model':ApiError} for code in (400,403,404,405,409,413,422,500,502,503)})
     app.state.repo=repo
+    app.state.evaluator=service
+    def workspace():
+        return to_wire_state({**repo.state(wire_decimals=True),'evaluationAvailable':service.adapter is not None})
+    def failure(code,message,status,details=(),headers=None):
+        return JSONResponse(error_payload(code,message,details,retryable=status in (429,502,503,504)),status_code=status,headers=headers)
     refresh_lock=asyncio.Lock()
     allowed_origins=set(os.getenv('APP_ORIGINS','http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:4173,http://localhost:4173,http://127.0.0.1:8000,http://localhost:8000').split(','))
 
@@ -59,17 +52,17 @@ def create_app(database_path=None,cache_path=None,organizer_url=None):
     async def boundary(request,call_next):
         if request.url.path.startswith('/api/'):
             origin=request.headers.get('origin')
-            if origin and origin not in allowed_origins: return JSONResponse({'error':'Источник запроса не разрешён.'},status_code=403)
+            if origin and origin not in allowed_origins: return failure('ORIGIN_FORBIDDEN','Источник запроса не разрешён.',403)
             host=request.url.hostname
-            if host not in ('127.0.0.1','localhost','testserver','::1'): return JSONResponse({'error':'Сервер доступен только локально.'},status_code=403)
+            if host not in ('127.0.0.1','localhost','testserver','::1'): return failure('HOST_FORBIDDEN','Сервер доступен только локально.',403)
             if request.method in ('POST','PUT','PATCH'):
                 try:
-                    if int(request.headers.get('content-length','0'))>MAX_BODY: return JSONResponse({'error':'Максимальный размер запроса — 5 МБ.'},status_code=413)
-                except ValueError: return JSONResponse({'error':'Некорректный размер запроса.'},status_code=400)
+                    if int(request.headers.get('content-length','0'))>MAX_BODY: return failure('REQUEST_TOO_LARGE','Максимальный размер запроса — 5 МБ.',413)
+                except ValueError: return failure('INVALID_REQUEST','Некорректный размер запроса.',400)
                 chunks=[];length=0
                 async for chunk in request.stream():
                     length+=len(chunk)
-                    if length>MAX_BODY: return JSONResponse({'error':'Максимальный размер запроса — 5 МБ.'},status_code=413)
+                    if length>MAX_BODY: return failure('REQUEST_TOO_LARGE','Максимальный размер запроса — 5 МБ.',413)
                     chunks.append(chunk)
                 request._body=b''.join(chunks)
         response=await call_next(request)
@@ -79,15 +72,17 @@ def create_app(database_path=None,cache_path=None,organizer_url=None):
         return response
 
     @app.exception_handler(Conflict)
-    async def conflict_handler(request,exc): return JSONResponse({'error':str(exc)},status_code=409)
+    async def conflict_handler(request,exc): return failure('CONFLICT',str(exc),409)
     @app.exception_handler(ValueError)
-    async def value_handler(request,exc): return JSONResponse({'error':str(exc)},status_code=422)
+    async def value_handler(request,exc): return failure('INVALID_VALUE',str(exc),422)
     @app.exception_handler(KeyError)
-    async def key_handler(request,exc): return JSONResponse({'error':str(exc.args[0])},status_code=404)
+    async def key_handler(request,exc): return failure('NOT_FOUND',str(exc.args[0]),404)
     @app.exception_handler(RequestValidationError)
-    async def request_error(request,exc): return JSONResponse({'error':'Проверьте поля запроса: '+', '.join('.'.join(map(str,e['loc'])) for e in exc.errors())},status_code=422)
-    @app.exception_handler(HTTPException)
-    async def http_error(request,exc): return JSONResponse({'error':exc.detail},status_code=exc.status_code,headers=exc.headers)
+    async def request_error(request,exc): return failure('INVALID_REQUEST','Проверьте поля запроса.',422,[{'code':e['type'],'path':'/'+('/'.join(map(str,e['loc']))),'message':'Поле не соответствует контракту.'} for e in exc.errors()])
+    @app.exception_handler(StarletteHTTPException)
+    async def http_error(request,exc): return failure({404:'NOT_FOUND',503:'SERVICE_UNAVAILABLE',502:'UPSTREAM_ERROR'}.get(exc.status_code,'HTTP_ERROR'),str(exc.detail),exc.status_code,headers=exc.headers)
+    @app.exception_handler(Exception)
+    async def unexpected_error(request,exc): return failure('INTERNAL_ERROR','Не удалось обработать запрос.',500)
 
     async def refresh():
         if not source_url or urlparse(source_url).scheme!='https': raise HTTPException(503,'Укажите ORGANIZER_DEV_URL в .env.local и перезапустите бэкенд.')
@@ -110,86 +105,106 @@ def create_app(database_path=None,cache_path=None,organizer_url=None):
             async with refresh_lock:
                 if not repo.has_dataset(): await refresh()
 
-    @app.get('/api/health')
-    def health(): return {'status':'ok','database':'sqlite','evaluationAvailable':False}
+    @app.get('/api/health',response_model=Health)
+    def health(): return {'schema_version':'2.0','status':'ok','database':'sqlite','evaluationAvailable':service.adapter is not None}
 
-    @app.get('/api/state')
+    @app.get('/api/state',response_model=WorkspaceState,response_model_exclude_unset=True)
     async def state():
-        await ensure_dataset();return repo.state()
+        await ensure_dataset();return workspace()
 
-    @app.post('/api/organizer/refresh')
-    async def organizer_refresh():
+    @app.post('/api/organizer/refresh',response_model=WorkspaceState,response_model_exclude_unset=True)
+    async def organizer_refresh(body:RefreshRequest):
         async with refresh_lock: await refresh()
-        return repo.state()
+        return workspace()
 
-    @app.post('/api/import')
-    def import_data(body:ImportBody):
+    @app.post('/api/import',response_model=WorkspaceState,response_model_exclude_unset=True)
+    def import_data(body:ImportRequest):
         imported=repo.import_data(body.text)
-        return {**repo.state(),'imported':imported}
+        return {**workspace(),'imported':imported}
 
-    @app.post('/api/migrate')
-    def migrate(body:MigrationBody):
-        repo.migrate(body.data);return repo.state()
+    @app.post('/api/migrate',response_model=WorkspaceState,response_model_exclude_unset=True)
+    def migrate(body:MigrationRequest):
+        repo.migrate(body.data);return workspace()
 
-    @app.get('/api/checklists')
+    @app.get('/api/checklists',response_model=list[Checklist],response_model_exclude_unset=True)
     def checklists():
-        with repo.connect() as db: return [json.loads(r[0]) for r in db.execute('SELECT body FROM checklists ORDER BY version DESC')]
+        with repo.connect() as db: return [to_wire_checklist(json.loads(r[0])) for r in db.execute('SELECT body FROM checklists ORDER BY version DESC')]
 
-    @app.post('/api/checklists/{checklist_id}/versions')
-    def save_checklist(checklist_id:str,body:VersionBody):
-        if body.checklist.get('id')!=checklist_id: raise ValueError('Идентификатор чек-листа не совпадает.')
-        repo.save_checklist(body.checklist,body.expectedVersion);return repo.state()
+    @app.post('/api/checklists/{checklist_id}/versions',response_model=WorkspaceState,response_model_exclude_unset=True)
+    def save_checklist(checklist_id:str,body:VersionRequest):
+        if body.checklist.id!=checklist_id: raise ValueError('Идентификатор чек-листа не совпадает.')
+        repo.save_checklist(from_wire_checklist(body.checklist),body.expectedVersion);return workspace()
 
-    @app.get('/api/conversations')
+    @app.get('/api/conversations',response_model=ConversationPage,response_model_exclude_unset=True)
     def conversations(q:str='',language:str='',channel:str='',offset:int=0,limit:int=100):
         if offset<0 or not 1<=limit<=1000: raise ValueError('Некорректная пагинация.')
-        rows=repo.state()['data']['conversations']
+        rows=workspace()['data']['conversations']
         rows=[r for r in rows if (not language or r['language']==language) and (not channel or r['channel']==channel) and (not q or q.lower() in (r['id']+' '+r['title']+' '+r['operator']).lower())]
-        return {'total':len(rows),'items':rows[offset:offset+limit]}
+        return {'schema_version':'2.0','total':len(rows),'items':rows[offset:offset+limit]}
 
     def find_conversation(conversation_id):
-        item=next((r for r in repo.state()['data']['conversations'] if r['id']==conversation_id),None)
+        item=next((r for r in repo.state(wire_decimals=True)['data']['conversations'] if r['id']==conversation_id),None)
         if item is None: raise KeyError('Диалог не найден.')
         return item
 
-    @app.get('/api/conversations/{conversation_id}')
-    def conversation(conversation_id:str): return find_conversation(conversation_id)
+    @app.get('/api/conversations/{conversation_id}',response_model=ConversationDTO,response_model_exclude_unset=True)
+    def conversation(conversation_id:str): return to_wire_conversation(find_conversation(conversation_id))
 
-    @app.post('/api/evaluations')
-    def evaluate(body:EvaluateBody):
+    @app.post('/api/evaluations',status_code=202,response_model=EvaluationResult,response_model_exclude_unset=True)
+    def evaluate(body:StartEvaluationRequest,background:BackgroundTasks):
         find_conversation(body.conversationId)
-        raise HTTPException(503,'Сервис ИИ-оценки ещё не подключён. Команде нужны ключ API и выбранная модель.')
+        if service.adapter is None: raise HTTPException(503,'Сервис ИИ-оценки ещё не подключён. Команде нужны ключ API и выбранная модель.')
+        result=service.create(body.conversationId)
+        background.add_task(service.run,result['id'])
+        return to_wire_evaluation(result)
 
-    @app.get('/api/evaluations/{evaluation_id}')
+    @app.get('/api/evaluations/{evaluation_id}',response_model=EvaluationResult,response_model_exclude_unset=True)
     def evaluation(evaluation_id:str):
         with repo.connect() as db:
-            _,result=repo.evaluation(db,evaluation_id)
-            return result
+            job=db.execute('SELECT request FROM evaluation_jobs WHERE id=?',(evaluation_id,)).fetchone()
+            if job:
+                snapshot=json.loads(job[0]);result=service.get(evaluation_id)
+                return to_wire_evaluation(result,messages=snapshot['messages'])
+            row,result=repo.evaluation(db,evaluation_id)
+            current=db.execute('SELECT body,content_hash FROM conversations WHERE id=?',(row['conversation_id'],)).fetchone()
+            messages=result.get('messagesSnapshot',json.loads(current['body'])['transcript'] if current and current['content_hash']==row['content_hash'] else [])
+            return to_wire_evaluation(result,row['conversation_id'],row['content_hash'],messages)
 
-    @app.post('/api/appeals')
-    def create_appeal(body:AppealBody):
-        repo.create_appeal(body.model_dump());return repo.state()
+    @app.post('/api/appeals',response_model=WorkspaceState,response_model_exclude_unset=True)
+    def create_appeal(body:CreateAppealRequest):
+        repo.create_appeal(body.model_dump(exclude={'schema_version'}));return workspace()
 
-    @app.post('/api/appeals/{appeal_id}/decision')
-    def decide_appeal(appeal_id:str,body:DecisionBody):
-        repo.decide_appeal(appeal_id,body.model_dump(exclude_unset=True));return repo.state()
+    def decision_body(body):
+        value=body.model_dump(exclude_unset=True,exclude={'schema_version'})
+        if value.get('newValue') is not None: value['newValue']=internal_number(value['newValue'])
+        return value
 
-    @app.post('/api/appeals/{appeal_id}/preview')
-    def preview_appeal(appeal_id:str,body:DecisionBody):
-        return repo.decide_appeal(appeal_id,body.model_dump(exclude_unset=True),preview=True)
+    @app.post('/api/appeals/{appeal_id}/decision',response_model=WorkspaceState,response_model_exclude_unset=True)
+    def decide_appeal(appeal_id:str,body:DecideAppealRequest):
+        repo.decide_appeal(appeal_id,decision_body(body));return workspace()
+
+    @app.post('/api/appeals/{appeal_id}/preview',response_model=Score,response_model_exclude_unset=True)
+    def preview_appeal(appeal_id:str,body:DecideAppealRequest):
+        with repo.connect() as db:
+            found=db.execute('SELECT body FROM appeals WHERE id=?',(appeal_id,)).fetchone()
+            if not found: raise KeyError('Апелляция не найдена.')
+            row,result=repo.evaluation(db,json.loads(found[0])['evaluationId'])
+            current=db.execute('SELECT body FROM conversations WHERE id=?',(row['conversation_id'],)).fetchone()
+            messages=result.get('messagesSnapshot',json.loads(current[0])['transcript'])
+        return to_wire_score(repo.decide_appeal(appeal_id,decision_body(body),preview=True,wire_decimals=True),messages)
 
     def download(value,name):
         return JSONResponse(value,headers={'Content-Disposition':f'attachment; filename="{name}.json"'})
 
-    @app.get('/api/export')
-    def export(): return download(repo.state(),'cqa-workspace')
+    @app.get('/api/export',response_model=WorkspaceState)
+    def export(): return download(workspace(),'cqa-workspace')
 
-    @app.get('/api/conversations/{conversation_id}/export')
+    @app.get('/api/conversations/{conversation_id}/export',response_model=ConversationExport)
     def export_conversation(conversation_id:str):
-        state=repo.state();item=find_conversation(conversation_id)
-        return download({'conversation':item,'appeals':[a for a in state['data']['appeals'] if a['conversationId']==conversation_id]},'cqa-dialog')
+        state=workspace();item=conversation(conversation_id)
+        return download({'schema_version':'2.0','conversation':item,'appeals':[a for a in state['data']['appeals'] if a['conversationId']==conversation_id]},'cqa-dialog')
 
-    @app.get('/api/evaluations/{evaluation_id}/export')
+    @app.get('/api/evaluations/{evaluation_id}/export',response_model=EvaluationResult)
     def export_evaluation(evaluation_id:str): return download(evaluation(evaluation_id),'cqa-evaluation')
 
     @app.get('/api/conversations/{conversation_id}/audio')

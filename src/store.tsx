@@ -3,11 +3,22 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import type { AppData, Checklist } from "./domain/types";
-import { apiRequest } from "./services/api";
+import type { AppData, Checklist, Evaluation } from "./domain/types";
+import {
+  fetchWorkspace,
+  migrateWorkspace,
+  refreshWorkspace,
+  importWorkspace,
+  saveChecklistVersion,
+  submitAppeal,
+  decideAppealRequest,
+  startEvaluation,
+  fetchEvaluation,
+} from "./services/api";
 import type { ServerState, DatasetInfo } from "./services/api";
 
 const LEGACY_KEY = "freedom-quality-organizer-v2";
@@ -22,7 +33,7 @@ let initialization: Promise<{
   migrationError: string;
 }> | null = null;
 async function initialize() {
-  const state = await apiRequest<ServerState>("/api/state");
+  const state = await fetchWorkspace();
   let legacy: string | null = null;
   try {
     localStorage.removeItem("freedom-quality-v1");
@@ -35,9 +46,7 @@ async function initialize() {
     const saved = JSON.parse(legacy);
     if (saved.schema !== 2 || !saved.data)
       throw new Error("Неподдерживаемый формат прежних данных.");
-    const migrated = await apiRequest<ServerState>("/api/migrate", {
-      data: saved.data,
-    });
+    const migrated = await migrateWorkspace(saved.data);
     try {
       localStorage.removeItem(LEGACY_KEY);
     } catch {
@@ -61,6 +70,8 @@ type Store = {
   reloadState: () => Promise<void>;
   refreshDataset: () => Promise<void>;
   evaluationAvailable: boolean;
+  evaluatingIds: string[];
+  evaluationErrors: Record<string, string>;
   toast: string;
   notify: (message: string) => void;
   checklistDirty: boolean;
@@ -91,6 +102,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [checklistDirty, setChecklistDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [evaluatingIds, setEvaluatingIds] = useState<string[]>([]);
+  const [evaluationErrors, setEvaluationErrors] = useState<
+    Record<string, string>
+  >({});
+  const evaluationRequests = useRef(new Map<string, Promise<void>>());
+  const controllers = useRef(new Set<AbortController>());
   const acceptState = useCallback((incoming: ServerState) => {
     setSession((current) =>
       !current || incoming.revision >= current.revision ? incoming : current,
@@ -126,16 +143,86 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const timer = setTimeout(() => setToast(""), 4500);
     return () => clearTimeout(timer);
   }, [toast]);
-  async function mutate(path: string, body: unknown) {
-    const next = await apiRequest<ServerState>(path, body);
-    acceptState(next);
-    return next;
+  function trackEvaluation(
+    conversationId: string,
+    existing?: Evaluation,
+  ): Promise<void> {
+    const active = evaluationRequests.current.get(conversationId);
+    if (active) return active;
+    const controller = new AbortController();
+    controllers.current.add(controller);
+    setEvaluatingIds((current) => [...new Set([...current, conversationId])]);
+    setEvaluationErrors((current) => {
+      const next = { ...current };
+      delete next[conversationId];
+      return next;
+    });
+    const task = (async () => {
+      try {
+        let job = existing ?? (await startEvaluation(conversationId));
+        acceptState(await fetchWorkspace());
+        while (job.status === "queued" || job.status === "running") {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          if (controller.signal.aborted) return;
+          job = await fetchEvaluation(job.id, controller.signal);
+        }
+        if (controller.signal.aborted) return;
+        acceptState(await fetchWorkspace());
+        if (job.status === "completed") setToast("Оценка готова");
+        else if (job.status === "needs_review")
+          setToast("Результат требует проверки доказательств");
+        else
+          throw new Error(
+            job.error ??
+              "Оценка не завершена. Проверьте сообщение сервера и повторите попытку.",
+          );
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Не удалось получить оценку.";
+        setEvaluationErrors((current) => ({
+          ...current,
+          [conversationId]: message,
+        }));
+        throw error;
+      } finally {
+        evaluationRequests.current.delete(conversationId);
+        controllers.current.delete(controller);
+        setEvaluatingIds((current) =>
+          current.filter((id) => id !== conversationId),
+        );
+      }
+    })();
+    evaluationRequests.current.set(conversationId, task);
+    return task;
   }
+  useEffect(() => {
+    for (const conversation of session?.data.conversations ?? []) {
+      if (
+        conversation.evaluation?.status === "queued" ||
+        conversation.evaluation?.status === "running"
+      ) {
+        void trackEvaluation(conversation.id, conversation.evaluation).catch(
+          () => {
+            /* Error is exposed by conversation ID. */
+          },
+        );
+      }
+    }
+  }, [session]);
+  useEffect(
+    () => () => {
+      for (const controller of controllers.current) controller.abort();
+    },
+    [],
+  );
   async function refreshDataset() {
     setLoading(true);
     setLoadError("");
     try {
-      await mutate("/api/organizer/refresh", {});
+      acceptState(await refreshWorkspace());
       setToast("Набор заказчика обновлён");
     } catch (error) {
       setLoadError(
@@ -156,37 +243,48 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         reloadState: () => load(true),
         refreshDataset,
         evaluationAvailable: session?.evaluationAvailable ?? false,
+        evaluatingIds,
+        evaluationErrors,
         toast,
         notify: setToast,
         checklistDirty,
         setChecklistDirty,
         importConversations: async (text) => {
-          const next = await mutate("/api/import", { text });
+          const next = await importWorkspace(text);
+          acceptState(next);
           setToast(`Добавлено диалогов: ${next.imported ?? 0}`);
           return next.imported ?? 0;
         },
         saveChecklist: async (checklist, expectedVersion) => {
-          const next = await mutate(
-            `/api/checklists/${encodeURIComponent(checklist.id)}/versions`,
-            { checklist, expectedVersion },
-          );
+          const next = await saveChecklistVersion(checklist, expectedVersion);
+          acceptState(next);
           setToast("Новая версия чек-листа сохранена на сервере");
           return next.data.checklist;
         },
-        evaluate: async (conversationId) => {
-          await mutate("/api/evaluations", { conversationId });
-          setToast("Оценка готова");
+        evaluate: (conversationId) => {
+          const existing = session?.data.conversations.find(
+            (conversation) => conversation.id === conversationId,
+          )?.evaluation;
+          return trackEvaluation(
+            conversationId,
+            existing &&
+              (existing.status === "queued" || existing.status === "running")
+              ? existing
+              : undefined,
+          );
         },
         createAppeal: async (appeal) => {
-          await mutate("/api/appeals", appeal);
+          acceptState(await submitAppeal(appeal));
           setToast("Апелляция отправлена на рассмотрение");
         },
         decideAppeal: async (id, status, decision, newValue) => {
-          await mutate(`/api/appeals/${encodeURIComponent(id)}/decision`, {
-            status,
-            decision,
-            newValue,
-          });
+          acceptState(
+            await decideAppealRequest(id, {
+              status,
+              decision,
+              newValue,
+            }),
+          );
           setToast(
             status === "accepted"
               ? "Апелляция принята. Итог пересчитан"

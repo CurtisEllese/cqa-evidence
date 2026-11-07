@@ -121,7 +121,7 @@ class Repository:
             db.execute('INSERT INTO checklists VALUES(?,?,?)',(clean['version'],dump(clean),now()));self.bump(db)
         return clean
 
-    def record_evaluation(self,conversation_id,evaluation,expected_hash):
+    def record_evaluation(self,conversation_id,evaluation,expected_hash,*,evaluation_id=None):
         """Integration point for the backend model worker; no browser result-upload endpoint."""
         with self.connect(write=True) as db:
             row=db.execute('SELECT * FROM conversations WHERE id=? AND active=1',(conversation_id,)).fetchone()
@@ -130,8 +130,11 @@ class Repository:
             version=evaluation.get('checklist',{}).get('version')
             stored=db.execute('SELECT body FROM checklists WHERE version=?',(version,)).fetchone()
             if not stored or json.loads(stored[0])!=evaluation.get('checklist'): raise ValueError('Оценка должна ссылаться на сохранённую версию чек-листа.')
-            clean=copy.deepcopy(evaluation);clean['id']=str(uuid4());clean['createdAt']=now();clean['source']='api'
+            clean=copy.deepcopy(evaluation);clean['id']=evaluation_id or str(uuid4());clean['createdAt']=now();clean['source']='api'
             clean=validate_evaluation(clean,json.loads(row['body']))
+            clean['messagesSnapshot']=json.loads(row['body'])['transcript']
+            clean['conversationId']=conversation_id
+            clean['conversationHash']=row['content_hash']
             db.execute('INSERT INTO evaluations VALUES(?,?,?,?,?,?)',(clean['id'],conversation_id,row['content_hash'],version,dump(clean),clean['createdAt']));self.bump(db)
             return clean
 
@@ -156,7 +159,7 @@ class Repository:
             db.execute('INSERT INTO appeals VALUES(?,?,?,?,?)',(appeal['id'],evaluation['id'],appeal['criterionId'],dump(appeal),appeal['createdAt']));self.bump(db)
             return appeal
 
-    def decide_appeal(self,appeal_id,body,preview=False):
+    def decide_appeal(self,appeal_id,body,preview=False,*,wire_decimals=False):
         with self.connect(write=not preview) as db:
             found=db.execute('SELECT body FROM appeals WHERE id=?',(appeal_id,)).fetchone()
             if not found: raise KeyError('Апелляция не найдена.')
@@ -169,7 +172,7 @@ class Repository:
             changed={**appeal,'status':status,'decision':decision.strip(),'newValue':body.get('newValue') if status=='accepted' else appeal['originalValue']}
             _,evaluation=self.evaluation(db,appeal['evaluationId'])
             others=[json.loads(r[0]) for r in db.execute('SELECT body FROM appeals WHERE evaluation_id=? AND id<>?',(evaluation['id'],appeal_id))]
-            score=score_evaluation(evaluation,[*others,changed])
+            score=score_evaluation(evaluation,[*others,changed],wire_decimals=wire_decimals)
             if not preview:
                 changed['decidedAt']=now();db.execute('UPDATE appeals SET body=? WHERE id=?',(dump(changed),appeal_id));self.bump(db)
             return score
@@ -180,7 +183,7 @@ class Repository:
             if not row: raise KeyError('Диалог не найден.')
             return json.loads(row['body']).get('audioUrl'),row['source']=='DEV'
 
-    def state(self):
+    def state(self,*,wire_decimals=False):
         with self.connect() as db:
             appeals=[json.loads(r[0]) for r in db.execute('SELECT body FROM appeals ORDER BY created_at DESC')]
             conversations=[]
@@ -198,8 +201,15 @@ class Repository:
                     for section in dict.fromkeys(c['section'] for c in evaluation['checklist']['criteria']):
                         subset=copy.deepcopy(evaluation);subset['checklist']['criteria']=[c for c in subset['checklist']['criteria'] if c['section']==section]
                         ids={c['id'] for c in subset['checklist']['criteria']};subset['results']=[r for r in subset['results'] if r['criterionId'] in ids]
-                        sections[section]=score_evaluation(subset,appeals)
-                    item['scores']={'original':score_evaluation(evaluation),'final':score_evaluation(evaluation,appeals),'sections':sections}
+                        sections[section]=score_evaluation(subset,appeals,wire_decimals=wire_decimals)
+                    item['scores']={'original':score_evaluation(evaluation,wire_decimals=wire_decimals),'final':score_evaluation(evaluation,appeals,wire_decimals=wire_decimals),'sections':sections}
+                if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='evaluation_jobs'").fetchone():
+                    job=db.execute('SELECT id,result,created_at FROM evaluation_jobs WHERE conversation_id=? AND content_hash=? ORDER BY created_at DESC,rowid DESC LIMIT 1',(item['id'],row['content_hash'])).fetchone()
+                    if job and (not found or job['created_at']>=item['evaluation']['createdAt'] or job['id']==item['evaluation']['id']):
+                        candidate=json.loads(job['result'])
+                        if candidate['status']!='completed':
+                            item['evaluation']=candidate
+                            item.pop('scores',None)
                 conversations.append(item)
             return {'data':{'conversations':conversations,'checklist':self.checklist(db),'appeals':appeals},'dataset':self.metadata(db,'dataset'),'evaluationAvailable':False,'revision':self.metadata(db,'revision')}
 

@@ -13,13 +13,14 @@ from playwright.sync_api import sync_playwright, expect
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'tmp/qa';OUT.mkdir(parents=True,exist_ok=True)
 DB=OUT/f'browser-{time.time_ns()}.sqlite'
-PYTHON=ROOT/('.venv/Scripts/python.exe' if os.name=='nt' else '.venv/bin/python')
+PYTHON=next((ROOT/folder/('Scripts/python.exe' if os.name=='nt' else 'bin/python') for folder in ('.venv311','.venv') if (ROOT/folder/('Scripts/python.exe' if os.name=='nt' else 'bin/python')).is_file()),None)
+if PYTHON is None: raise RuntimeError('Create the project Python environment before running browser checks')
 def free_port():
     with socket.socket() as sock:
         sock.bind(('127.0.0.1',0));return sock.getsockname()[1]
 BACK_PORT,UI_PORT=free_port(),free_port()
 URL=f'http://127.0.0.1:{UI_PORT}/';BACK=f'http://127.0.0.1:{BACK_PORT}'
-env={**os.environ,'DATABASE_PATH':str(DB),'BACKEND_URL':BACK,'APP_ORIGINS':URL.rstrip('/')}
+env={**os.environ,'DATABASE_PATH':str(DB),'BACKEND_URL':BACK,'APP_ORIGINS':URL.rstrip('/'),'EVALUATOR_ADAPTER':''}
 flags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0
 processes=[];checks=[]
 def passed(name):
@@ -41,11 +42,19 @@ try:
         browser=p.chromium.launch(headless=True,args=['--disable-gpu'])
         context=browser.new_context(viewport={'width':1440,'height':1080},accept_downloads=True)
         context.add_init_script("localStorage.setItem('freedom-quality-v1','{}')")
-        page=context.new_page();errors=[];requests=[]
+        page=context.new_page();errors=[];requests=[];mutation_bodies=[]
         page.on('pageerror',lambda error:errors.append(str(error)))
-        page.on('request',lambda req:requests.append(req.url))
+        def observe_request(req):
+            requests.append(req.url)
+            if req.method=='POST' and '/api/' in req.url:
+                mutation_bodies.append((req.url,req.post_data_json))
+        page.on('request',observe_request)
         page.goto(URL);expect(page.get_by_role('heading',name='Оценок пока нет')).to_be_visible()
         saved=state(page);rows=saved['data']['conversations']
+        assert saved['schema_version']=='2.0'
+        assert saved['data']['checklist']['schema_version']=='2.0'
+        assert saved['data']['checklist']['criteria'][0]['type']=='yes_no'
+        assert all(isinstance(c['weight'],str) and isinstance(c['max'],str) and all(isinstance(v,str) for v in c['allowedValues']) for c in saved['data']['checklist']['criteria'])
         assert len(rows)==65 and len({r['id'] for r in rows})==65
         assert Counter(r['language'] for r in rows)=={'RU':35,'KZ':15,'EN':15}
         assert Counter(r['channel'] for r in rows)=={'agent chat':60,'voice call':5}
@@ -93,6 +102,17 @@ try:
         page.reload();expect(page.get_by_label('Название чек-листа')).to_have_value('QA concurrent version')
         other.close();passed('Checklist persists across browsers; stale saves rejected without losing draft')
 
+        before=state(page)
+        for field,value in [('weight',10),('type','binary')]:
+            rubric=json.loads(json.dumps(before['data']['checklist']));rubric['criteria'][0][field]=value
+            invalid=page.request.post(URL+'api/checklists/'+rubric['id']+'/versions',data={'schema_version':'2.0','checklist':rubric,'expectedVersion':rubric['version']})
+            assert invalid.status==422 and invalid.json()['schema_version']=='2.0'
+            assert 'message' in invalid.json() and 'error' not in invalid.json()
+        missing=page.request.post(URL+'api/import',data={'text':'[]'})
+        assert missing.status==422
+        assert state(page)['revision']==before['revision']
+        passed('Active v2 rejects numeric values, binary type and missing version without mutation')
+
         page.goto(URL+'#conversations');page.get_by_role('button',name='Загрузить диалоги',exact=True).click()
         page.locator('#json-input').fill('{broken');page.get_by_role('button',name='Загрузить',exact=True).click()
         expect(page.locator('.form-error')).to_be_visible();expect(page.get_by_role('dialog')).to_be_visible()
@@ -102,6 +122,7 @@ try:
         with page.expect_download() as download:
             page.get_by_role('button',name='Экспорт набора',exact=True).click()
         exported=json.loads(Path(download.value.path()).read_text(encoding='utf-8'))
+        assert exported['schema_version']=='2.0'
         assert len(exported['data']['conversations'])==66
         passed('Server validates imports, preserves form errors, deduplicates and exports persisted data')
 
@@ -130,7 +151,7 @@ try:
         passed('Evidence, appeal submission, server preview and persistent decision work end to end')
 
         page.goto(URL+'#overview')
-        page.route('**/api/organizer/refresh',lambda route:route.fulfill(status=502,json={'error':'Проверка недоступности API'}))
+        page.route('**/api/organizer/refresh',lambda route:route.fulfill(status=502,json={'schema_version':'2.0','code':'TEST_UNAVAILABLE','message':'Проверка недоступности API','details':[],'request_id':'browser-refresh-test','retryable':True}))
         page.get_by_role('button',name='Обновить DEV',exact=True).click()
         expect(page.get_by_text('Проверка недоступности API')).to_be_visible()
         assert len(state(page)['data']['conversations'])==66
@@ -145,6 +166,11 @@ try:
             assert mp.evaluate('document.documentElement.scrollWidth <= 375'),route
         mp.screenshot(path=str(OUT/'backend-audio-mobile.png'),full_page=True)
         assert not errors,errors
+        assert mutation_bodies and all(body['schema_version']=='2.0' for _,body in mutation_bodies)
+        version_requests=[body for url,body in mutation_bodies if '/versions' in url]
+        assert version_requests and all(body['checklist']['criteria'][0]['type']=='yes_no' and isinstance(body['checklist']['criteria'][0]['weight'],str) for body in version_requests)
+        decision_requests=[body for url,body in mutation_bodies if '/decision' in url or '/preview' in url]
+        assert decision_requests and all(body['newValue'] is None or isinstance(body['newValue'],str) for body in decision_requests)
         passed('Direct routes and mobile layouts work without browser runtime exceptions')
         browser.close()
 finally:
