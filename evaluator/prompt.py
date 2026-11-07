@@ -53,5 +53,3 @@ def provider_schema(schema):
     if result.get('type')=='object' and 'properties' in result:
         result['required']=list(result['properties'])
     return result
-
-
