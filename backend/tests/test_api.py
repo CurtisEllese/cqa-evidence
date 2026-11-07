@@ -131,6 +131,48 @@ def test_invalid_appeal_value_and_wrong_conversation_rejected(setup):
     assert repo.state()['data']['appeals'][0]['status']=='pending'
 
 
+def test_official_sections_and_appeal_recalculate_only_affected_section(setup):
+    client,repo,*_=setup
+    conversation,evaluation=evaluated(repo)
+    url='/api/conversations/'+conversation['id']
+    scores=client.get(url).json()['scores']
+    sections=scores['sections']
+    assert {name:score['total'] for name,score in sections.items()}=={
+        'Начало и понимание запроса':'100',
+        'Безопасность и решение':'75',
+        'Ведение и завершение диалога':'87.14',
+        'Грубые нарушения':None,
+    }
+    assert scores['final']['total']=='85.38'
+    response=client.post('/api/appeals',json=wire(
+        conversationId=conversation['id'],evaluationId=evaluation['id'],
+        criterionId='empathy',comment='Синтетическая проверка секции после апелляции.'))
+    assert response.status_code==200
+    appeal=response.json()['data']['appeals'][0]
+    decision=client.post('/api/appeals/'+appeal['id']+'/decision',json=wire(
+        status='accepted',newValue='0',decision='Синтетическое изменение эмпатии.'))
+    assert decision.status_code==200
+    changed=client.get(url).json()['scores']
+    assert changed['original']['total']=='85.38'
+    assert changed['final']['total']=='62.31'
+    assert changed['sections']['Ведение и завершение диалога']['total']=='44.29'
+    for name in sections.keys()-{'Ведение и завершение диалога'}:
+        assert changed['sections'][name]==sections[name]
+
+
+def test_changed_seed_on_restart_does_not_rewrite_saved_checklist_or_scores(setup,monkeypatch):
+    client,repo,path,cache=setup
+    conversation,_=evaluated(repo)
+    saved=client.get('/api/conversations/'+conversation['id']).json()
+    old_checklist=client.get('/api/checklists').json()
+    replacement=initial_checklist()
+    replacement['criteria'][4]['section']='Другая секция в новой поставке'
+    monkeypatch.setattr('backend.repository.initial_checklist',lambda:copy.deepcopy(replacement))
+    with TestClient(create_app(path/'test.sqlite',cache,organizer_url='')) as restarted:
+        assert restarted.get('/api/checklists').json()==old_checklist
+        assert restarted.get('/api/conversations/'+conversation['id']).json()==saved
+
+
 def test_refresh_failure_preserves_all_data_and_no_fake_evaluation(setup):
     client,repo,*_=setup
     before=repo.state()
