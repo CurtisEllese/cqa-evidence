@@ -1,0 +1,78 @@
+{
+  "purpose": "Synthetic semantic regression. Only the changed criterion has a reference label; not a Ground Truth benchmark.",
+  "audited_commit": "b546fb92d69d27e41818f17188fb76d5d78356ba",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_version": "gemini-cqa-v2-wire2",
+  "language": "EN",
+  "channel": "agent chat",
+  "criterion": {
+    "id": "greeting",
+    "title": "Тест: инструкция и подтверждение",
+    "description": "Оцените только помощь со сменой языка: 5 — оператор дал шаги и клиент подтвердил решение; 2 — шаги даны без подтверждения; 0 — шагов нет. Приветствие и представление не учитывайте.",
+    "section": "Начало диалога",
+    "type": "scale",
+    "weight": "10",
+    "max": "5",
+    "allowedValues": [
+      "0",
+      "2",
+      "5"
+    ],
+    "allowNA": false,
+    "naCondition": null
+  },
+  "messages": [
+    {
+      "id": "audit-ui-new-scale-m1",
+      "message_index": 0,
+      "timestamp": "00:00",
+      "speaker": "client",
+      "text": "Hello, how can I change the app language?"
+    },
+    {
+      "id": "audit-ui-new-scale-m2",
+      "message_index": 1,
+      "timestamp": "00:02",
+      "speaker": "operator",
+      "text": "Open the app settings, choose Language and select your preferred language."
+    },
+    {
+      "id": "audit-ui-new-scale-m3",
+      "message_index": 2,
+      "timestamp": "00:10",
+      "speaker": "client",
+      "text": "I found it, thank you. That solved my question."
+    },
+    {
+      "id": "audit-ui-new-scale-m4",
+      "message_index": 3,
+      "timestamp": "00:12",
+      "speaker": "operator",
+      "text": "You are welcome. Is there anything else I can help with? Goodbye!"
+    }
+  ],
+  "expected_value": "5",
+  "actual_result": {
+    "criterionId": "greeting",
+    "value": 2.0,
+    "explanation": "Оператор дал шаги по смене языка, но клиент подтвердил решение самостоятельно в следующем сообщении, а не после прямого запроса подтверждения.",
+    "applicability_reason": null,
+    "evidence": [
+      {
+        "kind": "message",
+        "message_id": "audit-ui-new-scale-m2",
+        "quote": null,
+        "start_message_id": null,
+        "end_message_id": null,
+        "source_text": "Open the app settings, choose Language and select your preferred language.",
+        "verification_status": "verified",
+        "reason": null
+      }
+    ],
+    "evidenceIds": [
+      "audit-ui-new-scale-m2"
+    ],
+    "critical": false
+  },
+  "explanation": "Client explicitly confirmed resolution after receiving the steps. The criterion does not require the operator to ask for confirmation. Test must not be fixed by hardcoding this conversation or criterion ID."
+}

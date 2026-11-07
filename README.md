@@ -6,6 +6,8 @@ Conversation Quality Analytics для Freedom Broker CQA Hackathon: React/TypeSc
 
 ## Документация
 
+- [Командный аудит 7 ноября: проверенная готовность, найденные ошибки и следующие задачи](docs/team-audit-2026-11-07.md)
+
 - [Активный контракт v2.0 и отличия от v1](docs/contracts-v2.md)
 - [Готовый адаптер Gemini: запуск и проверки](docs/gemini-evaluator.md)
 - [Adalbala: контракт оценщика](docs/ADALBALA.md)
