@@ -13,7 +13,8 @@ Conversation Quality Analytics для Freedom Broker CQA Hackathon: React/TypeSc
 - [Командный аудит 7 ноября: проверенная готовность, найденные ошибки и следующие задачи](docs/team-audit-2026-11-07.md)
 
 - [Активный контракт v2.0 и отличия от v1](docs/contracts-v2.md)
-- [Готовый адаптер Gemini: запуск и проверки](docs/gemini-evaluator.md)
+- [Подключение OpenAI API: запуск и проверки](docs/openai-evaluator.md)
+- [Резервный адаптер Gemini](docs/gemini-evaluator.md)
 - [Adalbala: контракт оценщика](docs/ADALBALA.md)
 - [Backend v2: импорт, сохранность и проверка интеграции](docs/backend-v2.md)
 - [Командная передача и маршруты API](docs/TEAM-HANDOFF.md)
@@ -85,9 +86,9 @@ async def evaluate(request: EvaluationRequest) -> ModelResponse:
     ...
 ```
 
-Для реализованного Gemini укажите `EVALUATOR_ADAPTER=evaluator.v2:evaluate`; пример подключения и чек-лист приёмки — в [ADALBALA.md](docs/ADALBALA.md). Без адаптера POST `/api/evaluations` возвращает 503. Настроенный контур возвращает 202 с ID задачи; её состояние читается через GET `/api/evaluations/{id}`.
+Для текущего OpenAI укажите `EVALUATOR_ADAPTER=evaluator.provider:evaluate`, `LLM_PROVIDER=openai`, `LLM_MODEL=gpt-5.4-mini-2026-03-17` и серверный `OPENAI_API_KEY`; [инструкция подключения](docs/openai-evaluator.md). Без адаптера POST `/api/evaluations` возвращает 503. Настроенный контур возвращает 202 с ID задачи; её состояние читается через GET `/api/evaluations/{id}`.
 
-Модель возвращает решения критериев и доказательства. Backend проверяет ссылки/цитаты, шкалы и N/A, рассчитывает итог и сохраняет результат. Непроверенные доказательства дают `needs_review` без итогового балла. Gemini-адаптер реализован по активному v2; ключ и модель задаются только на сервере. Проверки подключения не заменяют экспертную проверку точности.
+Модель возвращает решения критериев и доказательства. Backend проверяет ссылки/цитаты, шкалы и N/A, рассчитывает итог и сохраняет результат. Непроверенные доказательства дают `needs_review` без итогового балла. OpenAI и резервный Gemini используют активный v2; ключ и модель задаются только на сервере. Проверки подключения не заменяют экспертную проверку точности.
 
 ## Данные и сохранность
 

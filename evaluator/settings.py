@@ -15,7 +15,7 @@ class EvaluatorSettings:
 
     def __post_init__(self):
         if not self.api_key.strip() or not self.model.strip():
-            raise ValueError("GEMINI_API_KEY and LLM_MODEL must be configured on the server")
+            raise ValueError("Provider API key and LLM_MODEL must be configured on the server")
         if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive and finite")
         if not math.isfinite(self.min_interval_seconds) or self.min_interval_seconds < 0:
@@ -58,3 +58,12 @@ def retry_delay(exc) -> int | None:
                 except (KeyError, ValueError, TypeError):
                     pass
     return None
+
+
+class OpenAISettings(EvaluatorSettings):
+    @classmethod
+    def from_env(cls):
+        if os.getenv("LLM_PROVIDER", "openai") != "openai":
+            raise ValueError("This adapter requires LLM_PROVIDER=openai")
+        return cls(api_key=os.getenv("OPENAI_API_KEY", ""),
+                   model=os.getenv("LLM_MODEL", "gpt-5.4-mini-2026-03-17"), timeout_seconds=45)

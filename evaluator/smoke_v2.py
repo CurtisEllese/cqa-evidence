@@ -2,12 +2,14 @@
 import argparse
 import asyncio
 import json
+import os
 from dataclasses import asdict
 from pathlib import Path
 from dotenv import load_dotenv
 from backend.contracts.v2 import EvaluationRequest
 from backend.evaluator import AdapterFailure, inspect_output
-from .settings import EvaluatorSettings
+from .settings import EvaluatorSettings, OpenAISettings
+from .openai_v2 import OpenAIV2Evaluator
 from .v2 import GeminiV2Evaluator
 
 
@@ -18,7 +20,13 @@ async def run(args):
     cases = json.loads(args.cases.read_text())
     prepared = [(EvaluationRequest.model_validate(c['request']), c['expected']) for c in cases]
     events = []
-    judge = GeminiV2Evaluator(EvaluatorSettings.from_env(), on_attempt=events.append)
+    provider = os.getenv("LLM_PROVIDER", "openai")
+    if provider == "openai":
+        judge = OpenAIV2Evaluator(OpenAISettings.from_env(), on_attempt=events.append)
+    elif provider == "gemini":
+        judge = GeminiV2Evaluator(EvaluatorSettings.from_env(), on_attempt=events.append)
+    else:
+        raise ValueError("Unsupported LLM_PROVIDER")
     rows = []
     for request, expected in prepared:
         if set(expected) != {c.id for c in request.checklist.criteria}:
@@ -32,6 +40,8 @@ async def run(args):
                          'matched':sum(actual.get(k) == v for k,v in expected.items()),'criteria':len(expected),
                          'errors':errors,'evidence_issues':reviews,
                          'differences':[{'criterion':k,'expected':v,'actual':actual.get(k)} for k,v in expected.items() if actual.get(k)!=v]})
+        except json.JSONDecodeError:
+            rows.append({"language":request.language,"status":"failed","code":"MODEL_OUTPUT_INVALID"})
         except AdapterFailure as exc:
             rows.append({'language':request.language,'status':'failed','code':exc.code})
     summary={'notice':'Synthetic integration checks, not independent accuracy or Ground Truth.',

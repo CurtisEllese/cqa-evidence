@@ -1,0 +1,70 @@
+{
+  "notice": "Synthetic integration checks, not independent accuracy or Ground Truth.",
+  "cases": [
+    {
+      "language": "RU",
+      "channel": "agent chat",
+      "status": "valid",
+      "matched": 8,
+      "criteria": 8,
+      "errors": [],
+      "evidence_issues": [],
+      "differences": []
+    },
+    {
+      "language": "KZ",
+      "channel": "voice call",
+      "status": "valid",
+      "matched": 8,
+      "criteria": 8,
+      "errors": [],
+      "evidence_issues": [],
+      "differences": []
+    },
+    {
+      "language": "EN",
+      "channel": "agent chat",
+      "status": "valid",
+      "matched": 8,
+      "criteria": 8,
+      "errors": [],
+      "evidence_issues": [],
+      "differences": []
+    }
+  ],
+  "attempts": [
+    {
+      "fingerprint": "e35c7cbdfea1eb836827e06c87cffbace14b808f70a91b0d1237462224c0ed87",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "outcome": "parsed",
+      "seconds": 3.869,
+      "input_tokens": 2267,
+      "output_tokens": 691,
+      "provider": "openai",
+      "cost_usd": null
+    },
+    {
+      "fingerprint": "1269efb383fff8a620bdae64d16b35b5f985b734f8f8d3e71d52fee0319ea80b",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "outcome": "parsed",
+      "seconds": 4.804,
+      "input_tokens": 2345,
+      "output_tokens": 785,
+      "provider": "openai",
+      "cost_usd": null
+    },
+    {
+      "fingerprint": "57582c7769c4f2c9d9f1d650a07bcfd6ddd403a97b37cfd6c6e8bb850706ff0d",
+      "prompt_version": "openai-cqa-v2-wire2-na3",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "outcome": "parsed",
+      "seconds": 3.684,
+      "input_tokens": 2253,
+      "output_tokens": 660,
+      "provider": "openai",
+      "cost_usd": null
+    }
+  ]
+}
