@@ -357,3 +357,60 @@ def test_duplicate_pending_job_rejected_and_completed_recovery_untouched(repo):
     before = deepcopy(result)
     service.recover()
     assert service.get(result["id"]) == before
+
+
+def test_long_provider_backoff_is_not_shortened_or_retried_immediately(repo):
+    calls = 0
+
+    async def adapter(request):
+        nonlocal calls
+        calls += 1
+        raise AdapterFailure("PROVIDER_RATE_LIMIT", retryable=True, retry_after=60)
+
+    _, result = execute(repo, adapter)
+    assert calls == 1 and result["status"] == "failed"
+    assert result["error"]["code"] == "PROVIDER_RATE_LIMIT" and result["error"]["retryable"] is True
+
+
+def test_provider_failure_is_counted_in_persisted_shared_attempt_budget(repo):
+    calls = 0
+
+    async def adapter(request):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise AdapterFailure("PROVIDER_UNAVAILABLE", retryable=True)
+        return output(request)
+
+    _, result = execute(repo, adapter)
+    assert result["status"] == "completed" and calls == 2
+    with repo.connect() as db:
+        attempts = db.execute("SELECT attempt,output,issues FROM evaluation_attempts WHERE job_id=? ORDER BY attempt", (result["id"],)).fetchall()
+    assert [row["attempt"] for row in attempts] == [1, 2]
+    assert attempts[0]["output"] is None
+    assert json.loads(attempts[0]["issues"])[0]["code"] == "PROVIDER_UNAVAILABLE"
+    assert json.loads(attempts[1]["output"])["schema_version"] == "2.0"
+
+
+def test_different_dialogues_share_one_provider_slot(repo):
+    second = deepcopy(repo.state()["data"]["conversations"][0])
+    second["id"] = "worker-test-second"
+    repo.import_data([second])
+    active = maximum = 0
+
+    async def adapter(request):
+        nonlocal active, maximum
+        active += 1
+        maximum = max(maximum, active)
+        await asyncio.sleep(0)
+        active -= 1
+        return output(request)
+
+    async def run_both():
+        service = EvaluationService(repo, adapter)
+        jobs = [service.create(identifier) for identifier in ("worker-test", "worker-test-second")]
+        await asyncio.gather(*(service.run(job["id"]) for job in jobs))
+        assert all(service.get(job["id"])["status"] == "completed" for job in jobs)
+
+    asyncio.run(run_both())
+    assert maximum == 1

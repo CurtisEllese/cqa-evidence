@@ -81,6 +81,10 @@ class Repository:
         with self.connect() as db:
             return self.metadata(db,'dataset') is not None
 
+    def has_conversations(self):
+        with self.connect() as db:
+            return db.execute('SELECT 1 FROM conversations WHERE active=1 LIMIT 1').fetchone() is not None
+
     @staticmethod
     def put_conversations(db, conversations, source):
         for item in conversations:

@@ -23,7 +23,7 @@ class AdapterFailure(Exception):
     def __init__(self, code='PROVIDER_UNAVAILABLE', *, retryable=False, retry_after=0):
         self.code=code if code in ('PROVIDER_UNAVAILABLE','PROVIDER_RATE_LIMIT','MODEL_REFUSAL') else 'PROVIDER_UNAVAILABLE'
         self.retryable=bool(retryable)
-        self.retry_after=min(30,max(0,float(retry_after)))
+        self.retry_after=max(0,float(retry_after))
         super().__init__(self.code)
 
 
@@ -144,13 +144,20 @@ class EvaluationService:
             if not row: raise KeyError('Задача оценки не найдена.')
             return json.loads(row['result'])
 
-    def update(self,identifier,status,*,results=None,error=None):
+    def update(self,identifier,status,*,results=None,error=None,snapshot=None):
         with self.repo.connect(write=True) as db:
-            row=db.execute('SELECT result FROM evaluation_jobs WHERE id=?',(identifier,)).fetchone();body=json.loads(row['result'])
+            row=db.execute('SELECT result FROM evaluation_jobs WHERE id=?',(identifier,)).fetchone()
+            body=copy.deepcopy(snapshot) if snapshot is not None else json.loads(row['result'])
             body.update(status=status,error=error)
             if results is not None: body['results']=results
             db.execute('UPDATE evaluation_jobs SET status=?,result=?,updated_at=? WHERE id=?',(status,dump(body),now(),identifier));self.repo.bump(db)
         return body
+
+    def record_attempt(self,identifier,attempt,*,output=None,issues=()):
+        with self.repo.connect(write=True) as db:
+            db.execute('''INSERT INTO evaluation_attempts VALUES(?,?,?,?)
+                ON CONFLICT(job_id,attempt) DO UPDATE SET output=excluded.output,issues=excluded.issues''',
+                (identifier,attempt,output,dump(list(issues))))
 
     async def run(self,identifier):
         async with self.limit:
@@ -160,6 +167,8 @@ class EvaluationService:
             for attempt in (1,2):
                 raw=None;errors=[];reviews=[]
                 try:
+                    # Count the attempt before I/O, including timeouts and interrupted requests.
+                    self.record_attempt(identifier,attempt)
                     # A new deep snapshot per call prevents adapters mutating backend evidence/validation inputs.
                     try:
                         raw=await asyncio.wait_for(self.adapter(request.model_copy(deep=True)),timeout=self.timeout)
@@ -170,8 +179,7 @@ class EvaluationService:
                     serialized=raw.model_dump() if hasattr(raw,'model_dump') else raw
                     try: serialized=dump(serialized)
                     except (ValueError,TypeError): serialized='null'
-                    with self.repo.connect(write=True) as db:
-                        db.execute('INSERT INTO evaluation_attempts VALUES(?,?,?,?)',(identifier,attempt,serialized,dump(errors+reviews)))
+                    self.record_attempt(identifier,attempt,output=serialized,issues=errors+reviews)
                     if errors:
                         if attempt==1:
                             request=EvaluationRequest.model_validate({**request.model_dump(),'repair_feedback':errors});continue
@@ -181,16 +189,20 @@ class EvaluationService:
                         self.update(identifier,'needs_review',results=results);return
                     result=self.get(identifier);result['results']=results;result['status']='completed'
                     saved=self.repo.record_evaluation(request.conversationId,result,request.conversationHash,evaluation_id=identifier)
-                    self.update(identifier,'completed',results=saved['results']);return
+                    self.update(identifier,'completed',snapshot=saved);return
                 except Conflict:
                     self.update(identifier,'failed_validation',results=[],error=error_payload('INPUT_CHANGED','Диалог изменился во время оценки; результат не применён.'));return
                 except (AdapterFailure,asyncio.TimeoutError) as exc:
                     retryable=not isinstance(exc,AdapterFailure) or exc.retryable
-                    if attempt==1 and retryable:
-                        await asyncio.sleep(exc.retry_after if isinstance(exc,AdapterFailure) else 0);continue
                     code=exc.code if isinstance(exc,AdapterFailure) else 'PROVIDER_TIMEOUT'
+                    self.record_attempt(identifier,attempt,issues=[issue(code,'','Сервис модели не выполнил попытку оценки.')])
+                    delay=exc.retry_after if isinstance(exc,AdapterFailure) else 0
+                    # Long provider backoff is returned as a retryable failure, never shortened.
+                    if attempt==1 and retryable and delay<=30:
+                        await asyncio.sleep(delay);continue
                     self.update(identifier,'failed',results=[],error=error_payload(code,'Сервис модели не выполнил оценку.',retryable=retryable));return
                 except asyncio.CancelledError:
                     raise # recovery marks the persisted job retryable on next startup
                 except Exception:
+                    self.record_attempt(identifier,attempt,issues=[issue('EVALUATOR_ERROR','','Не удалось обработать попытку оценки.')])
                     self.update(identifier,'failed',results=[],error=error_payload('EVALUATOR_ERROR','Не удалось обработать ответ оценщика. Подробности доступны команде сервера.'));return
